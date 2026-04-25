@@ -5,6 +5,7 @@
   box-sizing: border-box;
 }
 
+/* BODY */
 body {
   font-family: Arial, sans-serif;
   background: #f3f4f6;
@@ -17,15 +18,15 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 40px;
 }
 
 .header h2 {
-  font-size: 22px;
+  font-size: 24px;
 }
 
 .header p {
-  font-size: 14px;
+  font-size: 16px;
   color: #6b7280;
 }
 
@@ -35,56 +36,12 @@ body {
   padding: 10px 16px;
   border-radius: 8px;
   text-decoration: none;
-  font-size: 14px;
+  font-size: 16px;
   transition: 0.2s;
 }
 
 .btn:hover {
   background: #059669;
-}
-
-/* FILTER TABS */
-input[type="radio"] {
-  display: none;
-}
-
-.tabs {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.tab {
-  padding: 8px 16px;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  background: white;
-  cursor: pointer;
-  font-size: 14px;
-  transition: 0.2s;
-}
-
-.tab:hover {
-  background: #f9fafb;
-}
-
-#all:checked + label,
-#admin:checked + label,
-#seller:checked + label,
-#student:checked + label {
-  background: #d1fae5;
-  color: #047857;
-  border-color: #a7f3d0;
-}
-
-/* SEARCH */
-.search input {
-  width: 100%;
-  padding: 12px 14px;
-  border-radius: 8px;
-  border: 1px solid #d1d5db;
-  margin-bottom: 20px;
-  font-size: 14px;
 }
 
 /* TABLE */
@@ -93,7 +50,7 @@ table {
   border-collapse: collapse;
   background: white;
   border-radius: 12px;
-  overflow: hidden;
+  overflow: visible; /* 🔥 penting */
   table-layout: fixed;
 }
 
@@ -118,13 +75,13 @@ tr:hover {
   background: #f9fafb;
 }
 
-
-th:nth-child(1), td:nth-child(1) { width: 40%; }
-th:nth-child(2), td:nth-child(2) { width: 15%; }
+/* KOLOM */
+th:nth-child(1), td:nth-child(1) { width: 45%; }
+th:nth-child(2), td:nth-child(2) { width: 20%; }
 th:nth-child(3), td:nth-child(3) { width: 15%; text-align: center; }
-th:nth-child(4), td:nth-child(4) { width: 15%; text-align: center; }
-th:nth-child(5), td:nth-child(5) { width: 10%; text-align: center; }
+th:nth-child(4), td:nth-child(4) { width: 20%; text-align: center; }
 
+/* USER */
 .user {
   display: flex;
   align-items: center;
@@ -147,26 +104,11 @@ th:nth-child(5), td:nth-child(5) { width: 10%; text-align: center; }
   font-size: 12px;
 }
 
+
 .badge {
   padding: 5px 10px;
   border-radius: 999px;
   font-size: 12px;
-  display: inline-block;
-}
-
-.seller {
-  background: #dbeafe;
-  color: #1d4ed8;
-}
-
-.student {
-  background: #dcfce7;
-  color: #15803d;
-}
-
-.admin {
-  background: #fee2e2;
-  color: #b91c1c;
 }
 
 .status {
@@ -175,16 +117,17 @@ th:nth-child(5), td:nth-child(5) { width: 10%; text-align: center; }
 }
 
 
+
 .aksi-box {
   position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-block;
 }
 
+
 .aksi-btn {
-  width: 34px;
-  height: 34px;
+  width: 42px;
+  height: 42px;
+
   display: flex;
   align-items: center;
   justify-content: center;
@@ -193,19 +136,22 @@ th:nth-child(5), td:nth-child(5) { width: 10%; text-align: center; }
   color: #6b7280;
   cursor: pointer;
 
-  border-radius: 8px;
+  border: none;
+  background: transparent;
+  border-radius: 10px;
+
   transition: 0.2s;
 }
 
 .aksi-btn:hover {
-  background: #f3f4f6;
+  background: #e5e7eb;
 }
 
-/* DROPDOWN */
 .dropdown {
   display: none;
   position: absolute;
-  top: 40px;
+
+  top: 48px;
   right: 0;
 
   background: white;
@@ -213,24 +159,18 @@ th:nth-child(5), td:nth-child(5) { width: 10%; text-align: center; }
   border-radius: 10px;
 
   box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-  min-width: 140px;
+  min-width: 150px;
 
   padding: 6px 0;
-  z-index: 999;
+  z-index: 9999;
 }
 
-/* ITEM */
 .dropdown a {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
+  display: block;
   padding: 10px 14px;
   font-size: 13px;
   color: #374151;
   text-decoration: none;
-
-  transition: 0.2s;
 }
 
 .dropdown a:hover {
@@ -241,7 +181,8 @@ th:nth-child(5), td:nth-child(5) { width: 10%; text-align: center; }
   color: #dc2626;
 }
 
+
 .aksi-box:hover .dropdown,
-.dropdown:hover {
+.aksi-box:focus-within .dropdown {
   display: block;
 }
