@@ -24,6 +24,8 @@ $result = mysqli_query($conn, $query);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>E-Kantin - Beranda</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="navbar.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
 
@@ -44,6 +46,8 @@ $result = mysqli_query($conn, $query);
     <div class="kategori-container">
         <a href="index.php" class="tab-kategori <?= $kategori == '' ? 'active' : '' ?>">Semua</a>
         <a href="index.php?kategori=Makanan" class="tab-kategori <?= $kategori == 'Makanan' ? 'active' : '' ?>">Makanan</a>
+        <a href="index.php?kategori=Makanan_berat" class="tab-kategori <?= $kategori == 'Makanan_berat' ? 'active' : '' ?>">Makanan berat</a>
+        <a href="index.php?kategori=Makanan_ringan" class="tab-kategori <?= $kategori == 'Makanan_ringan' ? 'active' : '' ?>">Makanan ringan</a>
         <a href="index.php?kategori=Minuman" class="tab-kategori <?= $kategori == 'Minuman' ? 'active' : '' ?>">Minuman</a>
     </div>
 
@@ -68,5 +72,9 @@ $result = mysqli_query($conn, $query);
     <?php endif; ?>
 </div>
             </a>
+            <div class="menu-grid">
+        </div>
+
+    <?php include 'navbar.html'; ?>
 </body>
 </html>
