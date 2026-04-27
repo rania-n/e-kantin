@@ -1,0 +1,110 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.container {
+  max-width: 900px;
+  margin: auto;
+  padding: 20px;
+  padding-bottom: 90px;
+}
+
+.header h2 {
+  font-size: 22px;
+}
+
+.header p {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 20px;
+}
+
+.section-title {
+  margin: 20px 0 10px;
+  font-size: 16px;
+}
+
+.card {
+  background: white;
+  padding: 18px;
+  border-radius: 14px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.card.active {
+  background: #ecfdf5;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.status {
+  color: #059669;
+  font-weight: bold;
+}
+
+.ambil {
+  font-size: 13px;
+  color: #047857;
+}
+
+.done {
+  background: #e5e7eb;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.content {
+  display: flex;
+  justify-content: space-between;
+}
+
+.left p {
+  margin: 4px 0;
+}
+
+.right {
+  text-align: right;
+}
+
+.date {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+
+.bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.bottom b {
+  color: #10b981;
+}
+
+.payment {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.order-again {
+  color: #059669;
+  text-decoration: none;
+  font-weight: bold;
+}
+

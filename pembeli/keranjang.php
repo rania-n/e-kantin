@@ -95,7 +95,9 @@
                     </label>
                 </div>
 
-                <button class="checkout">Lanjut ke Pembayaran</button>
+                <form action="checkout.html">
+                    <button type="submit" class="checkout">Lanjut ke Pembayaran</button>
+                </form>
             </div>
         </div>
     </div>
@@ -141,10 +143,14 @@
                     </label>
                 </div>
 
-                <button class="checkout">Lanjut ke Pembayaran</button>
+                
+                <form action="checkout.html">
+                    <button type="submit" class="checkout">Lanjut ke Pembayaran</button>
+                </form>
+
             </div>
         </div>
     </div>
-<?php include '../3. komponen/navbarpembeli.html'; ?>
+<?php include 'navbarpembeli.html'; ?>
 </body>
 </html>

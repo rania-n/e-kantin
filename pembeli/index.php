@@ -73,6 +73,6 @@ $result = mysqli_query($conn, $query);
             <div class="menu-grid">
         </div>
 
-    <?php include '../3. komponen/navbarpembeli.html'; ?>
+    <?php include 'navbarpembeli.html'; ?>
 </body>
 </html>
