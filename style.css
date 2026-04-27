@@ -1,0 +1,235 @@
+:root {
+    --primary: #D35400;    
+    --secondary: #A04000;  
+    --accent: #E67E22;     
+    --bg-light: #FFF8F0;  
+    --white: #FFFFFF;
+}
+
+* {
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: var(--bg-light);
+    margin: 0;
+    padding-bottom: 80px; 
+}
+
+/* --- HEADER & NAVIGATION --- */
+header {
+    background-color: var(--primary);
+    color: var(--white);
+    padding: 15px 10px;
+    border-radius: 0 0 50px 10px;
+}
+
+header h1 { margin: 0; font-size: 22px; }
+header h5 { margin: 0; font-size: 10px; }
+
+.search-container {
+    padding: 10px 10px;
+    margin-top: 5px;
+}
+
+.search-box {
+    display: flex;
+    align-items: center;
+    background: white;
+    padding: 10px 20px;
+    border-radius: 20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid #ddd;
+}
+
+.search-icon {
+    margin-right: 10px;
+    font-size: 16px;
+    color: #888;
+}
+
+.search-box input {
+    border: none;
+    outline: none;
+    width: 100%;
+    font-size: 14px;
+    color: #333;
+}
+
+.kategori-container {
+    display: flex;
+    gap: 10px;
+    padding: 20px;
+    overflow-x: auto;
+}
+
+.tab-kategori {
+    text-decoration: none;
+    padding: 7px 17px;
+    background: var(--white);
+    color: var(--secondary);
+    border: 1px solid var(--secondary);
+    border-radius: 15px;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.tab-kategori.active {
+    background: var(--secondary);
+    color: var(--white);
+}
+
+/* --- MENU GRID (HOMEPAGE) --- */
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 15px;
+    padding: 0 15px;
+}
+
+
+@media (min-width: 480px) {
+    .menu-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); 
+    }
+}
+
+.card {
+    background: var(--white);
+    border-radius: 15px;
+    overflow: hidden;
+    text-decoration: none;
+    color: #333;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.card img {
+    width: 100%;
+    height: 150px; 
+    object-fit: cover;
+}
+
+.card-info { 
+    padding: 12px; 
+    position: relative;
+}
+
+.card-info h3 { 
+    margin: 0; 
+    font-size: 15px; 
+    padding-right: 35px; 
+}
+
+.card-info .harga { 
+    color: var(--primary); 
+    font-weight: bold; 
+    margin: 5px 0 0 0; 
+}
+
+/* Ikon Tambah Keranjang di Homepage */
+.btn-add-cart {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    background-color: var(--primary);
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+/* --- HALAMAN DETAIL --- */
+.detail-container {
+    padding: 20px;
+    max-width: 600px;
+    margin: 0 auto;
+    padding-bottom: 100px;
+}
+
+.btn-back {
+    display: inline-block;
+    color: black;
+    margin-bottom: 10px;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 5px;
+}
+
+.img-wrapper {
+    width: 100%;
+    height: 250px; 
+    border-radius: 40px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.detail-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.detail-harga {
+    color: var(--primary);
+    font-size: 20px;
+    margin: 5px 0;
+}
+
+.description-box {
+    background: #fff;
+    padding: 15px;
+    border-radius: 15px;
+    border: 1px solid #eee;
+    margin: 15px 0;
+}
+
+.description-box h4 {
+    margin: 0 0 10px 0;
+    color: #555;
+    font-size: 14px;
+    text-transform: uppercase;
+}
+
+.description-box p {
+    color: #666;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.action-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 20px;
+    background: white;
+    box-shadow: 0 -5px 15px rgba(0,0,0,0.05);
+    z-index: 999;
+}
+
+.btn-beli {
+    display: block;
+    background: var(--primary);
+    color: white;
+    text-align: center;
+    padding: 18px;
+    border-radius: 15px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 16px;
+    transition: 0.3s;
+}
+
+.btn-beli:hover {
+    background: var(--secondary);
+    transform: translateY(-2px);
+}
