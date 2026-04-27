@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard e-Kantin</title>
-  <link rel="stylesheet" href="dashboard.CSS">
+  <link rel="stylesheet" href="dashboard.css">
 </head>
 <body>
 <?php include '../../3. komponen/sidebaradmin.html'; ?>
