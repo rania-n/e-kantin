@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout</title>
+<link rel="stylesheet" href="checkout.css">
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="header">
+    <h2>Checkout</h2>
+    <p>Lengkapi pesananmu</p>
+  </div>
+
+  <!-- INFORMASI -->
+  <div class="card">
+    <h3>Informasi Pemesan</h3>
+    <div class="row">
+      <span>Nama</span>
+      <b>Ahmad Rizki</b>
+    </div>
+    <div class="row">
+      <span>Kelas</span>
+      <b>10A</b>
+    </div>
+  </div>
+
+  <!-- RINGKASAN -->
+  <div class="card">
+    <h3>Ringkasan Pesanan</h3>
+    <div class="row">
+      <span>1x Sate Ayam</span>
+      <b>Rp 15.000</b>
+    </div>
+    <div class="row total">
+      <span>Total</span>
+      <b>Rp 15.000</b>
+    </div>
+  </div>
+
+  <!-- WAKTU -->
+  <div class="card">
+    <h3>Waktu Pengambilan</h3>
+
+    <div class="time-grid">
+      <label>
+        <input type="radio" name="time">
+        <div class="time">12:00</div>
+      </label>
+
+      <label>
+        <input type="radio" name="time">
+        <div class="time">12:15</div>
+      </label>
+
+      <label>
+        <input type="radio" name="time" checked>
+        <div class="time">12:30</div>
+      </label>
+
+      <label>
+        <input type="radio" name="time">
+        <div class="time">12:45</div>
+      </label>
+    </div>
+
+    <small>*Waktu istirahat: 12:00 - 13:00</small>
+  </div>
+
+  <!-- PEMBAYARAN -->
+  <div class="card">
+    <h3>Metode Pembayaran</h3>
+
+    <label class="pay active">
+      <input type="radio" name="pay" checked>
+      <div>
+        <b>Bayar di Kantin</b>
+        <p>Bayar langsung saat mengambil pesanan</p>
+      </div>
+    </label>
+
+    <label class="pay">
+      <input type="radio" name="pay">
+      <div>
+        <b>Transfer Bank</b>
+        <p>Transfer ke rekening kantin</p>
+      </div>
+    </label>
+
+    <label class="pay">
+      <input type="radio" name="pay">
+      <div>
+        <b>E-Wallet</b>
+        <p>OVO, GoPay, Dana</p>
+      </div>
+    </label>
+
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div>
+    <span>Total Pembayaran</span>
+    <b>Rp 15.000</b>
+  </div>
+  <button>Konfirmasi Pesanan</button>
+</div>
+
+</body>
+</html>
