@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daftar Pesanan</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #fff0df, #ff7a1a);
+    padding: 45px;
+    color: #1f2937;
+}
+
+.header,
+.filter-box,
+.orders {
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.header {
+    margin-bottom: 28px;
+}
+
+.header h1 {
+    font-size: 42px;
+    margin-bottom: 8px;
+}
+
+.header p {
+    font-size: 17px;
+    color: #6b7280;
+}
+
+.filter-box {
+    background: rgba(255,255,255,0.9);
+    padding: 20px;
+    border-radius: 22px;
+    box-shadow: 0 12px 35px rgba(0,0,0,0.12);
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+}
+
+.search {
+    flex: 1;
+    min-width: 230px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 1px solid #ddd;
+    font-size: 15px;
+}
+
+.filter-btn {
+    border: none;
+    padding: 14px 20px;
+    border-radius: 14px;
+    background: #f3f4f6;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.filter-btn.active {
+    background: #ff6b00;
+    color: white;
+}
+
+.orders {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+}
+
+.card {
+    background: rgba(255,255,255,0.95);
+    border-radius: 24px;
+    box-shadow: 0 14px 35px rgba(0,0,0,0.14);
+    overflow: hidden;
+}
+
+.card-top {
+    padding: 24px;
+    border-bottom: 1px solid #eee;
+}
+
+.order-id {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.status {
+    float: right;
+    padding: 7px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.waiting {
+    background: #fff3c4;
+    color: #9a6a00;
+}
+
+.process {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.done {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.cancelled {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.card h3 {
+    font-size: 24px;
+    margin: 14px 0 4px;
+}
+
+.info {
+    color: #6b7280;
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+.time {
+    font-size: 14px;
+    color: #4b5563;
+}
+
+.card-body {
+    padding: 20px 24px;
+}
+
+.item {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 10px;
+    font-size: 15px;
+}
+
+.note {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid #eee;
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.total {
+    display: flex;
+    justify-content: space-between;
+    font-size: 20px;
+    font-weight: 700;
+    padding: 18px 24px;
+    border-top: 1px solid #eee;
+}
+
+.action {
+    display: flex;
+    gap: 10px;
+    padding: 0 24px 24px;
+}
+
+.action button {
+    width: 100%;
+    border: none;
+    padding: 13px;
+    border-radius: 13px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.accept {
+    background: #16a34a;
+}
+
+.cancel {
+    background: #ef4444;
+}
+
+.detail {
+    background: #ff6b00;
+}
+
+/* tablet */
+@media (max-width: 900px) {
+    body {
+        padding: 30px;
+    }
+
+    .orders {
+        grid-template-columns: 1fr;
+    }
+
+    .header h1 {
+        font-size: 34px;
+    }
+}
+
+/* hp */
+@media (max-width: 600px) {
+    body {
+        padding: 20px;
+    }
+
+    .header h1 {
+        font-size: 28px;
+    }
+
+    .header p {
+        font-size: 14px;
+    }
+
+    .filter-box {
+        padding: 16px;
+    }
+
+    .search,
+    .filter-btn {
+        width: 100%;
+    }
+
+    .card-top,
+    .card-body,
+    .total {
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+
+    .card h3 {
+        font-size: 20px;
+    }
+
+    .item {
+        font-size: 14px;
+    }
+
+    .total {
+        font-size: 18px;
+    }
+
+    .action {
+        flex-direction: column;
+        padding: 0 18px 18px;
+    }
+
+    .status {
+        float: none;
+        display: inline-block;
+        margin-left: 8px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    <h1>Daftar Pesanan</h1>
+    <p>Kelola pesanan yang masuk dari pembeli.</p>
+</div>
+
+<div class="filter-box">
+    <input type="text" class="search" placeholder="Cari nama atau kode pesanan...">
+    <button class="filter-btn active">Semua (5)</button>
+    <button class="filter-btn">Menunggu (1)</button>
+    <button class="filter-btn">Diproses (0)</button>
+    <button class="filter-btn">Selesai (1)</button>
+</div>
+
+<section class="orders">
+
+    <div class="card">
+        <div class="card-top">
+            <span class="order-id">ORD-001</span>
+            <span class="status waiting">Menunggu</span>
+            <h3>Skandinavia</h3>
+            <div class="info">Kelas X-RPL 2</div>
+            <div class="time">Pesan: 12.00 | Ambil: 13:00</div>
+        </div>
+
+        <div class="card-body">
+            <div class="item">
+                <span>1x Nasi Goreng</span>
+                <span>Rp 15.000</span>
+            </div>
+            <div class="item">
+                <span>1x Jus Jeruk</span>
+                <span>Rp 10.000</span>
+            </div>
+            <div class="note">Catatan: Jus nya gak usah pakai jeruk</div>
+        </div>
+
+        <div class="total">
+            <span>Total</span>
+            <span>Rp 25.000</span>
+        </div>
+
+        <div class="action">
+            <button class="accept">Terima</button>
+            <button class="cancel">Batalkan</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-top">
+            <span class="order-id">ORD-002</span>
+            <span class="status process">Diproses</span>
+            <h3>Rania Nurilah</h3>
+            <div class="info">Kelas X-RPL 2</div>
+            <div class="time">Pesan: 10:12 | Ambil: 12:00</div>
+        </div>
+
+        <div class="card-body">
+            <div class="item">
+                <span>2x Sate Ayam</span>
+                <span>Rp 30.000</span>
+            </div>
+            <div class="item">
+                <span>1x Es Teh</span>
+                <span>Rp 5.000</span>
+            </div>
+            <div class="note">Catatan: Sate nya gak usah pakai ayam</div>
+        </div>
+
+        <div class="total">
+            <span>Total</span>
+            <span>Rp 35.000</span>
+        </div>
+
+        <div class="action">
+            <button class="accept">Tandai Selesai</button>
+            <button class="detail">Detail</button>
+        </div>
+    </div>
+
+</section>
+
+</body>
+</html>

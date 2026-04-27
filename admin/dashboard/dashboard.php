@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="dashboard.CSS">
 </head>
 <body>
-<?php include '../3. komponen/sidebar.html'; ?>
+<?php include '../../3. komponen/sidebaradmin.html'; ?>
 <div class="content">
 <div class="container">
 

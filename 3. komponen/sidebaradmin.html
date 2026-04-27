@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sidebar</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    .sidebar {
+      width: 250px;
+      height: 100vh;
+      background: #f8fafc;
+      border-right: 1px solid #e2e8f0;
+      position: fixed;
+      left: 0;
+      top: 0;
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+      font-family: Arial, sans-serif;
+    }
+
+    .logo {
+      padding: 24px 20px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .logo h2 {
+      font-size: 24px;
+      color: #1e2937;
+    }
+
+    .logo p {
+      font-size: 13px;
+      color: #64748b;
+      margin-top: 4px;
+    }
+
+    .menu {
+      flex: 1;
+      padding: 12px 0;
+    }
+
+    .menu a {
+      display: block;
+      padding: 14px 24px;
+      text-decoration: none;
+      color: #334155;
+      font-size: 14.5px;
+      transition: all 0.2s;
+    }
+
+    .menu a:hover {
+      background: #f1f5f9;
+    }
+
+    .menu a.active {
+      background: #e0f2f1;
+      color: #10b981;
+      font-weight: 600;
+      border-left: 4px solid #10b981;
+    }
+
+    .logout {
+      padding: 16px 20px;
+      border-top: 1px solid #e2e8f0;
+      margin-top: auto;
+    }
+
+    .logout a {
+      display: block;
+      padding: 12px 20px;
+      color: #ef4444;
+      text-decoration: none;
+      transition: 0.2s;
+    }
+
+    .logout a:hover {
+      background: #fee2e2;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="logo">
+      <h2>Admin</h2>
+      <p>e-Kantin Sekolah</p>
+    </div>
+
+    <div class="menu">
+      <a href="../../admin/dashboard/dashboard.php">Dashboard</a>
+      <a href="../../admin/manajemenpengguna/user.php">Manajemen Pengguna</a>
+      <a href="../../admin/manajementoko/toko.php">Manajemen Toko</a>
+      <a href="../../admin/pengaturan.php">Pengaturan</a>
+    </div>
+
+    <div class="logout">
+      <a href="https://localhost/e-kantin/">Keluar</a>
+    </div>
+  </div>
+</body>
+</html>

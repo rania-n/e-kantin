@@ -8,7 +8,8 @@
 </head>
 
 <body>
-
+<?php include '../../3. komponen/sidebaradmin.html'; ?>
+<div class="content">
 <div class="container">
   <h2>Detail Pengguna</h2>
 
@@ -52,10 +53,11 @@
   </div>
 
   <div class="actions">
-    <a href="edituser.html" class="btn edit">Edit</a>
-    <a href="user.html" class="btn back">Kembali</a>
+    <a href="edituser.php" class="btn edit">Edit</a>
+    <a href="user.php" class="btn back">Kembali</a>
   </div>
 
+</div>
 </div>
 
 </body>

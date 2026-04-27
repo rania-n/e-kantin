@@ -1,14 +1,22 @@
-html, body {
-  height: 100%;
+/* ====================== GLOBAL ====================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
-  font-family: Arial;
+  font-family: Arial, sans-serif;
   background: #f3f4f6;
-  margin: 0;
-  padding: 10px;
+  color: #111827;
   min-height: 100vh;
-  overflow-x: hidden; /* ini penting banget */
+  overflow-x: hidden;
+}
+
+.content {
+  margin-left: 250px;
+  padding: 24px 20px;
+  min-height: 100vh;
 }
 
 .container {
@@ -18,16 +26,19 @@ body {
   padding: 0 10px;
 }
 
-/* HEADER */
+/* ====================== HEADER ====================== */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 25px;
+  flex-wrap: wrap;
+  gap: 15px;
 }
 
 .header h2 {
   margin: 0;
+  font-size: 22px;
 }
 
 .header p {
@@ -36,12 +47,12 @@ body {
   font-size: 14px;
 }
 
-/* BUTTON */
+/* ====================== BUTTON - MIRIP USER.CSS ====================== */
 .btn {
   background: #10b981;
   color: white;
   padding: 10px 18px;
-  border-radius: 10px;
+  border-radius: 8px;           /* tidak terlalu bulat */
   text-decoration: none;
   font-size: 14px;
   transition: 0.2s;
@@ -51,93 +62,95 @@ body {
   background: #059669;
 }
 
-/* RADIO */
+/* ====================== PERIOD SELECTOR ====================== */
 input[type="radio"] {
   display: none;
 }
 
 .period-selector {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   margin-bottom: 25px;
   flex-wrap: wrap;
 }
 
 .period-selector label {
-  padding: 8px 14px;
-  border: 1px solid #ddd;
-  border-radius: 999px;
+  padding: 8px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
   cursor: pointer;
   background: white;
-  font-size: 13px;
+  font-size: 14px;
   transition: 0.2s;
 }
 
 .period-selector label:hover {
-  background: #f0fdf4;
+  background: #f9fafb;
 }
 
-/* ACTIVE */
 #today:checked + label,
 #week:checked + label,
 #month:checked + label,
 #year:checked + label {
-  background: #10b981;
-  color: white;
-  border-color: #10b981;
+  background: #d1fae5;
+  color: #047857;
+  border-color: #a7f3d0;
 }
 
-/* CARD */
+/* ====================== CARD ====================== */
 .card {
-    width: 100%;
   background: white;
-  padding: 18px;
+  padding: 20px;
   border-radius: 16px;
   margin-bottom: 20px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.06);
 }
 
-/* STATS */
+/* ====================== STATS (TOTAL) - DIUBAH ====================== */
 .stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 12px;
+  margin-bottom: 25px;
 }
 
 .stats .card {
-  padding: 16px;
+  padding: 20px;
 }
 
 .stats h4 {
   margin: 0;
-  font-size: 13px;
+  font-size: 13.5px;
   color: #6b7280;
+  font-weight: 500;
 }
 
 .stats h2 {
-  margin: 5px 0;
-  font-size: 22px;
+  margin: 8px 0 6px;
+  font-size: 28px;
+  font-weight: 600;
 }
 
 .stats p {
-  font-size: 12px;
+  font-size: 12.5px;
   color: #9ca3af;
 }
 
-/* GRID */
+/* ====================== PRODUK TERLARIS & PENJUALAN KATEGORI - DIUBAH ====================== */
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 15px;
+  margin-bottom: 25px;
 }
 
-/* ITEM PRODUK */
 .item {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 12px 0;
   border-bottom: 1px solid #f1f1f1;
-  border-top: 1px solid #f1f1f1;
+  font-size: 14.5px;
 }
 
 .item:last-child {
@@ -146,17 +159,19 @@ input[type="radio"] {
 
 .item span {
   background: #ecfdf5;
-  padding: 4px 8px;
+  padding: 5px 10px;
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 500;
 }
 
-/* PROGRESS */
+/* Progress Bar untuk Penjualan Kategori */
 .progress {
   background: #e5e7eb;
-  height: 8px;
+  height: 9px;
   border-radius: 10px;
   overflow: hidden;
+  margin-top: 8px;
 }
 
 .progress div {
@@ -164,23 +179,41 @@ input[type="radio"] {
   background: #10b981;
 }
 
+/* ====================== TOP PEMBELI - DIUBAH ====================== */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: auto;
-}
-
-th {
-  font-size: 11px;
-  text-transform: uppercase;
-  color: #6b7280;
-  background: #f9fafb;
+  background: white;
+  min-width: 700px;
 }
 
 th, td {
-  padding: 12px;
-  border-bottom: 1px solid #eee;
+  padding: 14px 12px;
+  vertical-align: middle;
   text-align: left;
+}
+
+th {
+  font-size: 12.5px;
+  text-transform: uppercase;
+  color: #6b7280;
+  background: #f9fafb;
+  font-weight: 600;
+}
+
+tr {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+tr:hover {
+  background: #f9fafb;
 }
 
 /* SELLER */

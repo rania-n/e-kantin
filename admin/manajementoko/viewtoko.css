@@ -1,0 +1,218 @@
+/* ====================== RESET & GLOBAL ====================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #f3f4f6;
+  color: #111827;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ====================== CONTENT (untuk Sidebar) ====================== */
+.content {
+  margin-left: 250px;
+  padding: 24px 20px;
+  min-height: 100vh;
+}
+
+/* ====================== CONTAINER ====================== */
+.container {
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+/* ====================== TITLE ====================== */
+h2 {
+  font-size: 22px;
+  margin-bottom: 24px;
+  color: #111827;
+  font-weight: 600;
+}
+
+/* ====================== CARD ====================== */
+.card {
+  background: white;
+  padding: 28px;
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+  margin-bottom: 24px;
+}
+
+/* ====================== ROW (untuk Info Toko) ====================== */
+.row {
+  margin-bottom: 20px;
+}
+
+.row label {
+  display: block;
+  font-size: 13.5px;
+  color: #6b7280;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.row p {
+  font-size: 15.5px;
+  color: #111827;
+  padding: 11px 12px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+}
+
+/* ====================== BADGE ====================== */
+.badge {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.status {
+  background: #bbf7d0;
+  color: #166534;
+}
+
+/* ====================== STATS GRID ====================== */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-box {
+  background: white;
+  padding: 22px;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.stat-box h4 {
+  font-size: 12.5px;
+  color: #6b7280;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.stat-box p {
+  font-size: 26px;
+  font-weight: 700;
+  margin: 0;
+  color: #111827;
+}
+
+.green {
+  color: #10b981;
+}
+
+/* ====================== TABLE ====================== */
+h3 {
+  font-size: 18px;
+  margin-bottom: 18px;
+  color: #111827;
+  font-weight: 600;
+}
+
+.tabel-kantin {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabel-kantin th {
+  text-align: left;
+  font-size: 12.5px;
+  color: #6b7280;
+  padding: 14px 10px;
+  border-bottom: 2px solid #f3f4f6;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.tabel-kantin td {
+  padding: 14px 10px;
+  font-size: 14.5px;
+  border-bottom: 1px solid #f3f4f6;
+  color: #374151;
+}
+
+/* ====================== ACTIONS ====================== */
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 11px 20px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 14.5px;
+  font-weight: 500;
+  transition: 0.2s;
+  border: none;
+  cursor: pointer;
+}
+
+.edit {
+  background: #3b82f6;
+  color: white;
+}
+
+.edit:hover {
+  background: #2563eb;
+}
+
+.back {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.back:hover {
+  background: #d1d5db;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+/* ====================== RESPONSIVE ====================== */
+@media (max-width: 768px) {
+  .content {
+    margin-left: 0;
+    padding: 15px 10px;
+  }
+
+  .container {
+    margin: 0 10px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    padding: 22px;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+    text-align: center;
+  }
+}

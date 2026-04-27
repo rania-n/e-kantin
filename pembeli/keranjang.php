@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="keranjang.css">
 </head>
 <body>
-
     <div class="header">
         <h2>Keranjang</h2>
         <p>2 item • Siap dipesan</p>
@@ -146,6 +145,6 @@
             </div>
         </div>
     </div>
-
+<?php include '../3. komponen/navbarpembeli.html'; ?>
 </body>
 </html>

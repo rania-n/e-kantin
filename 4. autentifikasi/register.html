@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Poppins',sans-serif;
+}
+
+body{
+  min-height:100vh;
+  background:linear-gradient(135deg,#ffcf91,#ff5e00);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:clamp(16px, 4vw, 60px);
+}
+
+.container{
+  width:min(75vw, 900px);
+  background:white;
+  border-radius:clamp(14px, 2vw, 26px);
+  padding:clamp(24px, 5vw, 70px);
+  box-shadow:0 15px 35px rgba(0,0,0,0.2);
+}
+
+h2{
+  text-align:center;
+  font-size:clamp(24px, 4vw, 44px);
+  margin-bottom:clamp(6px, 1vw, 14px);
+}
+
+.sub{
+  text-align:center;
+  font-size:clamp(13px, 2vw, 20px);
+  color:#777;
+  margin-bottom:clamp(20px, 4vw, 42px);
+}
+
+input{
+  width:100%;
+  padding:clamp(12px, 2vw, 22px);
+  font-size:clamp(14px, 2vw, 22px);
+  margin-bottom:clamp(12px, 2vw, 22px);
+  border-radius:clamp(8px, 1.5vw, 14px);
+  border:1px solid #ccc;
+}
+
+.pass-wrap{
+  position:relative;
+}
+
+.eye{
+  position:absolute;
+  right:clamp(10px, 2vw, 20px);
+  top:clamp(12px, 2vw, 22px);
+  cursor:pointer;
+  font-size:clamp(14px, 2vw, 20px);
+}
+
+button{
+  width:100%;
+  padding:clamp(13px, 2vw, 22px);
+  font-size:clamp(15px, 2vw, 22px);
+  border:none;
+  border-radius:clamp(8px, 1.5vw, 14px);
+  background:#d14d00;
+  color:white;
+  cursor:pointer;
+  font-weight:600;
+}
+
+.link{
+  text-align:center;
+  margin-top:clamp(14px, 2vw, 24px);
+  font-size:clamp(13px, 1.5vw, 18px);
+}
+
+@media (max-width:600px){
+  .container{
+    width:100%;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h2>Register</h2>
+  <div class="sub">Daftar sebagai Pembeli</div>
+
+  <input type="text" id="user" placeholder="Email atau No HP">
+
+  <div class="pass-wrap">
+    <input type="password" id="pass" placeholder="Password">
+    <span class="eye" onclick="togglePassword()">👁</span>
+  </div>
+
+  <button onclick="register()">Register</button>
+
+  <div class="link">
+    Sudah punya akun? <a href="login.html">Login</a>
+  </div>
+
+</div>
+
+<script>
+function togglePassword(){
+  const pass = document.getElementById("pass");
+  pass.type = pass.type === "password" ? "text" : "password";
+}
+
+function register(){
+  const user = document.getElementById("user").value.trim();
+  const pass = document.getElementById("pass").value.trim();
+
+  if(user === "" || pass === ""){
+    alert("Isi email/no HP dan password dulu ya!");
+    return;
+  }
+
+  window.location.href = "login.html";
+}
+</script>
+
+</body>
+</html>
