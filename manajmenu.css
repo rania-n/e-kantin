@@ -1,0 +1,129 @@
+/* 1. RESET & GLOBAL */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f5f5f5;
+    display: flex; /* Menggunakan flexbox untuk layout utama */
+}
+
+/* ========================= */
+/* 2. LAYOUT UTAMA */
+/* ========================= */
+.container {
+    display: flex;
+    width: 100%;
+}
+
+.sidebar {
+    width: 240px;
+    height: 100vh;
+    background: #007f5f;
+    color: white;
+    padding: 30px 20px;
+    position: fixed; /* Tetap di kiri di desktop */
+    top: 0;
+    left: 0;
+}
+
+.main-content {
+    flex: 1;
+    padding: 40px;
+    margin-left: 240px; /* Memberi ruang untuk sidebar fixed */
+}
+
+/* ========================= */
+/* 3. SIDEBAR COMPONENTS */
+/* ========================= */
+.logo { display: flex; align-items: center; gap: 12px; margin-bottom: 35px; }
+.logo img { width: 50px; height: 50px; object-fit: cover; border-radius: 50%; background: white; padding: 5px; }
+.sidebar ul { list-style: none; }
+.sidebar ul li { padding: 15px; margin-bottom: 10px; border-radius: 10px; cursor: pointer; transition: 0.3s; font-weight: 500; }
+.sidebar ul li:hover, .sidebar ul li.active { background: #016d53; }
+
+/* ========================= */
+/* 4. CONTENT & COMPONENTS */
+/* ========================= */
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+.btn-add { background: #00a86b; color: white; text-decoration: none; padding: 14px 22px; border-radius: 10px; font-weight: bold; display: inline-block; }
+
+.menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 20px; }
+.card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+.card img { width: 100%; height: 180px; object-fit: cover; }
+.card h3 { padding: 15px 20px 5px; }
+.card span { display: block; padding: 15px 20px; color: #00a86b; font-weight: bold; }
+
+/* ========================= */
+/* 5. MODAL (SINGLE DEFINITION) */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    display: none; /* Default tersembunyi */
+    justify-content: center;
+    align-items: center; /* Center secara vertikal */
+    padding: 20px;       /* Biar nggak nempel ke pinggir layar */
+    overflow-y: auto;    /* Ini yang membuat seluruh modal bisa di-scroll */
+    z-index: 9999;       /* Pastikan paling depan */
+}
+
+/* 2. Modal Content: Fokus ke batasan tinggi */
+.modal-content {
+    background: white;
+    width: 100%;
+    max-width: 500px;
+    border-radius: 14px;
+    padding: 24px;
+    
+    /* PENTING: Batasi tinggi dan buat konten di dalamnya scrollable */
+    max-height: 90vh;    /* Modal tidak akan lebih tinggi dari 90% layar */
+    overflow-y: auto;    /* Jika konten kepanjangan, muncul scrollbar */
+    
+    /* Efek visual */
+    box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+}
+
+.modal:target {
+    display: flex; /* Muncul saat target (link) diklik */
+}
+
+@media (max-width: 768px) {
+    /* 1. Ubah container jadi tumpuk ke bawah */
+    .container {
+        flex-direction: column; 
+    }
+
+    /* 2. Matikan sifat 'fixed' pada sidebar */
+    .sidebar {
+        position: relative; /* Mengembalikan sidebar ke alur normal */
+        width: 100%;        /* Lebar penuh */
+        height: auto;       /* Tinggi menyesuaikan konten */
+        padding: 20px;      /* Sesuaikan padding */
+    }
+
+    /* 3. Hilangkan margin pada konten utama agar tidak terpotong */
+    .main-content {
+        margin-left: 0;
+        padding: 20px;
+    }
+
+    /* 4. Opsional: Buat menu sidebar jadi mendatar (horizontal) agar hemat tempat */
+    .sidebar ul {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 15px;
+    }
+    
+    .sidebar ul li {
+        margin-bottom: 0;
+        padding: 10px 15px;
+    }
+}
