@@ -19,18 +19,6 @@
             display: flex;
         }
 
-        /* SIDEBAR */
-        .sidebar {
-            width: 250px;
-            height: 100vh;
-            background: #064e3b;
-            color: white;
-            padding: 24px 20px;
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 1000;
-        }
 
         .logo {
             display: flex;
@@ -47,25 +35,6 @@
             padding: 6px;
         }
 
-        .sidebar ul {
-            list-style: none;
-        }
-
-        .sidebar ul li {
-            padding: 13px 16px;
-            margin-bottom: 6px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 500;
-            font-size: 14.5px;
-            transition: 0.2s;
-        }
-
-        .sidebar ul li:hover,
-        .sidebar ul li.active {
-            background: #065f46;
-        }
-
         /* MAIN CONTENT */
         .main {
             flex: 1;
@@ -78,9 +47,8 @@
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 24px;
+          margin-bottom: 25px;
           flex-wrap: wrap;
-          gap: 15px;
         }
 
         .header h1 {

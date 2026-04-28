@@ -5,13 +5,25 @@
   box-sizing: border-box;
 }
 
+/* GANTI BAGIAN INI */
+
 body {
   font-family: Arial, sans-serif;
-  background: #f3f4f6;
+  background: #064e3b;        /* sama dengan sidebar */
   color: #111827;
   min-height: 100vh;
   overflow-x: hidden;
   display: flex;
+}
+
+/* Tambahkan background ke .main */
+.main {
+  flex: 1;
+  margin-left: 250px;
+  padding: 32px 40px;
+  min-width: 0;
+  background: #f8fafc;        /* putih bersih untuk konten */
+  min-height: 100vh;          /* penting! */
 }
 
 /* ====================== SIDEBAR ====================== */
@@ -27,31 +39,45 @@ body {
   left: 0;
   z-index: 1000;
   overflow-y: auto;
+  
+  /* Flexbox biar logout bisa di pojok bawah */
+  display: flex;
+  flex-direction: column;
 }
 
 .logo {
   display: flex;
-  align-items: center;
+  align-items:center;
   gap: 12px;
-  margin-bottom: 40px;
+  padding: 0 20px 16px; 
+  margin-bottom: 18px; 
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .logo h2 {
   font-size: 24px;
   color: white;
-  margin: 0;
 }
+
+.logo p {
+    font-size: 13px;
+    color: #ffffff;
+    margin-top: 4px;
+  }
+
 
 .sidebar ul {
   list-style: none;
-  margin: 0 0 30px 0;
+  margin: 0;
+  padding: 0;
+  flex-grow: 1;           /* ini yang bikin menu "mendorong" logout ke bawah */
 }
 
 .sidebar ul li {
   margin-bottom: 6px;
 }
 
-.sidebar ul li a {
+.sidebar ul li a{
   display: block;
   padding: 14px 18px;
   color: white;
@@ -59,12 +85,26 @@ body {
   font-size: 15px;
   font-weight: 500;
   border-radius: 8px;
-  transition: 0.2s;
 }
 
-.sidebar ul li:hover a,
-.sidebar ul li.active a {
-  background: #065f46;
+.logout a {
+  display: block;
+  padding: 10px 18px 5px 18px;
+  color: white;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  border-radius: 8px;
+}
+
+.sidebar a:hover ,.logout a:hover {
+  background: #10b981;
+}
+
+.logout {
+  margin-top: auto;          /* ini kuncinya! */
+  border-top: 1px solid #e2e8f0;
+  padding: 17px 0 0;
 }
 
 /* ====================== MAIN CONTENT ====================== */
@@ -72,17 +112,19 @@ body {
   flex: 1;
   margin-left: 250px;
   padding: 32px 40px;
+  background: #f8fafc;
+  min-height: 100vh;
   min-width: 0;
 }
 
 /* ====================== HEADER ====================== */
+
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 28px;
+  margin-bottom: 25px;
   flex-wrap: wrap;
-  gap: 15px;
 }
 
 .header h1 {
@@ -91,9 +133,9 @@ body {
 }
 
 .header p {
-  font-size: 15px;
+  font-size: 14px;
   color: #6b7280;
-  margin-top: 4px;
+  margin: 5px 0 0;
 }
 
 /* ====================== BUTTON TAMBAH ====================== */
@@ -295,3 +337,5 @@ body {
   color: white !important;
   text-decoration: none;
 }
+
+
