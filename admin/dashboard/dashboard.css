@@ -136,7 +136,7 @@ input[type="radio"] {
   color: #C88EA7;
 }
 
-/* ====================== PRODUK TERLARIS & KATEGORI ====================== */
+/* ====================== GRID ====================== */
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -165,7 +165,7 @@ input[type="radio"] {
   font-weight: 500;
 }
 
-/* Progress Bar */
+/* ====================== PROGRESS ====================== */
 .bar {
   margin-bottom: 16px;
 }
@@ -173,7 +173,6 @@ input[type="radio"] {
 .bar p {
   margin-bottom: 6px;
   font-size: 14px;
-  color: #643843;
 }
 
 .progress {
@@ -188,7 +187,7 @@ input[type="radio"] {
   background: #99627A;
 }
 
-/* ====================== TABLE & SELLER ====================== */
+/* ====================== TABLE ====================== */
 .table-wrapper {
   width: 100%;
   overflow-x: auto;
@@ -205,7 +204,6 @@ table {
 
 th, td {
   padding: 14px 12px;
-  vertical-align: middle;
   text-align: left;
 }
 
@@ -214,7 +212,6 @@ th {
   text-transform: uppercase;
   color: #99627A;
   background: #E7CBCB;
-  font-weight: 600;
 }
 
 tr {
@@ -225,6 +222,41 @@ tr:hover {
   background: #E7CBCB;
 }
 
+/* ====================== AKSI BARU ====================== */
+.aksi-group {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.aksi-group input {
+  display: none;
+}
+
+.aksi-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #E7CBCB;
+  cursor: pointer;
+  transition: 0.2s;
+  font-size: 14px;
+}
+
+.aksi-btn:hover {
+  background: #C88EA7;
+  color: white;
+}
+
+.aksi-group input:checked + .aksi-btn {
+  background: #99627A;
+  color: white;
+}
+
+/* ====================== SELLER ====================== */
 .seller-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -236,73 +268,17 @@ tr:hover {
   padding: 15px;
   border-radius: 14px;
   background: white;
-  transition: 0.2s;
 }
 
-.seller-card:hover {
-  transform: translateY(-3px);
-}
-
-.seller-card small {
-  color: #99627A;
-}
-
-.seller-card p {
-  margin: 6px 0;
-}
-
-/* BADGE AKTIF — DIUBAH JADI HIJAU */
 .badge {
   background: #7fc88c;
   color: white;
   padding: 5px 12px;
   border-radius: 999px;
   font-size: 12px;
-  font-weight: 600;
 }
 
-/* SELLER CARD UPGRADE */
-.seller-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.icon {
-  width: 45px;
-  height: 45px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-}
-
-.gold { background: #E7CBCB; color: #643843; }
-.silver { background: #E7CBCB; color: #643843; }
-.bronze { background: #E7CBCB; color: #643843; }
-
-.rating span {
-  color: #99627A;
-}
-
-.shop-icon {
-  width: 40px;
-  height: 40px;
-  background: #E7CBCB;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-hr {
-  border: none;
-  border-top: 1px solid #E7CBCB;
-  margin: 10px 0;
-}
-
-/* RESPONSIVE */
+/* ====================== RESPONSIVE ====================== */
 @media(max-width:768px){
   .stats { grid-template-columns: 1fr 1fr; }
   .grid { grid-template-columns: 1fr; }
@@ -312,7 +288,6 @@ hr {
 @media (max-width: 480px) {
   .stats { grid-template-columns: 1fr; }
   .grid { grid-template-columns: 1fr; }
-  .seller-grid { grid-template-columns: 1fr; }
 }
 
 @media (min-width: 1400px) {

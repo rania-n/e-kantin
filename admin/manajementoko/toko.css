@@ -77,16 +77,16 @@ table {
 th, td {
   padding: 15px 14px;
   text-align: left;
+  white-space: normal;
+  word-break: break-word;
 }
 
-tr {
-  border-bottom: 1px solid #f3f4f6;
-}
-
-/* CENTER KHUSUS */
-.center {
-  text-align: center;
-}
+/* Kolom fleksibel (bisa kamu sesuaikan lagi nanti) */
+th:nth-child(1), td:nth-child(1) { width: 38%; }   /* nama user */
+th:nth-child(2), td:nth-child(2) { width: 18%; }   /* role / tipe */
+th:nth-child(3), td:nth-child(3) { width: 15%; text-align: center; }
+th:nth-child(4), td:nth-child(4) { width: 15%; text-align: center; }
+th:nth-child(5), td:nth-child(5) { width: 14%; text-align: center; }
 
 /* USER */
 .user {

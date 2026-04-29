@@ -8,127 +8,125 @@
 </head>
 
 <body>
-    <?php include '../../3. komponen/sidebaradmin.html'; ?>
+<?php include '../../3. komponen/sidebaradmin.html'; ?>
 
-    <div class="content">   <!-- ← Tambahkan ini supaya tidak ketiban sidebar -->
+<div class="content">
 
-        <div class="header">
-            <div>
-                <h2>Manajemen Pengguna</h2>
-                <p>Manage semua pengguna sistem e-Kantin</p>
-            </div>
-            <a href="#" class="btn">+ Tambah Penjual</a>
+    <div class="header">
+        <div>
+            <h2>Manajemen Pengguna</h2>
+            <p>Manage semua pengguna sistem e-Kantin</p>
         </div>
-
-        <!-- tabs -->
-        <div class="tabs">
-            <input type="radio" name="tab" id="all" checked>
-            <label for="all" class="tab">Semua (4)</label>
-
-            <input type="radio" name="tab" id="admin">
-            <label for="admin" class="tab">Admin (1)</label>
-
-            <input type="radio" name="tab" id="seller">
-            <label for="seller" class="tab">Penjual (2)</label>
-
-            <input type="radio" name="tab" id="student">
-            <label for="student" class="tab">Pembeli (1)</label>
-        </div>
-
-        <!-- search -->
-        <div class="search">
-            <input type="text" placeholder="Cari nama, email, atau username...">
-        </div>
-
-        <!-- table -->
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Pengguna</th>
-                        <th>Username</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>
-                            <div class="user">
-                                <div class="avatar">👤</div>
-                                <div>
-                                    <div>Admin Kantin</div>
-                                    <small>admin@sekolah.sch.id</small>
-                                </div>
-                            </div>
-                        </td>
-                        <td>admin</td>
-                        <td><span class="badge admin">Admin</span></td>
-                        <td><span class="badge status">Aktif</span></td>
-                        <td>
-                            <div class="aksi-box">
-                                <div class="aksi-btn">⋮</div>
-                                <div class="dropdown">
-                                    <a href="viewuser.php">👁 View</a>
-                                    <a href="edituser.php">✏️ Edit</a>
-                                    <a href="#" class="delete">🗑 Hapus</a>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <div class="user">
-                                <div class="avatar">👤</div>
-                                <div>
-                                    <div>Ibu Siti</div>
-                                    <small>siti@sekolah.sch.id</small>
-                                </div>
-                            </div>
-                        </td>
-                        <td>seller1</td>
-                        <td><span class="badge seller">Penjual</span></td>
-                        <td><span class="badge status">Aktif</span></td>
-                        <td>
-                            <div class="aksi-box">
-                                <div class="aksi-btn">⋮</div>
-                                <div class="dropdown">
-                                    <a href="viewuser.php">👁 View</a>
-                                    <a href="edituser.php">✏️ Edit</a>
-                                    <a href="#" class="delete">🗑 Hapus</a>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <div class="user">
-                                <div class="avatar">👤</div>
-                                <div>
-                                    <div>Ahmad Rizki</div>
-                                    <small>ahmad@sekolah.sch.id</small>
-                                </div>
-                            </div>
-                        </td>
-                        <td>ahmad</td>
-                        <td><span class="badge student">Pembeli</span></td>
-                        <td><span class="badge status">Aktif</span></td>
-                        <td>
-                            <div class="aksi-box">
-                                <div class="aksi-btn">⋮</div>
-                                <div class="dropdown">
-                                    <a href="viewuser.php">👁 View</a>
-                                    <a href="edituser.php">✏️ Edit</a>
-                                    <a href="#" class="delete">🗑 Hapus</a>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
+        <a href="#" class="btn">+ Tambah Penjual</a>
     </div>
+
+    <div class="tabs">
+        <input type="radio" name="tab" id="all" checked>
+        <label for="all" class="tab">Semua (4)</label>
+
+        <input type="radio" name="tab" id="admin">
+        <label for="admin" class="tab">Admin (1)</label>
+
+        <input type="radio" name="tab" id="seller">
+        <label for="seller" class="tab">Penjual (2)</label>
+
+        <input type="radio" name="tab" id="student">
+        <label for="student" class="tab">Pembeli (1)</label>
+    </div>
+
+    <div class="search">
+        <input type="text" placeholder="Cari nama, email, atau username...">
+    </div>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Pengguna</th>
+                    <th>Username</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th style="text-align:center;">Aksi</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr>
+                    <td>
+                        <div class="user">
+                            <div class="avatar">👤</div>
+                            <div>
+                                <div>Admin Kantin</div>
+                                <small>admin@sekolah.sch.id</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>admin</td>
+                    <td><span class="badge role">Admin</span></td>
+                    <td style="text-align:center;">
+                        <span class="badge status">Aktif</span>
+                    </td>
+                    <td>
+                        <div class="aksi-box">
+                            <a href="viewuser.php" class="aksi-icon">👁</a>
+                            <a href="edituser.php" class="aksi-icon">✏️</a>
+                            <a href="#" class="aksi-icon delete">🗑</a>
+                        </div>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="user">
+                            <div class="avatar">👤</div>
+                            <div>
+                                <div>Ibu Siti</div>
+                                <small>siti@sekolah.sch.id</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>seller1</td>
+                    <td><span class="badge role">Penjual</span></td>
+                    <td style="text-align:center;">
+                        <span class="badge status">Aktif</span>
+                    </td>
+                    <td>
+                        <div class="aksi-box">
+                            <a href="viewuser.php" class="aksi-icon">👁</a>
+                            <a href="edituser.php" class="aksi-icon">✏️</a>
+                            <a href="#" class="aksi-icon delete">🗑</a>
+                        </div>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="user">
+                            <div class="avatar">👤</div>
+                            <div>
+                                <div>Ahmad Rizki</div>
+                                <small>ahmad@sekolah.sch.id</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>ahmad</td>
+                    <td><span class="badge role">Pembeli</span></td>
+                    <td style="text-align:center;">
+                        <span class="badge status">Aktif</span>
+                    </td>
+                    <td>
+                        <div class="aksi-box">
+                            <a href="viewuser.php" class="aksi-icon">👁</a>
+                            <a href="edituser.php" class="aksi-icon">✏️</a>
+                            <a href="#" class="aksi-icon delete">🗑</a>
+                        </div>
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+</div>
 </body>
 </html>
