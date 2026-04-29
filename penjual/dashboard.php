@@ -53,7 +53,7 @@
         
         .header h1 {
           font-size: 28px;
-          color: #064e3b;
+          color: #643843;
         }
         
         .header p {
@@ -97,7 +97,7 @@
 
         .card p {
             font-size: 14px;
-            color: #10b981;
+            color: #643843;
         }
 
         /* GRID BOXES */
@@ -116,7 +116,7 @@
 
         .box h3 {
             font-size: 15px;
-            color: #064e3b;
+            color: #643843;
             margin-bottom: 16px;
             font-weight: 600;
         }
@@ -178,7 +178,7 @@
 
         .bar {
             height: 100%;
-            background: #10b981;
+            background: #643843;
             border-radius: 999px;
         }
 

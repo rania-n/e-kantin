@@ -1,0 +1,115 @@
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #E7CBCB, #643843);
+  padding: clamp(16px, 4vw, 60px);
+}
+
+.container {
+  width: min(75vw, 900px);
+  min-height: 55vh;
+  background: white;
+  padding: clamp(28px, 5vw, 65px);
+  border-radius: clamp(16px, 2vw, 26px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+h2 {
+  text-align: center;
+  font-size: clamp(26px, 4vw, 42px);
+  margin-bottom: 10px;
+  color: #150c09;
+}
+
+.sub {
+  text-align: center;
+  font-size: clamp(14px, 2vw, 20px);
+  color: #777;
+  margin-bottom: clamp(24px, 4vw, 40px);
+}
+
+input {
+  width: 100%;
+  padding: clamp(13px, 2vw, 22px);
+  font-size: clamp(15px, 2vw, 22px);
+  margin-bottom: clamp(14px, 2vw, 22px);
+  border-radius: clamp(9px, 1.5vw, 14px);
+  border: 1px solid #ccc;
+  transition: all 0.3s ease;
+}
+
+input:focus {
+  outline: none;
+  border-color: #643843;
+  box-shadow: 0 0 0 3px rgba(100, 56, 67, 0.1);
+}
+
+.pass-wrap {
+  position: relative;
+}
+
+.eye {
+  position: absolute;
+  right: clamp(12px, 2vw, 20px);
+  top: clamp(13px, 2vw, 22px);
+  cursor: pointer;
+  font-size: clamp(15px, 2vw, 20px);
+  color: #777;
+}
+
+button {
+  width: 100%;
+  padding: clamp(14px, 2vw, 22px);
+  font-size: clamp(15px, 2vw, 22px);
+  border: none;
+  border-radius: clamp(9px, 1.5vw, 14px);
+  background: #643843;
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  margin-top: 8px;
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  background: #8a4f5e;
+  transform: translateY(-2px);
+}
+
+.google {
+  background: white;
+  color: #333;
+  border: 1px solid #ccc;
+  margin-top: 12px;
+}
+
+.google:hover {
+  background: #f8f8f8;
+}
+
+.link {
+  text-align: center;
+  margin-top: clamp(14px, 2vw, 24px);
+  font-size: clamp(13px, 1.5vw, 18px);
+}
+
+@media (max-width: 600px) {
+  .container {
+    width: 100%;
+    min-height: auto;
+    padding: clamp(24px, 5vw, 45px);
+  }
+}
