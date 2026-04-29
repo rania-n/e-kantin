@@ -11,7 +11,6 @@
 <div class="content">
 <div class="container">
 
-  <!-- HEADER -->
   <div class="header">
     <div>
       <h2>Dashboard</h2>
@@ -19,7 +18,6 @@
     </div>
   </div>
 
-  <!-- PERIOD -->
   <div class="period-selector">
     <input type="radio" id="today" name="period" checked>
     <label for="today">Hari Ini</label>
@@ -34,7 +32,6 @@
     <label for="year">Tahun</label>
   </div>
 
-  <!-- GLOBAL STATS -->
   <div class="stats">
     <div class="card">
       <h4>Total Pembeli</h4>
@@ -61,10 +58,8 @@
     </div>
   </div>
 
-  <!-- GRID -->
   <div class="grid">
 
-    <!-- PRODUK -->
     <div class="card">
       <h3>Produk Terlaris</h3>
 
@@ -75,7 +70,6 @@
       <div class="item"><span>#5</span><p>Soto Ayam</p><b>Rp 2.6 Jt</b></div>
     </div>
 
-    <!-- KATEGORI -->
     <div class="card">
       <h3>Penjualan Kategori</h3>
 
@@ -102,7 +96,6 @@
 
   </div>
 
-  <!-- TOP PEMBELI -->
   <div class="card">
     <h3>Top Pembeli</h3>
     <div class="table-wrapper">
@@ -123,66 +116,6 @@
     </div>
   </div>
 
-  <!-- RATING PENJUAL -->
-  <div class="card">
-    <h3>Rating Penjual Tertinggi</h3>
-
-    <div class="seller-card">
-      <div class="seller-header">
-        <div class="icon gold">🥇</div>
-        <div>
-          <b>Ibu Siti</b>
-          <small>Kantin Sehat</small>
-        </div>
-      </div>
-      <div class="rating">
-        ⭐ <b>4.9</b> <span>(328 reviews)</span>
-      </div>
-      <hr>
-      <div class="seller-info">
-        <p>Revenue <b>Rp 45.2 Jt</b></p>
-        <p>Pesanan <b>892</b></p>
-      </div>
-    </div>
-  
-    <div class="seller-card">
-      <div class="seller-header">
-        <div class="icon silver">🥈</div>
-        <div>
-          <b>Pak Joko</b>
-          <small>Warung Nasi</small>
-        </div>
-      </div>
-      <div class="rating">
-        ⭐ <b>4.8</b> <span>(256 reviews)</span>
-      </div>
-      <hr>
-      <div class="seller-info">
-        <p>Revenue <b>Rp 38.5 Jt</b></p>
-        <p>Pesanan <b>751</b></p>
-      </div>
-    </div>
-    
-    <div class="seller-card">
-      <div class="seller-header">
-        <div class="icon bronze">🥉</div>
-        <div>
-          <b>Bu Ani</b>
-          <small>Kedai Minuman</small>
-        </div>
-      </div>
-      <div class="rating">
-        ⭐ <b>4.7</b> <span>(189 reviews)</span>
-      </div>
-      <hr>
-      <div class="seller-info">
-        <p>Revenue <b>Rp 28.3 Jt</b></p>
-        <p>Pesanan <b>598</b></p>
-      </div>
-    </div>
-  </div>
-
-  <!-- LAPORAN TOKO -->
   <div class="card">
     <h3>Laporan Toko</h3>
 
@@ -195,46 +128,53 @@
         <th>Produk</th>
         <th>Rating</th>
         <th>Status</th>
+        <th>Aksi</th>
       </tr>
 
       <tr>
-        <td>
-          <div class="shop-icon">🏪</div>
-          Kantin Sehat
-        </td>
+        <td>Kantin Sehat</td>
         <td>Ibu Siti</td>
         <td>Rp 45.2 Jt</td>
         <td>892</td>
         <td>48</td>
         <td>⭐ 4.9</td>
         <td><span class="badge">Aktif</span></td>
+        <td>
+          <div class="aksi-group">
+            <input type="radio" name="aksi1" id="view1">
+            <label for="view1" class="aksi-btn">👁️</label>
+
+            <input type="radio" name="aksi1" id="edit1">
+            <label for="edit1" class="aksi-btn">✏️</label>
+
+            <input type="radio" name="aksi1" id="delete1">
+            <label for="delete1" class="aksi-btn">🗑️</label>
+          </div>
+        </td>
       </tr>
 
       <tr>
-        <td>
-          <div class="shop-icon">🏪</div>
-          Warung Nasi
-        </td>
+        <td>Warung Nasi</td>
         <td>Pak Joko</td>
         <td>Rp 38.5 Jt</td>
         <td>742</td>
         <td>35</td>
         <td>⭐ 4.8</td>
         <td><span class="badge">Aktif</span></td>
+        <td>
+          <div class="aksi-group">
+            <input type="radio" name="aksi2" id="view2">
+            <label for="view2" class="aksi-btn">👁️</label>
+
+            <input type="radio" name="aksi2" id="edit2">
+            <label for="edit2" class="aksi-btn">✏️</label>
+
+            <input type="radio" name="aksi2" id="delete2">
+            <label for="delete2" class="aksi-btn">🗑️</label>
+          </div>
+        </td>
       </tr>
 
-      <tr>
-        <td>
-          <div class="shop-icon">🏪</div>
-          Kedai Minuman
-        </td>
-        <td>Bu Ani</td>
-        <td>Rp 28.3 Jt</td>
-        <td>586</td>
-        <td>28</td>
-        <td>⭐ 4.7</td>
-        <td><span class="badge">Aktif</span></td>
-      </tr>
     </table>
   </div>
 

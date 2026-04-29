@@ -8,118 +8,108 @@
 </head>
 
 <body>
-    <?php include '../../3. komponen/sidebaradmin.html'; ?>
+<?php include '../../3. komponen/sidebaradmin.html'; ?>
 
-    <div class="content">
+<div class="content">
 
-        <div class="header">
-            <div>
-                <h2>Manajemen Toko</h2>
-                <p>Manage semua toko dalam sistem e-Kantin</p>
-            </div>
-            <a href="#" class="btn">+ Tambah Toko</a>
+    <div class="header">
+        <div>
+            <h2>Manajemen Toko</h2>
+            <p>Manage semua toko dalam sistem e-Kantin</p>
         </div>
-
-        <!-- Search (opsional, tapi konsisten dengan halaman pengguna) -->
-        <div class="search">
-            <input type="text" placeholder="Cari nama toko atau username pemilik...">
-        </div>
-
-        <!-- Table -->
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Nama Toko</th>
-                        <th>Username Pemilik</th>
-                        <th>Status</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-
-                    <tr>
-                        <td>
-                            <div class="user">
-                                <div class="avatar">🏪</div>
-                                <div>
-                                    <div>Kantin Bu Siti</div>
-                                    <small>Makanan & Minuman</small>
-                                </div>
-                            </div>
-                        </td>
-                        <td>seller1</td>
-                        <td>
-                            <span class="badge status">Aktif</span>
-                        </td>
-                        <td>
-                            <div class="aksi-box">
-                                <button class="aksi-btn">⋮</button>
-                                <div class="dropdown">
-                                    <a href="viewtoko.php">👁 View</a>
-                                    <a href="edittoko.php">✏ Edit</a>
-                                    <a href="#" class="delete">🗑 Hapus</a>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <td>
-                            <div class="user">
-                                <div class="avatar">🏪</div>
-                                <div>
-                                    <div>Kantin Pak Dian</div>
-                                    <small>Makanan & Minuman</small>
-                                </div>
-                            </div>
-                        </td>
-                        <td>seller2</td>
-                        <td>
-                            <span class="badge status">Aktif</span>
-                        </td>
-                        <td>
-                            <div class="aksi-box">
-                                <button class="aksi-btn">⋮</button>
-                                <div class="dropdown">
-                                    <a href="viewtoko.php">👁 View</a>
-                                    <a href="edittoko.php">✏ Edit</a>
-                                    <a href="#" class="delete">🗑 Hapus</a>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <td>
-                            <div class="user">
-                                <div class="avatar">🏪</div>
-                                <div>
-                                    <div>Kantin Kak Ros</div>
-                                    <small>Makanan & Minuman</small>
-                                </div>
-                            </div>
-                        </td>
-                        <td>seller3</td>
-                        <td>
-                            <span class="badge status">Aktif</span>
-                        </td>
-                        <td>
-                            <div class="aksi-box">
-                                <button class="aksi-btn">⋮</button>
-                                <div class="dropdown">
-                                    <a href="viewtoko.php">👁 View</a>
-                                    <a href="edittoko.php">✏ Edit</a>
-                                    <a href="#" class="delete">🗑 Hapus</a>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-
-                </tbody>
-            </table>
-        </div>
-
+        <a href="#" class="btn">+ Tambah Toko</a>
     </div>
+
+    <div class="search">
+        <input type="text" placeholder="Cari nama toko atau username pemilik...">
+    </div>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nama Toko</th>
+                    <th>Username Pemilik</th>
+                    <th class="center">Status</th>
+                    <th class="center">Aksi</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="user">
+                            <div class="avatar">🏪</div>
+                            <div>
+                                <div>Kantin Bu Siti</div>
+                                <small>Makanan & Minuman</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>seller1</td>
+                    <td class="center">
+                        <span class="badge status">Aktif</span>
+                    </td>
+                    <td class="center">
+                        <div class="aksi-box">
+                            <a href="viewtoko.php" class="aksi-icon">👁</a>
+                            <a href="edittoko.php" class="aksi-icon">✏️</a>
+                            <a href="#" class="aksi-icon delete">🗑</a>
+                        </div>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="user">
+                            <div class="avatar">🏪</div>
+                            <div>
+                                <div>Kantin Pak Dian</div>
+                                <small>Makanan & Minuman</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>seller2</td>
+                    <td class="center">
+                        <span class="badge status">Aktif</span>
+                    </td>
+                    <td class="center">
+                        <div class="aksi-box">
+                            <a href="viewtoko.php" class="aksi-icon">👁</a>
+                            <a href="edittoko.php" class="aksi-icon">✏️</a>
+                            <a href="#" class="aksi-icon delete">🗑</a>
+                        </div>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="user">
+                            <div class="avatar">🏪</div>
+                            <div>
+                                <div>Kantin Kak Ros</div>
+                                <small>Makanan & Minuman</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>seller3</td>
+                    <td class="center">
+                        <span class="badge status">Aktif</span>
+                    </td>
+                    <td class="center">
+                        <div class="aksi-box">
+                            <a href="viewtoko.php" class="aksi-icon">👁</a>
+                            <a href="edittoko.php" class="aksi-icon">✏️</a>
+                            <a href="#" class="aksi-icon delete">🗑</a>
+                        </div>
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+</div>
 </body>
 </html>
