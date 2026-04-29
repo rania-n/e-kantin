@@ -24,11 +24,9 @@ $result = mysqli_query($conn, $query);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>E-Kantin - Beranda</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="navbar.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-
     <header>
         <h5>pembeli</h5>
         <h1>Halo, Budi Santoso! 👋</h1>
@@ -75,6 +73,7 @@ $result = mysqli_query($conn, $query);
             <div class="menu-grid">
         </div>
 
-    <?php include 'navbar.html'; ?>
+    <?php include 'navbarpembeli.html'; ?>
+    
 </body>
 </html>

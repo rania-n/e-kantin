@@ -2,7 +2,7 @@
 $host = "localhost";
 $user = "root";
 $pass = "";
-$db   = "db_e-canteen"; // Sesuaikan dengan nama database kamu
+$db   = "e_kantin"; // Sesuaikan dengan nama database kamu
 
 $conn = mysqli_connect($host, $user, $pass, $db);
 

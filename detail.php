@@ -20,7 +20,6 @@ $data = mysqli_fetch_assoc($result);
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
     <div class="detail-container">
         <a href="index.php" class="btn-back">⬅ Kembali~</a>
         

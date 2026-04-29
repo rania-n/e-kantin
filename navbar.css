@@ -1,4 +1,4 @@
-/* Container Utama Navbar */
+
 .bottom-nav {
     position: fixed;
     bottom: 0;
@@ -15,33 +15,33 @@
     z-index: 1000;
 }
 
-/* Item Navigasi */
+
 .nav-item {
     text-decoration: none;
     display: flex;
     flex-direction: column;
     align-items: center;
-    color: #888888; /* Warna abu-abu saat tidak aktif */
+    color: #888888; 
     font-size: 12px;
     transition: all 0.3s ease;
 }
 
-/* Ikon */
+
 .nav-item i {
     font-size: 20px;
     margin-bottom: 4px;
 }
 
-/* Keadaan Aktif (Beranda atau halaman yang sedang dibuka) */
+
 .nav-item.active {
-    color: #e67e22; /* Menyesuaikan warna oranye pada header kamu */
+    color: #99627A; 
 }
 
 .nav-item:hover {
-    color: #d35400;
+    color: #643843;
 }
 
-/* Responsif: Pastikan konten utama tidak tertutup navbar */
+
 body {
     padding-bottom: 70px;
 }
