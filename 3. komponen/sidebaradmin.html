@@ -14,8 +14,8 @@
     .sidebar {
       width: 250px;
       height: 100vh;
-      background: #f8fafc;
-      border-right: 1px solid #e2e8f0;
+      background: #6B3740;           /* Warna utama UNGU (deep mauve) */
+      border-right: 1px solid #E7CBCB;
       position: fixed;
       left: 0;
       top: 0;
@@ -27,17 +27,17 @@
 
     .logo {
       padding: 24px 20px;
-      border-bottom: 1px solid #e2e8f0;
+      border-bottom: 1px solid #A86670;
     }
 
     .logo h2 {
       font-size: 24px;
-      color: #1e2937;
+      color: #EFD9D4;                /* Lightest tone untuk teks cerah */
     }
 
     .logo p {
       font-size: 13px;
-      color: #64748b;
+      color: #EFD9D4;
       margin-top: 4px;
     }
 
@@ -50,38 +50,40 @@
       display: block;
       padding: 14px 24px;
       text-decoration: none;
-      color: #334155;
+      color: #EFD9D4;
       font-size: 14.5px;
       transition: all 0.2s;
     }
 
     .menu a:hover {
-      background: #f1f5f9;
+      background: #A86670;           /* Medium mauve untuk hover */
+      color: #fff;
     }
 
     .menu a.active {
-      background: #e0f2f1;
-      color: #10b981;
+      background: #C1848A;           /* Soft pink-mauve untuk active */
+      color: #4D262E;                /* Darkest tone untuk kontras teks */
       font-weight: 600;
-      border-left: 4px solid #10b981;
+      border-left: 4px solid #E7CBCB;
     }
 
     .logout {
       padding: 16px 20px;
-      border-top: 1px solid #e2e8f0;
+      border-top: 1px solid #A86670;
       margin-top: auto;
     }
 
     .logout a {
       display: block;
       padding: 12px 20px;
-      color: #ef4444;
+      color: #EFD9D4;
       text-decoration: none;
       transition: 0.2s;
     }
 
     .logout a:hover {
-      background: #fee2e2;
+      background: #A86670;
+      color: #fff;
       border-radius: 6px;
     }
   </style>
@@ -94,10 +96,10 @@
     </div>
 
     <div class="menu">
-      <a href="../../admin/dashboard/dashboard.php">Dashboard</a>
+      <a href="../../admin/dashboard/dashboard.php" class="active">Dashboard</a>
       <a href="../../admin/manajemenpengguna/user.php">Manajemen Pengguna</a>
       <a href="../../admin/manajementoko/toko.php">Manajemen Toko</a>
-      <a href="../../admin/pengaturan.php">Pengaturan</a>
+      <a href="#">Pengaturan</a>
     </div>
 
     <div class="logout">

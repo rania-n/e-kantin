@@ -7,8 +7,8 @@
 
 body {
   font-family: Arial, sans-serif;
-  background: #f3f4f6;
-  color: #111827;
+  background: #E7CBCB;
+  color: #643843;
   min-height: 100vh;
   overflow-x: hidden;
 }
@@ -30,7 +30,7 @@ body {
 h2 {
   font-size: 22px;
   margin-bottom: 24px;
-  color: #111827;
+  color: #643843;
   font-weight: 600;
 }
 
@@ -39,7 +39,7 @@ h2 {
   background: white;
   padding: 28px;
   border-radius: 16px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 15px rgba(100, 56, 67, 0.08);
   margin-bottom: 24px;
 }
 
@@ -51,17 +51,17 @@ h2 {
 .row label {
   display: block;
   font-size: 13.5px;
-  color: #6b7280;
+  color: #99627A;
   margin-bottom: 8px;
   font-weight: 500;
 }
 
 .row p {
   font-size: 15.5px;
-  color: #111827;
+  color: #643843;
   padding: 11px 12px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  background: #E7CBCB;
+  border: 1px solid #E7CBCB;
   border-radius: 8px;
   min-height: 42px;
   display: flex;
@@ -77,8 +77,8 @@ h2 {
 }
 
 .status {
-  background: #bbf7d0;
-  color: #166534;
+  background: #E7CBCB;
+  color: #643843;
 }
 
 /* ====================== STATS GRID ====================== */
@@ -93,13 +93,13 @@ h2 {
   background: white;
   padding: 22px;
   border-radius: 14px;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid #E7CBCB;
+  box-shadow: 0 2px 8px rgba(100, 56, 67, 0.08);
 }
 
 .stat-box h4 {
   font-size: 12.5px;
-  color: #6b7280;
+  color: #99627A;
   text-transform: uppercase;
   margin-bottom: 6px;
   font-weight: 600;
@@ -110,18 +110,18 @@ h2 {
   font-size: 26px;
   font-weight: 700;
   margin: 0;
-  color: #111827;
+  color: #643843;
 }
 
 .green {
-  color: #10b981;
+  color: #99627A;
 }
 
 /* ====================== TABLE ====================== */
 h3 {
   font-size: 18px;
   margin-bottom: 18px;
-  color: #111827;
+  color: #643843;
   font-weight: 600;
 }
 
@@ -133,9 +133,9 @@ h3 {
 .tabel-kantin th {
   text-align: left;
   font-size: 12.5px;
-  color: #6b7280;
+  color: #99627A;
   padding: 14px 10px;
-  border-bottom: 2px solid #f3f4f6;
+  border-bottom: 2px solid #E7CBCB;
   font-weight: 500;
   text-transform: uppercase;
 }
@@ -143,8 +143,8 @@ h3 {
 .tabel-kantin td {
   padding: 14px 10px;
   font-size: 14.5px;
-  border-bottom: 1px solid #f3f4f6;
-  color: #374151;
+  border-bottom: 1px solid #E7CBCB;
+  color: #643843;
 }
 
 /* ====================== ACTIONS ====================== */
@@ -167,21 +167,21 @@ h3 {
 }
 
 .edit {
-  background: #3b82f6;
+  background: #99627A;
   color: white;
 }
 
 .edit:hover {
-  background: #2563eb;
+  background: #C88EA7;
 }
 
 .back {
-  background: #e5e7eb;
-  color: #111827;
+  background: #E7CBCB;
+  color: #643843;
 }
 
 .back:hover {
-  background: #d1d5db;
+  background: #C88EA7;
 }
 
 .btn:active {

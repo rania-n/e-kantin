@@ -7,8 +7,8 @@
 
 body {
   font-family: Arial, sans-serif;
-  background: #f3f4f6;
-  color: #111827;
+  background: #E7CBCB;
+  color: #643843;
   min-height: 100vh;
   overflow-x: hidden;
 }
@@ -30,7 +30,7 @@ body {
 h2 {
   font-size: 22px;
   margin-bottom: 24px;
-  color: #111827;
+  color: #643843;
 }
 
 /* ====================== CARD ====================== */
@@ -38,7 +38,7 @@ h2 {
   background: white;
   padding: 28px;
   border-radius: 16px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 15px rgba(100, 56, 67, 0.08);
 }
 
 /* ====================== ROW ====================== */
@@ -49,7 +49,7 @@ h2 {
 .row label {
   display: block;
   font-size: 13.5px;
-  color: #6b7280;
+  color: #99627A;
   margin-bottom: 8px;
   font-weight: 500;
 }
@@ -57,10 +57,10 @@ h2 {
 /* Untuk mode tampilan teks (kalau nanti butuh) */
 .row p {
   font-size: 15px;
-  color: #111827;
+  color: #643843;
   padding: 11px 12px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  background: #E7CBCB;
+  border: 1px solid #E7CBCB;
   border-radius: 8px;
   min-height: 42px;
   display: flex;
@@ -72,7 +72,7 @@ h2 {
 .row select {
   width: 100%;
   padding: 11px 12px;
-  border: 1px solid #d1d5db;
+  border: 1px solid #E7CBCB;
   border-radius: 8px;
   font-size: 14.5px;
   transition: 0.2s;
@@ -80,9 +80,9 @@ h2 {
 
 .row input:focus,
 .row select:focus {
-  border-color: #10b981;
+  border-color: #99627A;
   outline: none;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+  box-shadow: 0 0 0 3px rgba(153, 98, 122, 0.15);
 }
 
 /* ====================== BUTTONS ====================== */
@@ -108,24 +108,24 @@ h2 {
 
 /* Save Button */
 .save {
-  background: #10b981;
+  background: #99627A;
   color: white;
 }
 
 .save:hover {
-  background: #059669;
+  background: #C88EA7;
 }
 
 /* Cancel / Back Button */
 .cancel,
 .back {
-  background: #e5e7eb;
-  color: #111827;
+  background: #E7CBCB;
+  color: #643843;
 }
 
 .cancel:hover,
 .back:hover {
-  background: #d1d5db;
+  background: #C88EA7;
 }
 
 /* Active effect */

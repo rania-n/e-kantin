@@ -1,9 +1,9 @@
 :root {
-    --primary: #D35400;    
-    --secondary: #A04000;  
-    --accent: #E67E22;     
-    --bg-light: #FFF8F0;  
-    --white: #FFFFFF;
+    --primary: #643843;    
+    --secondary: #99627A;  
+    --accent: #99627A;     
+    --bg-light: #E7CBCB;  
+    --white: #F8EBF1;
 }
 
 * {
@@ -22,7 +22,7 @@ header {
     background-color: var(--primary);
     color: var(--white);
     padding: 15px 10px;
-    border-radius: 0 0 50px 10px;
+    border-radius: 0 0 50px 0px;
 }
 
 header h1 { margin: 0; font-size: 22px; }
@@ -36,7 +36,7 @@ header h5 { margin: 0; font-size: 10px; }
 .search-box {
     display: flex;
     align-items: center;
-    background: white;
+    background: #F8EBF1;
     padding: 10px 20px;
     border-radius: 20px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
@@ -136,7 +136,7 @@ header h5 { margin: 0; font-size: 10px; }
     right: 12px;
     bottom: 12px;
     background-color: var(--primary);
-    color: white;
+    color: #F8EBF1;
     width: 32px;
     height: 32px;
     border-radius: 8px;
@@ -185,10 +185,10 @@ header h5 { margin: 0; font-size: 10px; }
 }
 
 .description-box {
-    background: #fff;
+    background: #F8EBF1;
     padding: 15px;
     border-radius: 15px;
-    border: 1px solid #eee;
+    border: 1px solid #F8EBF1;
     margin: 15px 0;
 }
 
@@ -211,7 +211,7 @@ header h5 { margin: 0; font-size: 10px; }
     left: 0;
     right: 0;
     padding: 20px;
-    background: white;
+    background: #F8EBF1;
     box-shadow: 0 -5px 15px rgba(0,0,0,0.05);
     z-index: 999;
 }
@@ -219,7 +219,7 @@ header h5 { margin: 0; font-size: 10px; }
 .btn-beli {
     display: block;
     background: var(--primary);
-    color: white;
+    color: #F8EBF1;
     text-align: center;
     padding: 18px;
     border-radius: 15px;

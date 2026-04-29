@@ -6,8 +6,8 @@
 
 body {
   font-family: Arial, sans-serif;
-  background: #f3f4f6;
-  color: #111827;
+  background: #EFD9D4;           /* light tone palette */
+  color: #643843;                /* warna utama gelap */
 }
 
 /* CONTAINER FULL */
@@ -25,7 +25,7 @@ body {
 
 .header p {
   font-size: 14px;
-  color: #6b7280;
+  color: #99627A;                /* medium mauve */
   margin-bottom: 20px;
 }
 
@@ -35,7 +35,7 @@ body {
   padding: 18px;
   border-radius: 12px;
   margin-bottom: 16px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #E7CBCB;     /* light palette */
 }
 
 .card h3 {
@@ -52,11 +52,11 @@ body {
 }
 
 .row span {
-  color: #6b7280;
+  color: #99627A;
 }
 
 .row.total b {
-  color: #10b981;
+  color: #643843;                /* warna utama gelap */
 }
 
 /* TIME */
@@ -74,7 +74,7 @@ body {
 .time {
   padding: 12px;
   border-radius: 8px;
-  border: 1px solid #d1d5db;
+  border: 1px solid #E7CBCB;
   background: white;
   text-align: center;
   cursor: pointer;
@@ -82,14 +82,14 @@ body {
 }
 
 .time:hover {
-  background: #f0fdf4;
-  border-color: #10b981;
+  background: #E7CBCB;
+  border-color: #643843;
 }
 
 .time-grid input:checked + .time {
-  background: #d1fae5;
-  border-color: #10b981;
-  color: #065f46;
+  background: #C88EA7;
+  border-color: #643843;
+  color: #643843;
 }
 
 /* PAYMENT */
@@ -99,7 +99,7 @@ body {
   gap: 12px;
   padding: 14px;
   border-radius: 10px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #E7CBCB;
   margin-bottom: 10px;
   cursor: pointer;
   transition: 0.2s;
@@ -107,8 +107,8 @@ body {
 }
 
 .pay:hover {
-  border-color: #10b981;
-  background: #f0fdf4;
+  border-color: #643843;
+  background: #E7CBCB;
 }
 
 .pay input {
@@ -117,12 +117,13 @@ body {
 
 .pay p {
   font-size: 12px;
-  color: #6b7280;
+  color: #99627A;
 }
 
-.pay.active {
-  background: #ecfdf5;
-  border-color: #10b981;
+.pay-active input:checked + .pay {
+  background: #C88EA7;
+  border-color: #643843;
+  color: #643843;
 }
 
 /* FOOTER FULL */
@@ -132,7 +133,7 @@ body {
   width: 100%;
   background: white;
   padding: 15px 20px;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #E7CBCB;
 }
 
 .footer div {
@@ -142,14 +143,14 @@ body {
 }
 
 .footer b {
-  color: #10b981;
+  color: #643843;
 }
 
 .footer button {
   width: 100%;
   padding: 14px;
   border: none;
-  background: #059669;
+  background: #643843;           /* warna utama gelap */
   color: white;
   border-radius: 10px;
   cursor: pointer;
@@ -158,5 +159,5 @@ body {
 }
 
 .footer button:hover {
-  background: #047857;
+  background: #99627A;
 }
