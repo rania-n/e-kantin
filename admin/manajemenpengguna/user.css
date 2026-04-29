@@ -99,7 +99,6 @@ th, td {
 }
 
 th {
-  background: #E7CBCB;
   font-size: 13px;
   text-align: left;
 }
@@ -162,7 +161,6 @@ td:last-child {
   gap: 10px;
 }
 
-/* ICON */
 .aksi-icon {
   width: 40px;
   height: 40px;
@@ -174,6 +172,7 @@ td:last-child {
   text-decoration: none;
   color: #643843;
   transition: 0.2s;
+  font-size: 16px;
 }
 
 .aksi-icon:hover {
