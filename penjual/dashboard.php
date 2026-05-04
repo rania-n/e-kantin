@@ -6,7 +6,7 @@
     <title>Dashboard Penjual - e-Kantin</title>
     <link rel="stylesheet" href="../3. komponen/penjual.css">
 </head>
-<body>
+<body> 
 
     <?php include 'sidebarpenjual.html'; ?>
 

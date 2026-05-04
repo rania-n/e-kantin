@@ -75,6 +75,3 @@
             <!-- (Sudah cocok dengan CSS) -->
 
         </div>
-    </div>
-</body>
-</html>

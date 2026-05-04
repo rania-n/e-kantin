@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sidebar</title>
+
+<style>
+/* ====================== SIDEBAR ====================== */
+.sidebar {
+  width: 250px;
+  min-width: 250px;
+  height: 100vh;
+  background: #6B3740;
+  color: white;
+  padding: 24px 20px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  overflow-y: auto;
+  
+  display: flex;
+  flex-direction: column;
+}
+
+/* HEADER BURGER */
+.mobile-header {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: #6B3740;
+  color: white;
+  padding: 14px 20px;
+  z-index: 1100;
+  align-items: center;
+  gap: 12px;
+}
+
+.menu-btn {
+  font-size: 24px;
+  cursor: pointer;
+}
+
+/* LOGO */
+.logo {
+  display: flex;
+  align-items:center;
+  gap: 12px;
+  padding: 0 20px 16px; 
+  margin-bottom: 18px; 
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.logo h2 {
+  font-size: 24px;
+  color: #EFD9D4;
+}
+
+.logo p {
+  font-size: 13px;
+  color: #EFD9D4;
+  margin-top: 4px;
+}
+
+/* MENU */
+.sidebar ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex-grow: 1;
+}
+
+.sidebar ul li {
+  margin-bottom: 10px;
+}
+
+.sidebar ul li a{
+  display: block;
+  padding: 14px 18px;
+  color: #EFD9D4;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  border-radius: 8px;
+}
+
+
+.logout {
+  margin-top: auto;
+  border-top: 1px solid #e2e8f0;
+  padding: 17px 0 0;
+}
+
+.logout a {
+  display: block;
+  padding: 12px 18px;
+  color: #EFD9D4;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  border-radius: 8px;
+}
+
+.sidebar a:hover ,.logout a:hover {
+  background: #A86670;
+}
+
+
+.search-box {
+  margin-bottom: 20px;
+}
+
+
+.filter-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px; 
+  margin-top: 20px;
+  margin-bottom: 50px; 
+}
+
+
+.filter-buttons + * {
+  margin-top: 25px;
+}
+
+/* judul section */
+.section-title {
+  margin-bottom: 15px;
+}
+
+/* ================= MOBILE ================= */
+@media (max-width: 768px) {
+
+  .mobile-header {
+    display: flex;
+  }
+
+  /* 🔥 SEMBUNYIKAN LOGO DI SIDEBAR SAAT HP */
+  .sidebar .logo {
+    display: none;
+  }
+
+  .sidebar {
+    position: fixed;
+    width: 100%;
+    height: auto;
+    top: 60px;
+    left: 0;
+    transform: translateY(-120%);
+    transition: 0.3s;
+    padding: 20px;
+  }
+
+  .sidebar.active {
+    transform: translateY(0);
+  }
+
+  .sidebar ul li a {
+    padding: 16px;
+  }
+
+  body {
+    padding-top: 60px;
+  }
+
+  .filter-buttons {
+    gap: 10px;
+  }
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- HEADER MOBILE -->
+<div class="mobile-header">
+  <span class="menu-btn" onclick="toggleSidebar()">☰</span>
+
+  <!-- 🔥 PINDAH KE SINI SAAT MOBILE -->
+  <div>
+    <h2 style="margin:0; font-size:18px;">Penjual</h2>
+    <p style="margin:0; font-size:11px;">e-Kantin Sekolah</p>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+
+  <div class="logo">
+    <h2>Penjual</h2>
+    <p>e-Kantin Sekolah</p>
+  </div>
+
+  <ul>
+    <li><a href="dashboard.php">Dashboard</a></li>
+    <li class="active"><a href="daftarpesanan.php">Manajemen Pesanan</a></li>
+    <li><a href="menu.php">Manajemen Menu</a></li>
+  </ul>
+
+  <div class="logout">
+    <a href="#">Keluar</a>
+  </div>
+
+</aside>
+
+<script>
+function toggleSidebar() {
+  document.getElementById("sidebar").classList.toggle("active");
+}
+</script>
+
+</body>
+</html>

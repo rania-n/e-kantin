@@ -4,7 +4,7 @@
 
 body {
   font-family: Arial, sans-serif;
-  background: #f3f4f6;
+  background: #E7CBCB;
   color: #111827;
   min-height: 100vh;
   display: flex;
@@ -15,7 +15,7 @@ body {
   flex: 1;
   margin-left: 250px;
   padding: 32px 40px;
-  background: #f8fafc;
+  background: #E7CBCB;
   min-height: 100vh;
 }
 
@@ -29,12 +29,12 @@ body {
   gap: 15px;
 }
 
-.header h1 { font-size: 28px; color: #064e3b; }
-.header p { font-size: 14px; color: #6b7280; margin: 5px 0 0; }
+.header h1 { font-size: 28px; color: #643843; }
+.header p { font-size: 14px; color: #99627A; margin: 5px 0 0; }
 
 /* Button Tambah */
 .btn-add {
-  background: #10b981;
+  background: #99627A;
   color: white;
   padding: 10px 20px;
   border-radius: 8px;
@@ -66,9 +66,10 @@ body {
   color: #64748b;
 }
 
-.filter-tabs, .filter {
+.filter-tabs {
   display: flex;
   gap: 8px;
+  margin-bottom: 20px;
   flex-wrap: wrap;
 }
 .filter-tabs button, .filter button {
@@ -81,8 +82,8 @@ body {
   color: #475569;
   cursor: pointer;
 }
-.filter-tabs button:hover, .filter button:hover { border-color: #10b981; color: #10b981; }
-.filter-tabs button.active, .filter button.active { background: #10b981; color: white; }
+.filter-tabs button:hover, .filter button:hover { border-color: #99627A; color: #99627A; }
+.filter-tabs button.active, .filter button.active { background: #99627A; color: white; }
 
 /* Cards */
 .cards {
@@ -137,7 +138,7 @@ body {
   margin-top: 12px;
   overflow: hidden;
 }
-.bar { height: 100%; background: #10b981; border-radius: 999px; }
+.bar { height: 100%; background: #7fc88c; border-radius: 999px; }
 
 /* Order Card (Daftar Pesanan) */
 .orders-grid {
@@ -174,7 +175,7 @@ body {
 .items { border-top: 1px solid #f1f5f9; padding-top: 12px; margin-bottom: 12px; }
 .item-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px; }
 
-.total { font-weight: 700; font-size: 18px; color: #10b981; margin: 12px 0; }
+.total { font-weight: 700; font-size: 18px; color: #99627A; margin: 12px 0; }
 
 .actions { display: flex; gap: 10px; }
 .actions button {
@@ -186,7 +187,7 @@ body {
   cursor: pointer;
   font-size: 14px;
 }
-.btn-process { background: #10b981; color: white; }
+.btn-process { background: #99627A; color: white; }
 .btn-reject { background: #fee2e2; color: #b91c1c; }
 .btn-detail { background: #e2e8f0; color: #475569; }
 
@@ -201,7 +202,7 @@ body {
 .card h3 { font-size: 17px; color: #111827; margin-bottom: 4px; }
 .card small { color: #6b7280; font-size: 13px; margin-bottom: 8px; }
 .card p { color: #4b5563; font-size: 13.5px; line-height: 1.5; margin-bottom: 12px; }
-.price { font-size: 18px; font-weight: 700; color: #10b981; margin-bottom: 12px; }
+.price { font-size: 18px; font-weight: 700; color: #99627A; margin-bottom: 12px; }
 
 .actions {
   display: flex;
@@ -254,4 +255,140 @@ body {
 @media (max-width: 768px) {
   .main { margin-left: 0; padding: 20px; }
   .orders-grid, .menu-grid, .grid, .cards { grid-template-columns: 1fr; }
+}
+
+/* ================= MODAL FINAL FIX (ANTI KEPOTONG) ================= */
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.55);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(5px);
+  z-index: 9999;
+
+  padding: 20px; /* biar ada jarak dari pinggir layar */
+}
+
+.modal:target {
+  display: flex;
+}
+
+/* BOX MODAL */
+.modal-content {
+  background: #ffffff;
+  width: 100%;
+  max-width: 480px;
+
+  border-radius: 14px;
+  padding: 20px;
+
+  box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+
+  /* 🔥 INI KUNCINYA */
+  max-height: 90vh;
+  overflow-y: auto;
+
+  animation: modalFade 0.25s ease;
+}
+
+/* Header */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.modal-header h2 {
+  font-size: 20px;
+  color: #643843;
+}
+
+/* tombol close */
+.modal-header .close {
+  font-size: 22px;
+  text-decoration: none;
+  color: #6b7280;
+}
+
+.modal-header .close:hover {
+  color: #111827;
+}
+
+/* Form */
+.modal form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.modal input,
+.modal select,
+.modal textarea {
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+}
+
+.modal input:focus,
+.modal select:focus,
+.modal textarea:focus {
+  border-color: #99627A;
+  box-shadow: 0 0 0 2px rgba(153,98,122,0.2);
+}
+
+.modal textarea {
+  resize: none;
+  min-height: 80px;
+}
+
+/* Buttons */
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.btn-cancel {
+  padding: 10px 16px;
+  background: #e5e7eb;
+  color: #374151;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.btn-save {
+  padding: 10px 18px;
+  background: #99627A;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-save:hover {
+  background: #7c4a5f;
+}
+
+/* Animasi */
+@keyframes modalFade {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
