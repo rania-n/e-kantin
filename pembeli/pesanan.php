@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pesanan Saya</title>
-    <link rel="stylesheet" href="pesanan.css">
+    <link rel="stylesheet" href="../3. komponen/pembeli.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
@@ -35,9 +35,9 @@
 
             <div class="right">
                 <p>Waktu Ambil</p>
-                <b style="font-size: 18px; color: var(--primary);">12:00</b>
-                <p>Rp 15.000</p>
-                <p>Rp 10.000</p>
+                <b>12:00</b>
+                <p class="price">Rp 15.000</p>
+                <p class="price">Rp 10.000</p>
             </div>
         </div>
 
@@ -45,7 +45,7 @@
 
         <div class="bottom">
             <div>
-                <p style="font-size: 12px; color: var(--text-muted);">Total Pembayaran</p>
+                <p class="total-label">Total Pembayaran</p>
                 <b>Rp 25.000</b>
             </div>
             <span class="payment">Bayar di Kantin</span>
@@ -66,14 +66,14 @@
                 <p>1x Smoothie</p>
             </div>
             <div class="right">
-                <p>Rp 25.000</p>
-                <p>Rp 15.000</p>
+                <p class="price">Rp 25.000</p>
+                <p class="price">Rp 15.000</p>
             </div>
         </div>
         <hr>
         <div class="bottom">
             <span>Total: <b>Rp 40.000</b></span>
-            <a href="#" class="order-again">Pesan Lagi</a>
+            <a href="index.php" class="order-again">Pesan Lagi</a>
         </div>
     </div>
 
@@ -88,13 +88,13 @@
                 <p>2x Sate Ayam</p>
             </div>
             <div class="right">
-                <p>Rp 30.000</p>
+                <p class="price">Rp 30.000</p>
             </div>
         </div>
         <hr>
         <div class="bottom">
             <span>Total: <b>Rp 30.000</b></span>
-            <a href="#" class="order-again">Pesan Lagi</a>
+            <a href="index.php" class="order-again">Pesan Lagi</a>
         </div>
     </div>
 

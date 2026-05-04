@@ -28,7 +28,7 @@ $result = mysqli_query($conn, $query);
 </head>
 <body>
     <header>
-        <h5>Pembeli</h5>
+        <h5>pembeli</h5>
         <h1>Halo, Budi Santoso! 👋</h1>
     </header>
 

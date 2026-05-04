@@ -1,110 +1,125 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sidebar</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sidebar</title>
+<style>
+/* ====================== SIDEBAR - MAUVE THEME ====================== */
+.sidebar {
+  width: 250px;
+  min-width: 250px;
+  height: 100vh;
+  background: #6B3740;
+  color: white;
+  padding: 24px 20px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
 
-    .sidebar {
-      width: 250px;
-      height: 100vh;
-      background: #6B3740;           /* Warna utama UNGU (deep mauve) */
-      border-right: 1px solid #E7CBCB;
-      position: fixed;
-      left: 0;
-      top: 0;
-      display: flex;
-      flex-direction: column;
-      z-index: 100;
-      font-family: Arial, sans-serif;
-    }
+.logo {
+  display: flex;
+  align-items:center;
+  gap: 12px;
+  padding: 0 20px 16px; 
+  margin-bottom: 18px; 
+  border-bottom: 1px solid #A86670;
+}
 
-    .logo {
-      padding: 24px 20px;
-      border-bottom: 1px solid #A86670;
-    }
+.logo h2 {
+  font-size: 24px;
+  color: #EFD9D4;
+}
 
-    .logo h2 {
-      font-size: 24px;
-      color: #EFD9D4;                /* Lightest tone untuk teks cerah */
-    }
+.logo p {
+  font-size: 13px;
+  color: #EFD9D4;
+  margin-top: 4px;
+}
 
-    .logo p {
-      font-size: 13px;
-      color: #EFD9D4;
-      margin-top: 4px;
-    }
+.sidebar ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex-grow: 1;
+}
 
-    .menu {
-      flex: 1;
-      padding: 12px 0;
-    }
+.sidebar ul li {
+  margin-bottom: 6px;
+}
 
-    .menu a {
-      display: block;
-      padding: 14px 24px;
-      text-decoration: none;
-      color: #EFD9D4;
-      font-size: 14.5px;
-      transition: all 0.2s;
-    }
+.sidebar ul li a {
+  display: block;
+  padding: 14px 18px;
+  color: #EFD9D4;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
 
-    .menu a:hover {
-      background: #A86670;           /* Medium mauve untuk hover */
-      color: #fff;
-    }
+.sidebar ul li a:hover {
+  background: #A86670;
+  color: #fff;
+}
 
-    .menu a.active {
-      background: #C1848A;           /* Soft pink-mauve untuk active */
-      color: #4D262E;                /* Darkest tone untuk kontras teks */
-      font-weight: 600;
-      border-left: 4px solid #E7CBCB;
-    }
+.sidebar ul li a.active {
+  background: #C1848A;
+  color: #4D262E;
+  font-weight: 600;
+  border-left: 4px solid #E7CBCB;
+}
 
-    .logout {
-      padding: 16px 20px;
-      border-top: 1px solid #A86670;
-      margin-top: auto;
-    }
+.logout {
+  margin-top: auto;
+  border-top: 1px solid #A86670;
+  padding: 17px 0 0;
+}
 
-    .logout a {
-      display: block;
-      padding: 12px 20px;
-      color: #EFD9D4;
-      text-decoration: none;
-      transition: 0.2s;
-    }
+.logout a {
+  display: block;
+  padding: 12px 18px;
+  color: #EFD9D4;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
 
-    .logout a:hover {
-      background: #A86670;
-      color: #fff;
-      border-radius: 6px;
-    }
-  </style>
+.logout a:hover {
+  background: #A86670;
+  color: #fff;
+}
+</style>
 </head>
 <body>
-  <div class="sidebar">
+
+<aside class="sidebar">
+    <!-- LOGO -->
     <div class="logo">
       <h2>Admin</h2>
       <p>e-Kantin Sekolah</p>
     </div>
 
-    <div class="menu">
-      <a href="../../admin/dashboard/dashboard.php" class="active">Dashboard</a>
-      <a href="../../admin/manajemenpengguna/user.php">Manajemen Pengguna</a>
-      <a href="../../admin/manajementoko/toko.php">Manajemen Toko</a>
-      <a href="#">Pengaturan</a>
-    </div>
+    <!-- MENU -->
+    <ul>
+        <li><a href="../../admin/dashboard/dashboard.php">Dashboard</a></li>
+        <li><a href="../../admin/manajemenpengguna/user.php">Manajemen Pengguna</a></li>
+        <li><a href="../../admin/manajemenToko/toko.php">Manajemen Toko</a></li>
+    </ul>
 
+    <!-- LOGOUT -->
     <div class="logout">
-      <a href="#">Keluar</a>
+        <a href="#">Keluar</a>
     </div>
-  </div>
+</aside>
+
 </body>
 </html>

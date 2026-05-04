@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Checkout</title>
-<link rel="stylesheet" href="checkout.css">
+<link rel="stylesheet" href="../../3. komponen/pembeli.css">
 </head>
 
 <body>
@@ -16,7 +16,7 @@
     <p>Lengkapi pesananmu</p>
   </div>
 
-  <!-- INFORMASI -->
+  <!-- INFORMASI PEMESAN -->
   <div class="card">
     <h3>Informasi Pemesan</h3>
     <div class="row">
@@ -29,7 +29,7 @@
     </div>
   </div>
 
-  <!-- RINGKASAN -->
+  <!-- RINGKASAN PESANAN -->
   <div class="card">
     <h3>Ringkasan Pesanan</h3>
     <div class="row">
@@ -42,7 +42,7 @@
     </div>
   </div>
 
-  <!-- WAKTU -->
+  <!-- WAKTU PENGAMBILAN -->
   <div class="card">
     <h3>Waktu Pengambilan</h3>
 
@@ -71,11 +71,11 @@
     <small>*Waktu istirahat: 12:00 - 13:00</small>
   </div>
 
-  <!-- PEMBAYARAN -->
+  <!-- METODE PEMBAYARAN -->
   <div class="card">
     <h3>Metode Pembayaran</h3>
 
-    <label class="pay">
+    <label class="pay active">
       <input type="radio" name="pay" checked>
       <div>
         <b>Bayar di Kantin</b>
@@ -98,21 +98,21 @@
         <p>OVO, GoPay, Dana</p>
       </div>
     </label>
-
   </div>
 
 </div>
 
 <!-- FOOTER -->
 <div class="footer">
-  <div>
-    <span>Total Pembayaran</span>
-    <b>Rp 15.000</b>
+  <div class="footer-content">
+    <div>
+      <span>Total Pembayaran</span>
+      <b>Rp 15.000</b>
+    </div>
+    <form action="pesanan.php">
+      <button type="submit">Konfirmasi Pesanan</button>
+    </form>
   </div>
-  <form action="pesanan.php">
-    <button type="submit" class="checkout">Konfirmasi Pesanan</button>
-  </form>
-
 </div>
 
 </body>
