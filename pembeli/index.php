@@ -28,7 +28,7 @@ $result = mysqli_query($conn, $query);
 </head>
 <body>
     <header>
-        <h5>pembeli</h5>
+        <h5>Pembeli</h5>
         <h1>Halo, Budi Santoso! 👋</h1>
     </header>
 
@@ -74,5 +74,6 @@ $result = mysqli_query($conn, $query);
         </div>
 
     <?php include 'navbarpembeli.html'; ?>
+    
 </body>
 </html>

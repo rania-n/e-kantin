@@ -1,5 +1,5 @@
 <?php 
-include '../1. koneksi/koneksi.php'; 
+include 'koneksi.php'; 
 
 if(!isset($_GET['id'])) {
     header("Location: index.php");

@@ -4,59 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Navbar Pembeli</title>
-    <style>
-/* Container Utama Navbar */
-.bottom-nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 65px;
-    background-color: #ffffff;
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-    border-top-left-radius: 15px;
-    border-top-right-radius: 15px;
-    z-index: 1000;
-}
-
-/* Item Navigasi */
-.nav-item {
-    text-decoration: none;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    color: #888888; /* Warna abu-abu saat tidak aktif */
-    font-size: 12px;
-    transition: all 0.3s ease;
-}
-
-/* Ikon */
-.nav-item i {
-    font-size: 20px;
-    margin-bottom: 4px;
-}
-
-/* Keadaan Aktif (Beranda atau halaman yang sedang dibuka) */
-.nav-item.active {
-    color: #e67e22; /* Menyesuaikan warna oranye pada header kamu */
-}
-
-.nav-item:hover {
-    color: #d35400;
-}
-
-/* Responsif: Pastikan konten utama tidak tertutup navbar */
-body {
-    padding-bottom: 70px;
-}
-    </style>
+    <link rel="stylesheet" href="navbar.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
 <nav class="bottom-nav">
-    <a href="index.php" class="nav-item active">
+    <a href="index.php" class="nav-item">
         <i class="fas fa-home"></i>
         <span>Beranda</span>
     </a>
@@ -72,6 +25,6 @@ body {
         <i class="fas fa-user"></i>
         <span>Profil</span>
     </a>
-</nav>
+
 </body>
 </html>
