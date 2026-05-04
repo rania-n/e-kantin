@@ -4,113 +4,116 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Checkout</title>
-<link rel="stylesheet" href="../../3. komponen/pembeli.css">
+<link rel="stylesheet" href="../3. komponen/pembeli.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
+
+<!-- ... bagian head tetap sama ... -->
 
 <body>
 
 <div class="container">
-
   <div class="header">
     <h2>Checkout</h2>
     <p>Lengkapi pesananmu</p>
   </div>
 
-  <!-- INFORMASI PEMESAN -->
-  <div class="card">
-    <h3>Informasi Pemesan</h3>
-    <div class="row">
-      <span>Nama</span>
-      <b>Ahmad Rizki</b>
-    </div>
-    <div class="row">
-      <span>Kelas</span>
-      <b>10A</b>
-    </div>
-  </div>
-
-  <!-- RINGKASAN PESANAN -->
-  <div class="card">
-    <h3>Ringkasan Pesanan</h3>
-    <div class="row">
-      <span>1x Sate Ayam</span>
-      <b>Rp 15.000</b>
-    </div>
-    <div class="row total">
-      <span>Total</span>
-      <b>Rp 15.000</b>
-    </div>
-  </div>
-
-  <!-- WAKTU PENGAMBILAN -->
-  <div class="card">
-    <h3>Waktu Pengambilan</h3>
-
-    <div class="time-grid">
-      <label>
-        <input type="radio" name="time">
-        <div class="time">12:00</div>
-      </label>
-
-      <label>
-        <input type="radio" name="time">
-        <div class="time">12:15</div>
-      </label>
-
-      <label>
-        <input type="radio" name="time" checked>
-        <div class="time">12:30</div>
-      </label>
-
-      <label>
-        <input type="radio" name="time">
-        <div class="time">12:45</div>
-      </label>
-    </div>
-
-    <small>*Waktu istirahat: 12:00 - 13:00</small>
-  </div>
-
-  <!-- METODE PEMBAYARAN -->
-  <div class="card">
-    <h3>Metode Pembayaran</h3>
-
-    <label class="pay active">
-      <input type="radio" name="pay" checked>
-      <div>
-        <b>Bayar di Kantin</b>
-        <p>Bayar langsung saat mengambil pesanan</p>
+  <!-- PEMBUNGKUS BARU UNTUK GRID DESKTOP -->
+  <div class="checkout-grid-container">
+    
+    <!-- KOLOM KIRI: Form & Informasi -->
+    <div class="main-content">
+      <!-- INFORMASI PEMESAN -->
+      <div class="card">
+        <h3>Informasi Pemesan</h3>
+        <div class="row">
+          <span>Nama</span>
+          <b>Ahmad Rizki</b>
+        </div>
+        <div class="row">
+          <span>Kelas</span>
+          <b>10A</b>
+        </div>
       </div>
-    </label>
 
-    <label class="pay">
-      <input type="radio" name="pay">
-      <div>
-        <b>Transfer Bank</b>
-        <p>Transfer ke rekening kantin</p>
+      <!-- WAKTU PENGAMBILAN -->
+      <div class="card">
+        <h3>Waktu Pengambilan</h3>
+        <div class="time-grid">
+          <label>
+            <input type="radio" name="time">
+            <div class="time">12:00</div>
+          </label>
+          <label>
+            <input type="radio" name="time">
+            <div class="time">12:15</div>
+          </label>
+          <label>
+            <input type="radio" name="time" checked>
+            <div class="time">12:30</div>
+          </label>
+          <label>
+            <input type="radio" name="time">
+            <div class="time">12:45</div>
+          </label>
+        </div>
+        <small>*Waktu istirahat: 12:00 - 13:00</small>
       </div>
-    </label>
 
-    <label class="pay">
-      <input type="radio" name="pay">
-      <div>
-        <b>E-Wallet</b>
-        <p>OVO, GoPay, Dana</p>
+      <!-- METODE PEMBAYARAN -->
+      <div class="card">
+        <h3>Metode Pembayaran</h3>
+        <label class="pay-option">
+          <input type="radio" name="pay" value="kantin" checked>
+          <span>Bayar di Kantin</span>
+        </label>
+        <label class="pay-option">
+          <input type="radio" name="pay" value="transfer">
+          <span>Transfer Bank</span>
+        </label>
+        <label class="pay-option">
+          <input type="radio" name="pay" value="ewallet">
+          <span>E-Wallet (OVO, Dana, GoPay)</span>
+        </label>
       </div>
-    </label>
-  </div>
+    </div>
 
-</div>
+    <!-- KOLOM KANAN: Ringkasan & Konfirmasi (Footer pindah sini saat Desktop) -->
+    <div class="side-content">
+      <div class="card summary-card">
+        <h3>Ringkasan Pesanan</h3>
+        <div class="row">
+          <span>1x Nasi Goreng</span>
+          <b>Rp 15.000</b>
+        </div>
+        <div class="row">
+          <span>1x Jus Jeruk</span>
+          <b>Rp 10.000</b>
+        </div>
+        <hr>
+        <div class="row total">
+          <span>Total Pembayaran</span>
+          <b>Rp 25.000</b>
+        </div>
+        
+        <form action="pesanan.php">
+          <button type="submit" class="checkout-btn">Konfirmasi Pesanan</button>
+        </form>
+      </div>
+    </div>
 
-<!-- FOOTER -->
-<div class="footer">
+  </div> <!-- Akhir Checkout Grid Container -->
+</div> <!-- Akhir Container Utama -->
+
+<!-- FOOTER (Hanya muncul di Mobile melalui CSS Media Query) -->
+<div class="footer mobile-only-footer">
   <div class="footer-content">
     <div>
       <span>Total Pembayaran</span>
-      <b>Rp 15.000</b>
+      <b>Rp 25.000</b>
     </div>
     <form action="pesanan.php">
-      <button type="submit">Konfirmasi Pesanan</button>
+      <button type="submit" class="checkout-btn">Konfirmasi Pesanan</button>
     </form>
   </div>
 </div>

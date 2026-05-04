@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Keranjang Belanja</title>
-    <link rel="stylesheet" href="keranjang.css">
+    <link rel="stylesheet" href="../3. komponen/pembeli.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
@@ -48,8 +48,8 @@
                 <div class="info">
                     <div class="top">
                         <div class="text">
-                            <h3>Ayam Geprek</h3>
-                            <div class="price">Rp 18.000</div>
+                            <h3>Jus Jeruk</h3>
+                            <div class="price">Rp 10.000</div>
                         </div>
                         <div class="hapus">🗑</div>
                     </div>
@@ -60,7 +60,7 @@
                             <span class="quantity">1</span>
                             <button class="plus">+</button>
                         </div>
-                        <div class="hasil">Rp 18.000</div>
+                        <div class="hasil">Rp 10.000</div>
                     </div>
 
                     <input type="text" placeholder="Catatan (opsional)" class="note">
@@ -73,11 +73,11 @@
             <div class="total-box">
                 <div class="total">
                     <span>Subtotal (2 item)</span>
-                    <span>Rp 33.000</span>
+                    <span>Rp 25.000</span>
                 </div>
                 <div class="total grand">
                     <strong>Total</strong>
-                    <strong class="green">Rp 33.000</strong>
+                    <strong class="green">Rp 25.000</strong>
                 </div>
 
                 <div class="payment">
@@ -97,7 +97,7 @@
                 </div>
 
                 <form action="checkout.html">
-                    <button type="submit" class="checkout">Lanjut ke Pembayaran</button>
+                    <button type="submit" class="checkout-btn">Lanjut ke Pembayaran</button>
                 </form>
             </div>
         </div>
@@ -105,7 +105,7 @@
 
     <!-- Floating Button untuk Mobile -->
     <label for="show-summary" class="mobile-total-btn">
-        Lihat Total & Pembayaran • Rp 33.000
+        Lihat Total & Pembayaran • Rp 25.000
     </label>
 
     <!-- Bottom Sheet Popup untuk Mobile -->
@@ -121,11 +121,11 @@
             <div class="total-box">
                 <div class="total">
                     <span>Subtotal (2 item)</span>
-                    <span>Rp 33.000</span>
+                    <span>Rp 25.000</span>
                 </div>
                 <div class="total grand">
                     <strong>Total</strong>
-                    <strong class="green">Rp 33.000</strong>
+                    <strong class="green">Rp 25.000</strong>
                 </div>
 
                 <div class="payment">
@@ -146,7 +146,7 @@
 
                 
                 <form action="checkout.html">
-                    <button type="submit" class="checkout">Lanjut ke Pembayaran</button>
+                    <button type="submit" class="checkout-btn">Lanjut ke pembayaran</button>
                 </form>
 
             </div>
