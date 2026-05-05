@@ -21,13 +21,6 @@ body {
   min-height: 100vh;
 }
 
-.container {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 10px;
-}
-
 /* ====================== HEADER & TITLE ====================== */
 .header {
   display: flex;
@@ -76,7 +69,7 @@ body {
   font-size: 15.5px;
   color: #643843;
   padding: 11px 12px;
-  background: #E7CBCB;
+  background: white;
   border: 1px solid #E7CBCB;
   border-radius: 8px;
   min-height: 42px;
@@ -104,7 +97,6 @@ body {
 /* ====================== SEARCH ====================== */
 .search input {
   width: 100%;
-  max-width: 600px;
   padding: 12px 14px;
   border-radius: 8px;
   border: 1px solid #E7CBCB;

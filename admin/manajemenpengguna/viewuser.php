@@ -10,8 +10,7 @@
     <?php include '../../3. komponen/sidebaradmin.html'; ?>
 
     <div class="content">
-        <div class="container">
-            <h2>Detail Pengguna</h2>
+            <h2 style="margin-bottom: 24px;">Detail Pengguna</h2>
 
             <div class="card">
                 <div class="row">
@@ -48,7 +47,6 @@
                 <a href="edituser.php" class="btn edit">✏ Edit</a>
                 <a href="user.php" class="btn back">← Kembali</a>
             </div>
-        </div>
     </div>
 </body>
 </html>

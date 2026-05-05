@@ -10,7 +10,6 @@
     <?php include '../../3. komponen/sidebaradmin.html'; ?>
 
     <div class="content">
-        <div class="container">
             <div class="header">
                 <div>
                     <h2>Dashboard</h2>
@@ -70,8 +69,6 @@
                     <div class="bar"><p>Buah</p><div class="progress"><div style="width:4%"></div></div></div>
                 </div>
             </div>
-
-            <!-- Top Pembeli & Laporan Toko tetap sama seperti yang kamu kirim -->
-            <!-- (Sudah cocok dengan CSS) -->
-
-        </div>
+    </div>
+</body>
+</html>

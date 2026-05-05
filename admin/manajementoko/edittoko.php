@@ -10,8 +10,7 @@
     <?php include '../../3. komponen/sidebaradmin.html'; ?>
 
     <div class="content">
-        <div class="container">
-            <h2>Edit Toko</h2>
+            <h2 style="margin-bottom: 24px;">Edit Toko</h2>
 
             <form class="card">
                 <div class="row">
@@ -37,7 +36,6 @@
                     <a href="toko.php" class="btn cancel">Batal</a>
                 </div>
             </form>
-        </div>
     </div>
 </body>
 </html>

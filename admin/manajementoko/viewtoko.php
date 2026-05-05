@@ -10,8 +10,7 @@
     <?php include '../../3. komponen/sidebaradmin.html'; ?>
 
     <div class="content">
-        <div class="container">
-            <h2>Detail Toko - Kantin Bu Siti</h2>
+            <h2 style="margin-bottom: 24px;">Detail Toko - Kantin Bu Siti</h2>
 
             <!-- STATS -->
             <div class="stats-grid">
@@ -65,7 +64,6 @@
                 <a href="edittoko.php" class="btn edit">✏ Edit Toko</a>
                 <a href="toko.php" class="btn back">← Kembali ke Daftar Toko</a>
             </div>
-        </div>
     </div>
 </body>
 </html>
