@@ -8,7 +8,7 @@
 </head>
 <body>
 
-    <?php include 'sidebarpenjual.html'; ?>
+    <?php include '../3. komponen/sidebarpenjual.html'; ?>
 
     <div class="main">
         <div class="header">
