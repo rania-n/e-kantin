@@ -1,0 +1,484 @@
+
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #E7CBCB;
+  color: #643843;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ====================== LAYOUT DASAR ====================== */
+.content {
+  margin-left: 250px;
+  padding: 24px 20px;
+  min-height: 100vh;
+}
+
+/* ====================== HEADER & TITLE ====================== */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.header h2 {
+  font-size: 22px;
+  margin: 0;
+  color: #643843;
+}
+
+.header p {
+  font-size: 14px;
+  color: #99627A;
+  margin: 5px 0 0;
+}
+
+/* ====================== CARD ====================== */
+.card {
+  background: white;
+  padding: 28px;
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgba(100, 56, 67, 0.08);
+  margin-bottom: 24px;
+}
+
+/* ====================== ROW & FORM ====================== */
+.row {
+  margin-bottom: 20px;
+}
+
+.row label {
+  display: block;
+  font-size: 13.5px;
+  color: #99627A;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.row p {
+  font-size: 15.5px;
+  color: #643843;
+  padding: 11px 12px;
+  background: white;
+  border: 1px solid #E7CBCB;
+  border-radius: 8px;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+}
+
+.row input,
+.row select {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid #E7CBCB;
+  border-radius: 8px;
+  font-size: 14.5px;
+  transition: 0.2s;
+}
+
+.row input:focus,
+.row select:focus {
+  border-color: #99627A;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(153, 98, 122, 0.15);
+}
+
+/* ====================== SEARCH ====================== */
+.search input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #E7CBCB;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+/* ====================== BUTTONS ====================== */
+.buttons,
+.actions {
+  margin-top: 28px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 11px 20px;
+  border-radius: 8px;
+  font-size: 14.5px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: 0.2s;
+  display: inline-block;
+  border: none;
+  font-weight: 500;
+}
+
+/* Primary */
+.save,
+.edit,
+.btn {
+  background: #99627A;
+  color: white;
+}
+
+.save:hover,
+.edit:hover,
+.btn:hover {
+  background: #C88EA7;
+}
+
+
+/* Secondary */
+.cancel,
+.back {
+  background: #E7CBCB;
+  color: #643843;
+}
+
+.cancel:hover,
+.back:hover {
+  background: #C88EA7;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+/* ====================== TABS (Manajemen Pengguna) ====================== */
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+input[type="radio"] {
+  display: none;
+}
+
+.tab {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #E7CBCB;
+  background: white;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+#all:checked + label,
+#admin:checked + label,
+#seller:checked + label,
+#student:checked + label {
+  background: #99627A;
+  color: white;
+}
+
+/* ====================== PERIOD SELECTOR (Dashboard) ====================== */
+.period-selector {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+}
+
+.period-selector label {
+  padding: 8px 16px;
+  border: 1px solid #E7CBCB;
+  border-radius: 8px;
+  cursor: pointer;
+  background: white;
+  font-size: 14px;
+  transition: 0.2s;
+}
+
+.period-selector label:hover {
+  background: #E7CBCB;
+}
+
+#today:checked + label,
+#week:checked + label,
+#month:checked + label,
+#year:checked + label {
+  background: #99627A;
+  color: white;
+}
+
+/* ====================== STATS (Dashboard) ====================== */
+.stats-grid,
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 25px;
+}
+
+.stat-box,
+.stats .card {
+  background: white;
+  padding: 22px;
+  border-radius: 14px;
+  border: 1px solid #E7CBCB;
+  box-shadow: 0 2px 8px rgba(100, 56, 67, 0.08);
+}
+
+.stat-box h4,
+.stats h4 {
+  font-size: 13.5px;
+  color: #99627A;
+  margin-bottom: 6px;
+}
+
+.stat-box p,
+.stats h2 {
+  font-size: 26px;
+  font-weight: 700;
+  color: #643843;
+}
+
+.green {
+  color: #99627A;
+}
+
+/* ====================== TABLE ====================== */
+.table-wrapper {
+  width: 100%;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(100, 56, 67, 0.08);
+  background: white;
+  overflow: hidden;
+}
+
+table,
+.tabel-kantin {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 15px 14px;
+  text-align: left;
+}
+
+.tabel-kantin th,
+th {
+  font-size: 12.5px;
+  color: #99627A;
+  background: #E7CBCB;
+  text-transform: uppercase;
+}
+
+.tabel-kantin td,
+td {
+  font-size: 14.5px;
+  border-bottom: 1px solid #E7CBCB;
+  color: #643843;
+}
+
+tr {
+  border-bottom: 1px solid #f3f4f6;
+}
+
+tr:hover {
+  background: #f9f5f5;
+}
+
+.center {
+  text-align: center;
+}
+
+/* ====================== USER & AVATAR ====================== */
+.user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  background: #E7CBCB;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user small {
+  color: #99627A;
+}
+
+/* ====================== BADGE ====================== */
+.badge {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.status {
+  background: #7fc88c;
+  color: white;
+}
+
+.role {
+  background: #E7CBCB;
+  color: #643843;
+}
+
+/* ====================== AKSI ICON ====================== */
+.aksi-box,
+.aksi-group {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.aksi-icon,
+.aksi-btn {
+  width: 40px;
+  height: 40px;
+  background: #E7CBCB;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: #643843;
+  transition: 0.2s;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.aksi-icon:hover,
+.aksi-btn:hover {
+  background: #99627A;
+  color: white;
+}
+
+.aksi-icon.delete {
+  background: #fcdcdc;
+  color: #b91c1c;
+}
+
+.aksi-icon.delete:hover {
+  background: #ef4444;
+  color: white;
+}
+
+/* ====================== DASHBOARD TAMBAHAN ====================== */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #E7CBCB;
+  font-size: 14.5px;
+}
+
+.item:last-child {
+  border-bottom: none;
+}
+
+.item span {
+  background: #E7CBCB;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.bar p {
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.progress {
+  background: #E7CBCB;
+  height: 9px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress div {
+  height: 100%;
+  background: #99627A;
+}
+
+.seller-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 15px;
+}
+
+.seller-card {
+  border: 1px solid #E7CBCB;
+  padding: 15px;
+  border-radius: 14px;
+  background: white;
+}
+
+/* ====================== RESPONSIVE ====================== */
+@media (max-width: 768px) {
+  .content {
+    margin-left: 0;
+    padding: 15px 10px;
+  }
+
+  .container {
+    padding: 0 10px;
+  }
+
+  .card {
+    padding: 22px;
+  }
+
+  .buttons,
+  .actions {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .stats-grid,
+  .stats {
+    grid-template-columns: 1fr;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  table {
+    display: block;
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid,
+  .stats {
+    grid-template-columns: 1fr;
+  }
+}
