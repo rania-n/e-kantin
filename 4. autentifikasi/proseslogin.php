@@ -1,20 +1,10 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 include "../1. koneksi/koneksi.php"; 
 session_start();
 
-echo "<h3>🔧 DEBUG LOGIN MODE (hapus nanti)</h3>";
-
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    echo "✅ POST diterima<br>";
-
     $usernameemail = trim($_POST['usernameemail'] ?? '');
     $password      = trim($_POST['password'] ?? '');
-
-    echo "Username/Email input: " . htmlspecialchars($usernameemail) . "<br>";
-    echo "Password length: " . strlen($password) . " karakter<br>";
 
     // Validasi kosong
     if (empty($usernameemail) || empty($password)) {
@@ -29,8 +19,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $statement->execute();
         $statement->store_result();
 
-        echo "Jumlah data ditemukan di DB: " . $statement->num_rows . "<br>";
-
         if ($statement->num_rows === 0) {
             $error = "Username atau Email tidak ditemukan!";
         } 
@@ -38,25 +26,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $statement->bind_result($id_user, $db_username, $db_email, $hashed_password, $role);
             $statement->fetch();
 
-            echo "Hash dari database: " . htmlspecialchars($hashed_password) . "<br>";
-            echo "Panjang hash: " . strlen($hashed_password) . " karakter<br>";
-
-            // Cek password_verify
-            $verify_result = password_verify($password, $hashed_password);
-            echo "password_verify() hasil: " . ($verify_result ? '<b style="color:green">TRUE → LOGIN BERHASIL</b>' : '<b style="color:red">FALSE → Password salah</b>') . "<br>";
-
-            if ($verify_result) {
+            // Cek password
+            if (password_verify($password, $hashed_password)) {
                 // Set session
                 $_SESSION['id_user']  = $id_user;
                 $_SESSION['username'] = $db_username;
                 $_SESSION['email']    = $db_email;
+                $_SESSION['role']     = $role;
 
-                echo "<h3 style='color:green'>✅ Login berhasil! Session sudah diset.</h3>";
+                // ====================== REDIRECT BERDASARKAN ROLE ======================
+                if ($role === 'admin') {
+                    $redirect_url = '../admin/index/index.php';
+                } 
+                elseif ($role === 'penjual') {
+                    $redirect_url = '../penjual/index/index.php';
+                } 
+                elseif ($role === 'pembeli') {
+                    $redirect_url = '../pembeli/index.php';
+                } 
+                else {
+                    $redirect_url = '../4. autentifikasi/login.php'; // default kalau role tidak dikenali
+                }
+
+                // Redirect otomatis
                 echo "<script>
                         alert('Login berhasil! Selamat datang, " . addslashes($db_username) . "');
-                        window.location.href = '../pembeli/index.php';
+                        window.location.href = '" . $redirect_url . "';
                       </script>";
-                echo '<br><a href="../pembeli/index.php" style="font-size:18px;">→ Klik sini kalau tidak otomatis redirect</a>';
+                echo '<br><a href="' . $redirect_url . '" style="font-size:18px;">→ Klik di sini jika tidak otomatis redirect</a>';
                 exit;
             } 
             else {
@@ -67,12 +64,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
+// Jika ada error, kembali ke halaman login
 if (isset($error)) {
-    echo "<br><b style='color:red'>Error: " . htmlspecialchars($error) . "</b>";
+    header("Location: login.php?error=" . urlencode($error) 
+           . "&usernameemail=" . urlencode($usernameemail ?? ''));
+    exit;
 }
-
-// Redirect normal kalau tidak ada debug
-header("Location: login.php?error=" . urlencode($error ?? '') 
-       . "&usernameemail=" . urlencode($usernameemail ?? ''));
-exit;
 ?>

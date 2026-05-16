@@ -1,3 +1,14 @@
+<?php
+include '../../1. koneksi/koneksi.php'; 
+$query = "SELECT tb_toko.*, tb_user.username 
+          FROM tb_toko 
+          INNER JOIN tb_user ON tb_toko.id_user = tb_user.id_user 
+          WHERE tb_toko.deleted = 0 
+          ORDER BY tb_toko.id_toko DESC";
+
+$result = mysqli_query($conn, $query);
+?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -15,7 +26,7 @@
                 <h2>Manajemen Toko</h2>
                 <p>Manage semua toko dalam sistem e-Kantin</p>
             </div>
-            <a href="#" class="btn">+ Tambah Toko</a>
+            <!-- Pastikan tombol ini mengarah ke file tambah yang kita buat tadi -->
         </div>
 
         <div class="search">
@@ -33,28 +44,42 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Data contoh tetap sama, tidak diubah -->
+                    <?php 
+                    if (mysqli_num_rows($result) > 0) {
+                        while ($row = mysqli_fetch_assoc($result)) { 
+                    ?>
                     <tr>
                         <td>
                             <div class="user">
                                 <div class="avatar">🏪</div>
                                 <div>
-                                    <div>Kantin Bu Siti</div>
-                                    <small>Makanan & Minuman</small>
+                                    <div><?php echo htmlspecialchars($row['nama_toko']); ?></div>
+                                    <small>ID: #<?php echo $row['id_toko']; ?></small>
                                 </div>
                             </div>
                         </td>
-                        <td>seller1</td>
+                        <!-- Menampilkan Username Pemilik hasil JOIN -->
+                        <td><?php echo htmlspecialchars($row['username']); ?></td>
                         <td class="center"><span class="badge status">Aktif</span></td>
                         <td class="center">
                             <div class="aksi-box">
-                                <a href="viewtoko.php" class="aksi-icon">👁</a>
-                                <a href="edittoko.php" class="aksi-icon">✏️</a>
-                                <a href="#" class="aksi-icon delete">🗑</a>
+                                <!-- Mengirim ID Toko ke halaman view, edit, dan hapus -->
+                                <a href="viewtoko.php?id=<?php echo $row['id_toko']; ?>" class="aksi-icon" title="Lihat">👁</a>
+                                <a href="edittoko.php?id=<?php echo $row['id_toko']; ?>" class="aksi-icon" title="Edit">✏️</a>
+                                <a href="hapustoko.php?id=<?php echo $row['id_toko']; ?>" 
+                                   class="aksi-icon delete" 
+                                   title="Hapus"
+                                   onclick="return confirm('Apakah Anda yakin ingin menghapus toko <?php echo $row['nama_toko']; ?>?')">🗑</a>
                             </div>
                         </td>
                     </tr>
-                    <!-- Sisanya sama seperti sebelumnya -->
+                    <?php 
+                        } 
+                    } else {
+                        // Tampilan jika database masih kosong
+                        echo "<tr><td colspan='4' class='center'>Belum ada data toko terdaftar.</td></tr>";
+                    }
+                    ?>
                 </tbody>
             </table>
         </div>

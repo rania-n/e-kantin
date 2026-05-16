@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Penjual - e-Kantin</title>
-    <link rel="stylesheet" href="../3. komponen/penjual.css">
+    <link rel="stylesheet" href="../../3. komponen/penjual.css">
 </head>
 <body> 
 
-    <?php include '../3. komponen/sidebarpenjual.html'; ?>
+    <?php include '../../3. komponen/sidebarpenjual.html'; ?>
 
     <div class="main">
         <div class="header">
