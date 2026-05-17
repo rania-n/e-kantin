@@ -42,7 +42,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $redirect_url = '../penjual/index/index.php';
                 } 
                 elseif ($role === 'pembeli') {
-                    $redirect_url = '../pembeli/index.php';
+                    $redirect_url = '../pembeli/index/index.php';
                 } 
                 else {
                     $redirect_url = '../4. autentifikasi/login.php'; // default kalau role tidak dikenali

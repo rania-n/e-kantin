@@ -59,7 +59,7 @@ try {
 
     elseif ($action === 'delete') {
         $id = (int)$_GET['id'];
-        $sql = "UPDATE tb_menu SET deleted=1, deleted_at=NOW() WHERE id_menu=?";
+        $sql = "UPDATE tb_menu SET deleted=1, deleted_at=NOW(), status='nonaktif' WHERE id_menu=?";
         $stmt = mysqli_prepare($conn, $sql);
         mysqli_stmt_bind_param($stmt, "i", $id);
         mysqli_stmt_execute($stmt);

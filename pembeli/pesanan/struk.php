@@ -1,0 +1,242 @@
+<?php
+/* ============================================================
+   HALAMAN STRUK
+   Antrian: dihitung dari jumlah order di toko yang sama
+   pada hari yang sama, urutan berdasarkan id_order.
+   Reset otomatis setiap hari (karena berdasarkan tanggal).
+   ============================================================ */
+include '../../3. komponen/guard.php';
+include '../../1. koneksi/koneksi.php';
+
+$idpesanan  = (int)($_GET['id_order'] ?? 0);
+$idpengguna = (int)$_SESSION['id_user'];
+
+if (!$idpesanan) { header("Location: pesanan.php"); exit; }
+
+// Ambil data pesanan
+$q = $conn->prepare("SELECT o.*,t.nama_toko FROM tb_order o LEFT JOIN tb_toko t ON o.id_toko=t.id_toko WHERE o.id_order=? AND o.id_user=? AND o.deleted=0");
+$q->bind_param("ii", $idpesanan, $idpengguna);
+$q->execute();
+$pesanan = $q->get_result()->fetch_assoc();
+$q->close();
+
+if (!$pesanan) { header("Location: pesanan.php"); exit; }
+
+// Ambil detail item
+$d = $conn->prepare("SELECT d.*,m.nama_menu FROM tb_detail_order d JOIN tb_menu m ON d.id_menu=m.id_menu WHERE d.id_order=? AND d.deleted=0");
+$d->bind_param("i", $idpesanan);
+$d->execute();
+$detail = $d->get_result()->fetch_all(MYSQLI_ASSOC);
+$d->close();
+
+// Hitung nomor antrian harian per toko
+// Antrian = urutan order ke-berapa hari ini untuk toko yang sama
+$nomerantrian = null;
+if ($pesanan['id_toko']) {
+    $qa = $conn->prepare("SELECT COUNT(*) FROM tb_order WHERE id_toko=? AND DATE(tanggal_order)=DATE(?) AND id_order<=? AND deleted=0");
+    $tglpesanan = $pesanan['tanggal_order'];
+    $qa->bind_param("isi", $pesanan['id_toko'], $tglpesanan, $idpesanan);
+    $qa->execute();
+    $nomerantrian = (int)$qa->get_result()->fetch_row()[0];
+    $qa->close();
+}
+
+// Cek sudah rating atau belum
+$cr = $conn->prepare("SELECT id_rating FROM tb_rating WHERE id_order=? AND id_user=?");
+$cr->bind_param("ii", $idpesanan, $idpengguna);
+$cr->execute();
+$sudahrating = $cr->get_result()->num_rows > 0;
+$cr->close();
+
+// Hitung subtotal dan biaya layanan
+$subtotalitem = 0;
+foreach ($detail as $dt) $subtotalitem += $dt['subtotal'];
+$biayalayanan = $pesanan['total_harga'] - $subtotalitem;
+$namatoko     = $pesanan['nama_toko'] ?? 'Kantin';
+$nomerpesanan = 'EK-' . str_pad($idpesanan, 6, '0', STR_PAD_LEFT);
+
+// Fungsi status badge
+function kelasstatus(string $status): string {
+    return match($status) {
+        'Menunggu'    => 'menunggu',
+        'Diproses'    => 'diproses',
+        'Siap Diambil'=> 'siap',
+        'Selesai'     => 'selesai',
+        default       => 'dibatalkan',
+    };
+}
+function ikonststatus(string $status): string {
+    return match($status) {
+        'Menunggu'     => 'fa-clock',
+        'Diproses'     => 'fa-fire-burner',
+        'Siap Diambil' => 'fa-bell',
+        'Selesai'      => 'fa-circle-check',
+        default        => 'fa-circle-xmark',
+    };
+}
+
+$pathbase = '..';
+?>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Struk <?= $nomerpesanan ?> - eKantin</title>
+<link rel="stylesheet" href="../../3. komponen/pembeli.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+
+<?php include '../../3. komponen/navbarpembeli.php'; ?>
+
+<div class="bungkussempit">
+
+  <!-- Banner berhasil (hanya saat baru pesan) -->
+  <?php if (isset($_GET['baru'])): ?>
+  <div class="bannerberhasil">
+    <div class="ikonberhasil"><i class="fa-solid fa-circle-check"></i></div>
+    <h2>Pesanan Berhasil!</h2>
+    <p>Penjual sedang menyiapkan pesananmu</p>
+  </div>
+  <?php else: ?>
+  <div class="headerkembali">
+    <a href="pesanan.php" class="tombolkembali"><i class="fa-solid fa-arrow-left"></i></a>
+    <div class="teksheader">
+      <h1>Struk Pesanan</h1>
+      <p><?= $nomerpesanan ?></p>
+    </div>
+  </div>
+  <?php endif; ?>
+
+  <!-- NOMOR ANTRIAN (jika ada) -->
+  <?php if ($nomerantrian): ?>
+  <div class="antirian">
+    <div class="angkaantrian"><?= str_pad($nomerantrian, 3, '0', STR_PAD_LEFT) ?></div>
+    <div class="labelantrian">
+      Nomor Antrian di <?= htmlspecialchars($namatoko) ?> &mdash; <?= date('d M Y', strtotime($pesanan['tanggal_order'])) ?>
+    </div>
+  </div>
+  <?php endif; ?>
+
+  <!-- STRUK -->
+  <div class="bungkusstruk">
+
+    <div class="kepalastruk">
+      <div class="ikonstruk"><i class="fa-solid fa-receipt"></i></div>
+      <h2>eKantin &mdash; Struk Digital</h2>
+      <p>Simpan sebagai bukti pembayaran</p>
+    </div>
+
+    <div class="isistruk">
+
+      <div class="barisstruk">
+        <span class="labelstruk">No. Pesanan</span>
+        <span class="nilaistruk" style="font-family:monospace;color:var(--utama);"><?= $nomerpesanan ?></span>
+      </div>
+      <div class="barisstruk">
+        <span class="labelstruk">Kantin</span>
+        <span class="nilaistruk"><i class="fa-solid fa-store"></i> <?= htmlspecialchars($namatoko) ?></span>
+      </div>
+      <div class="barisstruk">
+        <span class="labelstruk">Tanggal</span>
+        <span class="nilaistruk"><?= date('d M Y, H:i', strtotime($pesanan['tanggal_order'])) ?></span>
+      </div>
+      <div class="barisstruk">
+        <span class="labelstruk">Pembeli</span>
+        <span class="nilaistruk"><?= htmlspecialchars($_SESSION['username']) ?></span>
+      </div>
+      <div class="barisstruk">
+        <span class="labelstruk">Metode Bayar</span>
+        <span class="nilaistruk"><i class="fa-solid fa-wallet"></i> <?= htmlspecialchars($pesanan['metode_pembayaran']) ?></span>
+      </div>
+      <div class="barisstruk">
+        <span class="labelstruk">Status</span>
+        <span class="badge <?= kelasstatus($pesanan['status_order']) ?>">
+          <i class="fa-solid <?= ikonststatus($pesanan['status_order']) ?>"></i>
+          <?= htmlspecialchars($pesanan['status_order']) ?>
+        </span>
+      </div>
+      <?php if (!empty($pesanan['catatan'])): ?>
+      <div class="barisstruk">
+        <span class="labelstruk">Catatan</span>
+        <span class="nilaistruk"><?= htmlspecialchars($pesanan['catatan']) ?></span>
+      </div>
+      <?php endif; ?>
+
+      <div class="pemisah"><hr><span><i class="fa-solid fa-star"></i></span><hr></div>
+
+      <div class="judulbagian" style="margin:0 0 12px;"><i class="fa-solid fa-list"></i> Detail Pesanan</div>
+      <?php foreach ($detail as $item): ?>
+      <div class="itemdetailstruk">
+        <div class="namamenu"><?= htmlspecialchars($item['nama_menu']) ?></div>
+        <div class="barisnilai">
+          <span><?= $item['jumlah'] ?>x @ Rp <?= number_format($item['harga_satuan'],0,',','.') ?></span>
+          <b>Rp <?= number_format($item['subtotal'],0,',','.') ?></b>
+        </div>
+      </div>
+      <?php endforeach; ?>
+
+      <div class="pemisah"><hr><span><i class="fa-solid fa-star"></i></span><hr></div>
+
+      <div class="barisstruk">
+        <span class="labelstruk">Subtotal</span>
+        <span class="nilaistruk">Rp <?= number_format($subtotalitem,0,',','.') ?></span>
+      </div>
+      <div class="barisstruk">
+        <span class="labelstruk">Biaya Layanan</span>
+        <span class="nilaistruk">Rp <?= number_format(max(0,$biayalayanan),0,',','.') ?></span>
+      </div>
+      <div class="totalstruk">
+        <span class="label"><i class="fa-solid fa-coins"></i> Total Bayar</span>
+        <span class="nilai">Rp <?= number_format($pesanan['total_harga'],0,',','.') ?></span>
+      </div>
+
+    </div>
+
+    <div class="kakistruk">
+      <i class="fa-solid fa-heart"></i>
+      <p>Terima kasih telah memesan di eKantin!</p>
+      <p style="margin-top:4px;font-size:11px;">
+        <?= $nomerpesanan ?> &nbsp;|&nbsp; <?= date('d/m/Y H:i', strtotime($pesanan['tanggal_order'])) ?>
+      </p>
+    </div>
+
+  </div>
+
+  <!-- Aksi -->
+  <div style="display:flex;gap:10px;margin-bottom:12px;" class="takprint">
+    <button onclick="window.print()" class="tombolringan" style="flex:1;">
+      <i class="fa-solid fa-print"></i> Cetak
+    </button>
+    <button onclick="salinLink()" class="tombolringan" style="flex:1;">
+      <i class="fa-solid fa-share-nodes"></i> Bagikan
+    </button>
+  </div>
+
+  <?php if ($pesanan['status_order'] === 'Selesai' && !$sudahrating): ?>
+  <a href="rating.php?id_order=<?= $idpesanan ?>" class="tombolutama blok takprint" style="margin-bottom:10px;">
+    <i class="fa-solid fa-star"></i> Beri Rating dan Ulasan
+  </a>
+  <?php endif; ?>
+
+  <a href="pesanan.php" class="tombolkedua blok takprint" style="margin-bottom:10px;">
+    <i class="fa-solid fa-receipt"></i> Lihat Semua Pesanan
+  </a>
+  <a href="../index/index.php" class="tombolringan blok takprint" style="margin-bottom:28px;">
+    <i class="fa-solid fa-house"></i> Kembali ke Beranda
+  </a>
+
+</div>
+
+<script>
+function salinLink() {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(window.location.href).then(function() {
+      alert('Link struk berhasil disalin!');
+    });
+  }
+}
+</script>
+</body>
+</html>

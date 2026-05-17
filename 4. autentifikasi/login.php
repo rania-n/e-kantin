@@ -61,7 +61,7 @@ function toggle(){
 
 function loginGoogle(){
   alert("Login dengan Google belum dihubungkan, ini masih tampilan frontend.");
-  window.location.href = "http://localhost/e-kantin/pembeli/index.php";
+  window.location.href = "http://localhost/e-kantin/pembeli/index/index.php";
 }
 </script>
 
