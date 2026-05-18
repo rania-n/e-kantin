@@ -2,7 +2,7 @@
 /* ============================================================
    BERANDA PEMBELI
    ============================================================ */
-include '../../3. komponen/guard.php';
+include '../../3. komponen/guardpembeli.php';
 include '../../1. koneksi/koneksi.php';
 
 $namapengguna = $_SESSION['username'];

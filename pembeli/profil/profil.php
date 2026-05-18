@@ -2,7 +2,7 @@
 /* ============================================================
    HALAMAN PROFIL
    ============================================================ */
-include '../../3. komponen/guard.php';
+include '../../3. komponen/guardpembeli.php';
 include '../../1. koneksi/koneksi.php';
 
 $idpengguna = (int)$_SESSION['id_user'];

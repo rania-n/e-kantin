@@ -1,20 +1,12 @@
 <?php
 /* ============================================================
-   NAVBAR PEMBELI
-   Di-include di setiap halaman pembeli.
-   Setiap halaman harus mendefinisikan $pathbase = '..' sebelum
-   include file ini, supaya link navbar mengarah ke folder yang benar.
-
-   Contoh: di pembeli/index/index.php → $pathbase = '..';
-   Contoh: di pembeli/keranjang/keranjang.php → $pathbase = '..';
+   NAVBAR PEMBELI — Di-include di setiap halaman pembeli.
+   Setiap halaman wajib mendefinisikan $pathbase = '..'
+   sebelum include file ini.
    ============================================================ */
-
 if (session_status() === PHP_SESSION_NONE) session_start();
-
-// Pastikan $pathbase sudah didefinisikan oleh halaman yang include
 if (!isset($pathbase)) $pathbase = '..';
 
-// Cek halaman aktif berdasarkan nama file
 $halamansaatini = basename($_SERVER['PHP_SELF'], '.php');
 
 // Hitung jumlah item keranjang dari SESSION
@@ -28,7 +20,7 @@ if (!empty($_SESSION['keranjang'])) {
     }
 }
 
-// Ambil dan hapus flash message dari session (jika ada)
+// Flash message
 $flashpesan = '';
 $flashjenis = '';
 if (!empty($_SESSION['flash'])) {
@@ -37,60 +29,49 @@ if (!empty($_SESSION['flash'])) {
     unset($_SESSION['flash']);
 }
 
-// Tentukan apakah tiap menu aktif
-$berandaaktif  = ($halamansaatini === 'index') ? 'aktif' : '';
-$keranjangaktif = ($halamansaatini === 'keranjang') ? 'aktif' : '';
-$pesananaktif  = in_array($halamansaatini, ['pesanan','struk','rating']) ? 'aktif' : '';
-$profilaktif   = in_array($halamansaatini, ['profil','editprofil','gantipassword']) ? 'aktif' : '';
+// Tentukan menu yang aktif
+$berandaaktif   = $halamansaatini === 'index'                                              ? 'aktif' : '';
+$keranjangaktif = $halamansaatini === 'keranjang'                                          ? 'aktif' : '';
+$pesananaktif   = in_array($halamansaatini, ['pesanan','struk','rating'])                  ? 'aktif' : '';
+$profilaktif    = in_array($halamansaatini, ['profil','editprofil','gantipassword'])        ? 'aktif' : '';
 ?>
 
 <nav class="navbarpembeli">
 
-  <!-- Logo (hanya tampil di sidebar desktop) -->
   <div class="logosidebar">
-    <div class="namaapp">
-      <i class="fa-solid fa-utensils"></i>
-      eKantin
-    </div>
-    <div class="taglineapp">Pesan & nikmati</div>
+    <div class="namaapp"><i class="fa-solid fa-utensils"></i> eKantin</div>
+    <div class="taglineapp">Pesan &amp; nikmati</div>
   </div>
 
-  <!-- Beranda -->
   <a href="<?= $pathbase ?>/index/index.php" class="itemnav <?= $berandaaktif ?>">
-    <i class="fa-solid fa-house"></i>
-    <span>Beranda</span>
+    <i class="fa-solid fa-house"></i><span>Beranda</span>
   </a>
 
-  <!-- Keranjang -->
   <a href="<?= $pathbase ?>/keranjang/keranjang.php" class="itemnav <?= $keranjangaktif ?>">
-    <i class="fa-solid fa-cart-shopping"></i>
-    <span>Keranjang</span>
+    <i class="fa-solid fa-cart-shopping"></i><span>Keranjang</span>
     <?php if ($jumlahkeranjang > 0): ?>
       <span class="lencanakeranjang"><?= $jumlahkeranjang ?></span>
     <?php endif; ?>
   </a>
 
-  <!-- Pesanan -->
   <a href="<?= $pathbase ?>/pesanan/pesanan.php" class="itemnav <?= $pesananaktif ?>">
-    <i class="fa-solid fa-receipt"></i>
-    <span>Pesanan</span>
+    <i class="fa-solid fa-receipt"></i><span>Pesanan</span>
   </a>
 
-  <!-- Profil -->
   <a href="<?= $pathbase ?>/profil/profil.php" class="itemnav <?= $profilaktif ?>">
-    <i class="fa-solid fa-user"></i>
-    <span>Profil</span>
+    <i class="fa-solid fa-user"></i><span>Profil</span>
   </a>
 
-  <!-- Keluar (hanya tampil di sidebar desktop) -->
-  <a href="../../4. autentifikasi/logout.php" class="itemnav itemkeluar">
-    <i class="fa-solid fa-right-from-bracket"></i>
-    <span>Keluar</span>
+  <!-- Tombol keluar (desktop sidebar — dengan konfirmasi modal) -->
+  <a href="#"
+     onclick="document.getElementById('modalkekluarpembeli').classList.add('tampil'); return false;"
+     class="itemnav itemkeluar">
+    <i class="fa-solid fa-right-from-bracket"></i><span>Keluar</span>
   </a>
 
 </nav>
 
-<!-- Flash Message (pesan setelah redirect) -->
+<!-- Flash message (muncul setelah redirect) -->
 <?php if ($flashpesan): ?>
 <div style="padding: 0 16px; margin-top: 8px;">
   <div class="flashpesan flash<?= $flashjenis ?>">
@@ -105,3 +86,24 @@ $profilaktif   = in_array($halamansaatini, ['profil','editprofil','gantipassword
   </div>
 </div>
 <?php endif; ?>
+
+<!-- Modal konfirmasi keluar pembeli -->
+<div class="modaloverlay" id="modalkekluarpembeli"
+     onclick="this.classList.remove('tampil')">
+  <div class="isimodal" onclick="event.stopPropagation()" style="max-width:380px;text-align:center;">
+    <div class="peganganmodal"></div>
+    <div style="font-size:44px;color:var(--utama);margin-bottom:10px;">
+      <i class="fa-solid fa-right-from-bracket"></i>
+    </div>
+    <div style="font-size:18px;font-weight:800;color:var(--utama);margin-bottom:6px;">Yakin ingin keluar?</div>
+    <div style="font-size:13px;color:var(--tekssamar);margin-bottom:20px;">Kamu perlu login lagi untuk memesan</div>
+    <a href="../../4. autentifikasi/logout.php"
+       class="tombolutama blok" style="margin-bottom:10px;">
+      <i class="fa-solid fa-right-from-bracket"></i> Ya, Keluar
+    </a>
+    <button class="tombolringan blok"
+            onclick="document.getElementById('modalkekluarpembeli').classList.remove('tampil')">
+      Batal
+    </button>
+  </div>
+</div>

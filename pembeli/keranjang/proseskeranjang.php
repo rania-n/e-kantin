@@ -5,7 +5,7 @@
    Dipanggil via form POST, lalu redirect kembali ke halaman asal.
    Tidak mengembalikan JSON karena sudah pakai redirect.
    ============================================================ */
-include '../../3. komponen/guard.php';
+include '../../3. komponen/guardpembeli.php';
 include '../../1. koneksi/koneksi.php';
 
 // Hanya terima POST

@@ -1,214 +1,295 @@
 <?php
-session_start();
+/* ============================================================
+   KELOLA MENU PENJUAL
+   ============================================================ */
 include '../../1. koneksi/koneksi.php';
+include '../../3. komponen/guardpenjual.php';
 
-if (!isset($_SESSION['id_user']) || $_SESSION['role'] !== 'penjual') {
-    header("Location: ../../4. autentifikasi/login.php");
-    exit();
-}
+$idtoko = (int)$_SESSION['id_toko'];
+$halamansaatini = 'manajemenmenu';
 
 // Filter
-$filter = $_GET['filter'] ?? 'Semua';
+$filter  = $_GET['filter'] ?? 'Semua';
+$editid  = (int)($_GET['edit'] ?? 0);
 
-// Notifikasi
-$pesan = $_GET['pesan'] ?? '';
-$tipe  = $_GET['tipe'] ?? '';
-
-// Query dengan filter yang benar
-$query = "SELECT * FROM tb_menu WHERE deleted = 0";
-if ($filter === 'Minuman Ringan' || $filter === 'Minuman Sehat') {
-    $query .= " AND kategori = '$filter'";
-} elseif (in_array($filter, ['Makanan Berat', 'Makanan Ringan', 'Makanan Sehat'])) {
-    $query .= " AND kategori = '$filter'";
+// Flash message
+$flashpesan = ''; $flashjenis = '';
+if (!empty($_SESSION['flash'])) {
+    $flashpesan = $_SESSION['flash']['pesan'];
+    $flashjenis = $_SESSION['flash']['jenis'];
+    unset($_SESSION['flash']);
 }
-// Semua = tidak ditambah kondisi
-$query .= " ORDER BY created DESC";
 
-$result = mysqli_query($conn, $query);
+// Kategori yang valid
+$kategorilist = ['Makanan Berat','Makanan Ringan','Makanan Sehat','Minuman Ringan','Minuman Sehat'];
+
+// Query menu milik toko ini
+$kondisi = "id_toko=$idtoko AND deleted=0";
+if ($filter !== 'Semua' && in_array($filter, $kategorilist)) {
+    $filteraman = $conn->real_escape_string($filter);
+    $kondisi .= " AND kategori='$filteraman'";
+}
+$hasilmenu = $conn->query("SELECT * FROM tb_menu WHERE $kondisi ORDER BY created DESC");
+
+// Data edit (jika diminta)
+$dataedit = null;
+if ($editid > 0) {
+    $qe = $conn->prepare("SELECT * FROM tb_menu WHERE id_menu=? AND id_toko=? AND deleted=0");
+    $qe->bind_param("ii", $editid, $idtoko);
+    $qe->execute();
+    $dataedit = $qe->get_result()->fetch_assoc();
+    $qe->close();
+}
 ?>
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manajemen Menu e-Kantin</title>
-    <link rel="stylesheet" href="../../3. komponen/penjual.css">
-    <style>
-        .modal { display: none; }
-        .modal:target { display: flex; }
-        .alert { padding: 12px; margin: 15px 0; border-radius: 6px; }
-        .alert-success { background: #d4edda; color: #155724; }
-        .alert-danger { background: #f8d7da; color: #721c24; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kelola Menu - eKantin</title>
+<link rel="stylesheet" href="../../3. komponen/penjual.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
 
-<?php include '../../3. komponen/sidebarpenjual.html'; ?>
+<?php include '../../3. komponen/navbarpenjual.php'; ?>
 
-<div class="main">
-    <div class="header">
-        <div>
-            <h1>Manajemen Menu</h1>
-            <p>Kelola menu makanan dan minuman kantin</p>
-        </div>
-        <a href="#tambahModal" class="btn-add">+ Tambah Menu</a>
+<main class="konten">
+
+  <div class="header-halaman">
+    <div class="kiri">
+      <h1><i class="fa-solid fa-bowl-food"></i> Kelola Menu</h1>
+      <p>Daftar menu yang dijual di <?= htmlspecialchars($_SESSION['nama_toko']??'') ?></p>
     </div>
+    <button onclick="bukaModal('modalTambah')" class="tombolutama">
+      <i class="fa-solid fa-plus"></i> Tambah Menu
+    </button>
+  </div>
 
-    <!-- Notifikasi -->
-    <?php if($pesan): ?>
-        <div class="alert alert-<?= $tipe === 'success' ? 'success' : 'danger' ?>">
-            <?= htmlspecialchars($pesan) ?>
+  <?php if ($flashpesan): ?>
+  <div class="flashpesan flash<?= $flashjenis ?>">
+    <i class="fa-solid fa-<?= $flashjenis === 'sukses' ? 'circle-check' : 'circle-xmark' ?>"></i>
+    <?= htmlspecialchars($flashpesan) ?>
+  </div>
+  <?php endif; ?>
+
+  <!-- Filter kategori -->
+  <div class="filter-bar">
+    <a href="manajemenmenu.php" class="chip-filter <?= $filter === 'Semua' ? 'aktif' : '' ?>">
+      Semua
+    </a>
+    <?php foreach ($kategorilist as $k): ?>
+    <a href="manajemenmenu.php?filter=<?= urlencode($k) ?>"
+       class="chip-filter <?= $filter === $k ? 'aktif' : '' ?>">
+      <?= $k ?>
+    </a>
+    <?php endforeach; ?>
+  </div>
+
+  <!-- Grid menu -->
+  <?php if ($hasilmenu && $hasilmenu->num_rows > 0): ?>
+  <div class="grid-menu">
+    <?php while ($menu = $hasilmenu->fetch_assoc()): ?>
+    <div class="kartu-menu">
+      <img class="gambar-menu"
+           src="../../2. aset/katalog/<?= htmlspecialchars($menu['foto']) ?>"
+           alt="<?= htmlspecialchars($menu['nama_menu']) ?>"
+           onerror="this.style.background='var(--latar)'; this.style.height='140px'">
+      <div class="isi-kartu">
+        <div class="nama-menu"><?= htmlspecialchars($menu['nama_menu']) ?></div>
+        <div class="kategori-menu"><?= htmlspecialchars($menu['kategori']) ?></div>
+        <div class="harga-menu">Rp <?= number_format($menu['harga'],0,',','.') ?></div>
+        <div class="stok-menu">
+          <i class="fa-solid fa-box" style="font-size:10px;"></i>
+          Stok: <strong><?= $menu['stok'] ?></strong>
+          <?php if ($menu['stok'] <= 5 && $menu['stok'] > 0): ?>
+          <span style="color:var(--tunggu);font-size:10px;"> (hampir habis)</span>
+          <?php elseif ($menu['stok'] == 0): ?>
+          <span style="color:var(--gagal);font-size:10px;"> (habis)</span>
+          <?php endif; ?>
         </div>
+        <div style="margin-top:6px;">
+          <span class="badge <?= $menu['status'] === 'aktif' ? 'siap' : 'selesai' ?>">
+            <?= $menu['status'] === 'aktif' ? 'Aktif' : 'Nonaktif' ?>
+          </span>
+        </div>
+      </div>
+      <div class="aksi-menu">
+        <a href="manajemenmenu.php?edit=<?= $menu['id_menu'] ?>&filter=<?= urlencode($filter) ?>"
+           onclick="bukaModal('modalEdit')"
+           class="tombolkecil">
+          <i class="fa-solid fa-pen"></i> Edit
+        </a>
+        <a href="prosesmanajemenmenu.php?aksi=toggle&id=<?= $menu['id_menu'] ?>&filter=<?= urlencode($filter) ?>"
+           class="tombolkecil <?= $menu['status'] === 'aktif' ? 'kuning' : 'hijau' ?>"
+           onclick="return confirm('Ubah status menu ini?')">
+          <i class="fa-solid fa-<?= $menu['status'] === 'aktif' ? 'ban' : 'check' ?>"></i>
+          <?= $menu['status'] === 'aktif' ? 'Nonaktifkan' : 'Aktifkan' ?>
+        </a>
+        <a href="prosesmanajemenmenu.php?aksi=hapus&id=<?= $menu['id_menu'] ?>&filter=<?= urlencode($filter) ?>"
+           class="tombolkecil merah"
+           onclick="return confirm('Yakin hapus menu ini? Tindakan ini tidak bisa dibatalkan.')">
+          <i class="fa-solid fa-trash"></i>
+        </a>
+      </div>
+    </div>
+    <?php endwhile; ?>
+  </div>
+  <?php else: ?>
+  <div class="kosong">
+    <div class="ikon-kosong"><i class="fa-solid fa-bowl-food"></i></div>
+    <h3>Belum ada menu</h3>
+    <p>Tambahkan menu pertamamu untuk mulai menerima pesanan</p>
+    <button onclick="bukaModal('modalTambah')" class="tombolutama">
+      <i class="fa-solid fa-plus"></i> Tambah Menu Sekarang
+    </button>
+  </div>
+  <?php endif; ?>
+
+</main>
+
+<!-- ===== MODAL TAMBAH MENU ===== -->
+<div class="modaloverlay" id="modalTambah" onclick="tutupModal('modalTambah')">
+  <div class="isimodal" onclick="event.stopPropagation()" style="max-width:520px;">
+    <div class="modal-judul">
+      <h2><i class="fa-solid fa-plus"></i> Tambah Menu Baru</h2>
+      <button class="tombol-tutup-modal" onclick="tutupModal('modalTambah')">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <form method="POST" action="prosesmanajemenmenu.php" enctype="multipart/form-data">
+      <input type="hidden" name="aksi" value="tambah">
+      <input type="hidden" name="filter" value="<?= htmlspecialchars($filter) ?>">
+      <div class="barisform">
+        <div class="kelompokform">
+          <label>Nama Menu <span style="color:var(--gagal);">*</span></label>
+          <input type="text" name="nama_menu" required maxlength="50" placeholder="Nama menu...">
+        </div>
+        <div class="kelompokform">
+          <label>Kategori <span style="color:var(--gagal);">*</span></label>
+          <select name="kategori" required>
+            <?php foreach ($kategorilist as $k): ?>
+            <option value="<?= $k ?>"><?= $k ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+      </div>
+      <div class="barisform">
+        <div class="kelompokform">
+          <label>Harga (Rp) <span style="color:var(--gagal);">*</span></label>
+          <input type="number" name="harga" required min="0" max="999999" placeholder="0">
+          <small>Minimum Rp 0</small>
+        </div>
+        <div class="kelompokform">
+          <label>Stok Awal <span style="color:var(--gagal);">*</span></label>
+          <input type="number" name="stok" required min="0" max="9999" placeholder="0">
+          <small>Minimum 0</small>
+        </div>
+      </div>
+      <div class="kelompokform">
+        <label>Deskripsi</label>
+        <textarea name="deskripsi" rows="2" placeholder="Deskripsi singkat menu..."></textarea>
+      </div>
+      <div class="kelompokform">
+        <label>Foto Menu <span style="color:var(--gagal);">*</span></label>
+        <input type="file" name="foto" accept="image/jpeg,image/png,image/webp" required>
+        <small>Format: JPG, PNG, WEBP. Maks. 2MB</small>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:4px;">
+        <button type="button" class="tombolringan" onclick="tutupModal('modalTambah')">Batal</button>
+        <button type="submit" class="tombolutama" style="flex:1;">
+          <i class="fa-solid fa-floppy-disk"></i> Simpan Menu
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ===== MODAL EDIT MENU ===== -->
+<div class="modaloverlay" id="modalEdit" onclick="tutupModal('modalEdit')"
+     style="<?= $dataedit ? 'opacity:1;pointer-events:all;' : '' ?>">
+  <div class="isimodal" onclick="event.stopPropagation()" style="max-width:520px;">
+    <div class="modal-judul">
+      <h2><i class="fa-solid fa-pen"></i> Edit Menu</h2>
+      <a href="manajemenmenu.php?filter=<?= urlencode($filter) ?>" class="tombol-tutup-modal">
+        <i class="fa-solid fa-xmark"></i>
+      </a>
+    </div>
+    <?php if ($dataedit): ?>
+    <form method="POST" action="prosesmanajemenmenu.php" enctype="multipart/form-data">
+      <input type="hidden" name="aksi" value="edit">
+      <input type="hidden" name="id_menu" value="<?= $dataedit['id_menu'] ?>">
+      <input type="hidden" name="filter" value="<?= htmlspecialchars($filter) ?>">
+      <input type="hidden" name="foto_lama" value="<?= htmlspecialchars($dataedit['foto']) ?>">
+      <div class="barisform">
+        <div class="kelompokform">
+          <label>Nama Menu <span style="color:var(--gagal);">*</span></label>
+          <input type="text" name="nama_menu" required maxlength="50"
+                 value="<?= htmlspecialchars($dataedit['nama_menu']) ?>">
+        </div>
+        <div class="kelompokform">
+          <label>Kategori <span style="color:var(--gagal);">*</span></label>
+          <select name="kategori" required>
+            <?php foreach ($kategorilist as $k): ?>
+            <option value="<?= $k ?>" <?= $dataedit['kategori'] === $k ? 'selected' : '' ?>><?= $k ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+      </div>
+      <div class="barisform">
+        <div class="kelompokform">
+          <label>Harga (Rp) <span style="color:var(--gagal);">*</span></label>
+          <input type="number" name="harga" required min="0" max="999999"
+                 value="<?= $dataedit['harga'] ?>">
+        </div>
+        <div class="kelompokform">
+          <label>Stok <span style="color:var(--gagal);">*</span></label>
+          <input type="number" name="stok" required min="0" max="9999"
+                 value="<?= $dataedit['stok'] ?>">
+        </div>
+      </div>
+      <div class="kelompokform">
+        <label>Deskripsi</label>
+        <textarea name="deskripsi" rows="2"><?= htmlspecialchars($dataedit['deskripsi']) ?></textarea>
+      </div>
+      <div class="kelompokform">
+        <label>Ganti Foto (kosongkan jika tidak ingin ganti)</label>
+        <input type="file" name="foto" accept="image/jpeg,image/png,image/webp">
+        <small>Foto saat ini: <?= htmlspecialchars($dataedit['foto']) ?></small>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:4px;">
+        <a href="manajemenmenu.php?filter=<?= urlencode($filter) ?>" class="tombolringan">Batal</a>
+        <button type="submit" class="tombolutama" style="flex:1;">
+          <i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan
+        </button>
+      </div>
+    </form>
+    <?php else: ?>
+    <p style="text-align:center;color:var(--tekssamar);padding:20px;">Pilih menu yang ingin diedit.</p>
     <?php endif; ?>
-
-
-    <div class="filter-tabs">
-        <?php
-        $kategori_list = [
-            'Semua'           => 'Semua',
-            'Makanan Berat'   => 'Makanan Berat',
-            'Makanan Ringan'  => 'Makanan Ringan',
-            'Makanan Sehat'   => 'Makanan Sehat',
-            'Minuman Ringan'  => 'Minuman Ringan',
-            'Minuman Sehat'   => 'Minuman Sehat'
-        ];
-        foreach ($kategori_list as $val => $label):
-        ?>
-            <form method="get" style="display:inline-block;margin:0;">
-                <input type="hidden" name="filter" value="<?= $val ?>">
-                <button type="submit" class="<?= $filter === $val ? 'active' : '' ?>"><?= $label ?></button>
-            </form>
-        <?php endforeach; ?>
-    </div>
-
-    <div class="menu-grid">
-        <?php if(mysqli_num_rows($result) > 0): ?>
-            <?php while($row = mysqli_fetch_assoc($result)): ?>
-            <div class="card">
-                <img src="../../2. aset/katalog/<?= htmlspecialchars($row['foto']) ?>" 
-                     alt="<?= htmlspecialchars($row['nama_menu']) ?>"
-                     onerror="this.src='../../2. aset/katalog/default.jpg'">
-                <div class="card-body">
-                    <h3><?= htmlspecialchars($row['nama_menu']) ?></h3>
-                    <small><?= htmlspecialchars($row['kategori']) ?></small>
-                    <p><?= htmlspecialchars($row['deskripsi']) ?></p>
-                    <div class="price">Rp <?= number_format($row['harga'], 0, ',', '.') ?></div>
-                </div>
-                <div class="actions">
-                    <a href="prosesmanajemenmenu.php?action=toggle&id=<?= $row['id_menu'] ?>&filter=<?= urlencode($filter) ?>" 
-                       class="disable" onclick="return confirm('Ubah status menu ini?')"> 
-                        <?= $row['status'] === 'aktif' ? 'Nonaktifkan' : 'Aktifkan' ?>
-                    </a>
-                    <a href="?edit=<?= $row['id_menu'] ?>&filter=<?= urlencode($filter) ?>#menuModal" class="edit">✏ Edit</a>
-                    <a href="prosesmanajemenmenu.php?action=delete&id=<?= $row['id_menu'] ?>&filter=<?= urlencode($filter) ?>" 
-                       class="delete" onclick="return confirm('Yakin hapus menu ini?')">🗑 Hapus</a>
-                </div>
-            </div>
-            <?php endwhile; ?>
-        <?php else: ?>
-            <p style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #888; font-size: 1.1em;">
-                Menu tidak ditemukan.
-            </p>
-        <?php endif; ?>
-    </div>
+  </div>
 </div>
 
-<!-- MODAL TAMBAH -->
-<div class="modal" id="tambahModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Tambah Menu Baru</h2>
-            <a href="#" class="close">&times;</a>
-        </div>
-        <form action="prosesmanajemenmenu.php" method="POST" enctype="multipart/form-data">
-            <input type="hidden" name="action" value="add">
-            <input type="hidden" name="filter" value="<?= htmlspecialchars($filter) ?>">
-
-            <label>Nama Menu</label>
-            <input type="text" name="nama_menu" required>
-
-            <label>Kategori</label>
-            <select name="kategori" required>
-                <option value="Makanan Berat">Makanan Berat</option>
-                <option value="Makanan Ringan">Makanan Ringan</option>
-                <option value="Makanan Sehat">Makanan Sehat</option>
-                <option value="Minuman Ringan">Minuman Ringan</option>
-                <option value="Minuman Sehat">Minuman Sehat</option>
-            </select>
-
-            <label>Harga (Rp)</label>
-            <input type="number" name="harga" required>
-
-            <label>Stok</label>
-            <input type="number" name="stok" required>
-
-            <label>Deskripsi</label>
-            <textarea name="deskripsi" rows="3"></textarea>
-
-            <label>Upload Gambar</label>
-            <input type="file" name="foto" accept="image/*" required>
-
-            <div class="modal-buttons">
-                <a href="#" class="btn-cancel">Batal</a>
-                <button type="submit" class="btn-save">Tambah Menu</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- MODAL EDIT -->
-<div class="modal" id="menuModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Edit Menu</h2>
-            <a href="#" class="close">&times;</a>
-        </div>
-        <?php 
-        $edit_id = $_GET['edit'] ?? '';
-        $edit_data = null;
-        if($edit_id) {
-            $q = mysqli_query($conn, "SELECT * FROM tb_menu WHERE id_menu = " . (int)$edit_id);
-            $edit_data = mysqli_fetch_assoc($q);
-        }
-        ?>
-        <form action="prosesmanajemenmenu.php" method="POST" enctype="multipart/form-data">
-            <input type="hidden" name="action" value="edit">
-            <input type="hidden" name="id_menu" value="<?= $edit_data['id_menu'] ?? '' ?>">
-            <input type="hidden" name="filter" value="<?= htmlspecialchars($filter) ?>">
-            <input type="hidden" name="foto_lama" value="<?= $edit_data['foto'] ?? '' ?>">
-
-            <label>Nama Menu</label>
-            <input type="text" name="nama_menu" value="<?= htmlspecialchars($edit_data['nama_menu'] ?? '') ?>" required>
-
-            <label>Kategori</label>
-            <select name="kategori" required>
-                <option value="Makanan Berat" <?= ($edit_data['kategori'] ?? '') === 'Makanan Berat' ? 'selected' : '' ?>>Makanan Berat</option>
-                <option value="Makanan Ringan" <?= ($edit_data['kategori'] ?? '') === 'Makanan Ringan' ? 'selected' : '' ?>>Makanan Ringan</option>
-                <option value="Makanan Sehat" <?= ($edit_data['kategori'] ?? '') === 'Makanan Sehat' ? 'selected' : '' ?>>Makanan Sehat</option>
-                <option value="Minuman Ringan" <?= ($edit_data['kategori'] ?? '') === 'Minuman Ringan' ? 'selected' : '' ?>>Minuman Ringan</option>
-                <option value="Minuman Sehat" <?= ($edit_data['kategori'] ?? '') === 'Minuman Sehat' ? 'selected' : '' ?>>Minuman Sehat</option>
-            </select>
-
-            <label>Harga (Rp)</label>
-            <input type="number" name="harga" value="<?= $edit_data['harga'] ?? '' ?>" required>
-
-            <label>Stok</label>
-            <input type="number" name="stok" value="<?= $edit_data['stok'] ?? '' ?>" required>
-
-            <label>Deskripsi</label>
-            <textarea name="deskripsi" rows="3"><?= htmlspecialchars($edit_data['deskripsi'] ?? '') ?></textarea>
-
-            <label>Upload Gambar Baru (kosongkan jika tidak ingin ganti)</label>
-            <input type="file" name="foto" accept="image/*">
-
-            <div class="modal-buttons">
-                <a href="#" class="btn-cancel">Batal</a>
-                <button type="submit" class="btn-save">Simpan Perubahan</button>
-            </div>
-        </form>
-    </div>
-</div>
+<script>
+function bukaModal(id) {
+  document.getElementById(id).classList.add('tampil');
+}
+function tutupModal(id) {
+  document.getElementById(id).classList.remove('tampil');
+  // Kalau tutup modal edit, hapus parameter edit dari URL
+  if (id === 'modalEdit') {
+    var url = new URL(window.location.href);
+    url.searchParams.delete('edit');
+    window.history.replaceState({}, '', url);
+  }
+}
+// Buka modal edit otomatis jika ada parameter ?edit=
+<?php if ($dataedit): ?>
+document.addEventListener('DOMContentLoaded', function() {
+  bukaModal('modalEdit');
+});
+<?php endif; ?>
+</script>
 
 </body>
 </html>

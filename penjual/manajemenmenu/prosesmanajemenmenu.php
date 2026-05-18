@@ -1,87 +1,133 @@
 <?php
-session_start();
+/* ============================================================
+   PROSES KELOLA MENU
+   Handler: tambah, edit, hapus, toggle status menu.
+   ============================================================ */
 include '../../1. koneksi/koneksi.php';
+include '../../3. komponen/guardpenjual.php';
 
-if (!isset($_SESSION['id_user']) || $_SESSION['role'] !== 'penjual') {
-    header("Location: ../../4. autentifikasi/login.php");
-    exit();
-}
-
-$action = $_POST['action'] ?? $_GET['action'] ?? '';
+$idtoko = (int)$_SESSION['id_toko'];
+$aksi   = $_POST['aksi'] ?? $_GET['aksi'] ?? '';
 $filter = $_POST['filter'] ?? $_GET['filter'] ?? 'Semua';
 
+function setFlash(string $pesan, string $jenis): void {
+    $_SESSION['flash'] = ['pesan' => $pesan, 'jenis' => $jenis];
+}
+function kembali(string $filter, int $editid = 0): void {
+    $url = "manajemenmenu.php?filter=" . urlencode($filter);
+    if ($editid) $url .= "&edit=$editid";
+    header("Location: $url"); exit;
+}
+
 try {
-    if ($action === 'add' || $action === 'edit') {
-        $nama      = trim($_POST['nama_menu']);
-        $harga     = (int)$_POST['harga'];
-        $stok      = (int)$_POST['stok'];
-        $kategori  = trim($_POST['kategori']);
-        $deskripsi = trim($_POST['deskripsi']);
 
-        // === PERBAIKAN FOTO EDIT ===
-        $foto = '';
+    // ===== TAMBAH / EDIT =====
+    if ($aksi === 'tambah' || $aksi === 'edit') {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            kembali($filter);
+        }
+
+        // Ambil & validasi input
+        $namamenu  = trim($_POST['nama_menu']  ?? '');
+        $harga     = (int)($_POST['harga']     ?? 0);
+        $stok      = (int)($_POST['stok']      ?? 0);
+        $kategori  = trim($_POST['kategori']   ?? '');
+        $deskripsi = trim($_POST['deskripsi']  ?? '');
+
+        $kategorilist = ['Makanan Berat','Makanan Ringan','Makanan Sehat','Minuman Ringan','Minuman Sehat'];
+
+        // Validasi
+        if (empty($namamenu))                          throw new Exception("Nama menu wajib diisi.");
+        if (strlen($namamenu) > 50)                    throw new Exception("Nama menu maksimal 50 karakter.");
+        if (!in_array($kategori, $kategorilist))       throw new Exception("Kategori tidak valid.");
+        if ($harga < 0)                                throw new Exception("Harga tidak boleh negatif.");
+        if ($harga > 999999)                           throw new Exception("Harga terlalu besar (maks. Rp 999.999).");
+        if ($stok < 0)                                 throw new Exception("Stok tidak boleh negatif.");
+        if ($stok > 9999)                              throw new Exception("Stok terlalu besar (maks. 9.999).");
+
+        // Proses foto
+        $fotofile = '';
         if (isset($_FILES['foto']) && $_FILES['foto']['error'] === 0) {
-            // Ada upload foto baru
-            $allowed = ['jpg','jpeg','png','webp'];
-            $ext = strtolower(pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION));
-            if (!in_array($ext, $allowed)) {
-                throw new Exception('Format gambar hanya jpg, jpeg, png, webp!');
+            // Validasi tipe & ukuran
+            $allowedmime = ['image/jpeg','image/png','image/webp'];
+            if (!in_array($_FILES['foto']['type'], $allowedmime)) {
+                throw new Exception("Format gambar hanya JPG, PNG, atau WEBP.");
             }
-            $foto = uniqid() . '.' . $ext;
-            $target = '../../2. aset/katalog/' . $foto;
+            if ($_FILES['foto']['size'] > 2 * 1024 * 1024) {
+                throw new Exception("Ukuran gambar maksimal 2MB.");
+            }
+            $ext      = pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION);
+            $fotofile = uniqid() . '.' . strtolower($ext);
+            $target   = '../../2. aset/katalog/' . $fotofile;
             if (!move_uploaded_file($_FILES['foto']['tmp_name'], $target)) {
-                throw new Exception('Gagal mengupload gambar');
+                throw new Exception("Gagal mengupload gambar. Pastikan folder katalog bisa ditulis.");
             }
+        } elseif ($aksi === 'edit') {
+            // Edit tanpa foto baru → pakai foto lama
+            $fotofile = $_POST['foto_lama'] ?? '';
         } else {
-            // TIDAK upload foto baru → pakai foto lama
-            $foto = $_POST['foto_lama'] ?? '';
+            // Tambah wajib ada foto
+            throw new Exception("Foto menu wajib diunggah.");
         }
 
-        if ($action === 'add') {
-            $sql = "INSERT INTO tb_menu (nama_menu, harga, stok, kategori, deskripsi, foto, status) 
-                    VALUES (?, ?, ?, ?, ?, ?, 'aktif')";
-            $stmt = mysqli_prepare($conn, $sql);
-            mysqli_stmt_bind_param($stmt, "siisss", $nama, $harga, $stok, $kategori, $deskripsi, $foto);
-            mysqli_stmt_execute($stmt);
-            $pesan = "Menu berhasil ditambahkan!";
-            $tipe  = "success";
-        } 
-        else { // edit
-            $id = (int)$_POST['id_menu'];
-            $sql = "UPDATE tb_menu SET nama_menu=?, harga=?, stok=?, kategori=?, deskripsi=?, foto=? WHERE id_menu=?";
-            $stmt = mysqli_prepare($conn, $sql);
-            mysqli_stmt_bind_param($stmt, "siisssi", $nama, $harga, $stok, $kategori, $deskripsi, $foto, $id);
-            mysqli_stmt_execute($stmt);
-            $pesan = "Menu berhasil diupdate!";
-            $tipe  = "success";
+        if ($aksi === 'tambah') {
+            $s = $conn->prepare("INSERT INTO tb_menu (nama_menu, harga, stok, kategori, deskripsi, foto, status, id_toko)
+                                  VALUES (?,?,?,?,?,?,'aktif',?)");
+            $s->bind_param("siisssi", $namamenu, $harga, $stok, $kategori, $deskripsi, $fotofile, $idtoko);
+            $s->execute(); $s->close();
+            setFlash("Menu '$namamenu' berhasil ditambahkan!", 'sukses');
+        } else {
+            $idmenu = (int)($_POST['id_menu'] ?? 0);
+            // Pastikan menu milik toko ini
+            $cek = $conn->prepare("SELECT id_menu FROM tb_menu WHERE id_menu=? AND id_toko=? AND deleted=0");
+            $cek->bind_param("ii", $idmenu, $idtoko); $cek->execute();
+            if (!$cek->get_result()->num_rows) throw new Exception("Menu tidak ditemukan.");
+            $cek->close();
+
+            $s = $conn->prepare("UPDATE tb_menu SET nama_menu=?, harga=?, stok=?, kategori=?, deskripsi=?, foto=?, updated=NOW() WHERE id_menu=? AND id_toko=?");
+            $s->bind_param("siisssii", $namamenu, $harga, $stok, $kategori, $deskripsi, $fotofile, $idmenu, $idtoko);
+            $s->execute(); $s->close();
+            setFlash("Menu '$namamenu' berhasil diperbarui!", 'sukses');
         }
     }
 
-    elseif ($action === 'delete') {
-        $id = (int)$_GET['id'];
-        $sql = "UPDATE tb_menu SET deleted=1, deleted_at=NOW(), status='nonaktif' WHERE id_menu=?";
-        $stmt = mysqli_prepare($conn, $sql);
-        mysqli_stmt_bind_param($stmt, "i", $id);
-        mysqli_stmt_execute($stmt);
-        $pesan = "Menu berhasil dihapus!";
-        $tipe  = "success";
+    // ===== TOGGLE STATUS =====
+    elseif ($aksi === 'toggle') {
+        $idmenu = (int)($_GET['id'] ?? 0);
+        // Pastikan menu milik toko ini
+        $cek = $conn->prepare("SELECT status FROM tb_menu WHERE id_menu=? AND id_toko=? AND deleted=0");
+        $cek->bind_param("ii", $idmenu, $idtoko); $cek->execute();
+        $row = $cek->get_result()->fetch_assoc(); $cek->close();
+        if (!$row) throw new Exception("Menu tidak ditemukan.");
+
+        $statusbaru = ($row['status'] === 'aktif') ? 'nonaktif' : 'aktif';
+        $s = $conn->prepare("UPDATE tb_menu SET status=?, updated=NOW() WHERE id_menu=? AND id_toko=?");
+        $s->bind_param("sii", $statusbaru, $idmenu, $idtoko);
+        $s->execute(); $s->close();
+        setFlash("Status menu diubah menjadi '$statusbaru'.", 'sukses');
     }
 
-    elseif ($action === 'toggle') {
-        $id = (int)$_GET['id'];
-        $sql = "UPDATE tb_menu SET status = IF(status='aktif','nonaktif','aktif') WHERE id_menu=?";
-        $stmt = mysqli_prepare($conn, $sql);
-        mysqli_stmt_bind_param($stmt, "i", $id);
-        mysqli_stmt_execute($stmt);
-        $pesan = "Status menu berhasil diubah!";
-        $tipe  = "success";
+    // ===== HAPUS =====
+    elseif ($aksi === 'hapus') {
+        $idmenu = (int)($_GET['id'] ?? 0);
+        $cek = $conn->prepare("SELECT id_menu FROM tb_menu WHERE id_menu=? AND id_toko=? AND deleted=0");
+        $cek->bind_param("ii", $idmenu, $idtoko); $cek->execute();
+        if (!$cek->get_result()->num_rows) throw new Exception("Menu tidak ditemukan.");
+        $cek->close();
+
+        $s = $conn->prepare("UPDATE tb_menu SET deleted=1, deleted_at=NOW(), status='nonaktif' WHERE id_menu=? AND id_toko=?");
+        $s->bind_param("ii", $idmenu, $idtoko);
+        $s->execute(); $s->close();
+        setFlash("Menu berhasil dihapus.", 'sukses');
+    }
+
+    else {
+        throw new Exception("Aksi tidak dikenali.");
     }
 
 } catch (Exception $e) {
-    $pesan = $e->getMessage();
-    $tipe  = "danger";
+    setFlash($e->getMessage(), 'gagal');
 }
 
-header("Location: manajemenmenu.php?filter=" . urlencode($filter) . "&pesan=" . urlencode($pesan) . "&tipe=" . $tipe);
-exit();
+kembali($filter);
 ?>

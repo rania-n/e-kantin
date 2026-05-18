@@ -3,7 +3,7 @@
    PROSES PESANAN
    Dipanggil dari form checkout, lalu redirect ke struk.
    ============================================================ */
-include '../../3. komponen/guard.php';
+include '../../3. komponen/guardpembeli.php';
 include '../../1. koneksi/koneksi.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

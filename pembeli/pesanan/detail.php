@@ -2,7 +2,7 @@
 /* ============================================================
    DETAIL MENU
    ============================================================ */
-include '../../3. komponen/guard.php';
+include '../../3. komponen/guardpembeli.php';
 include '../../1. koneksi/koneksi.php';
 
 $idmenu = (int)($_GET['id'] ?? 0);

@@ -2,7 +2,7 @@
 /* ============================================================
    PROSES RATING
    ============================================================ */
-include '../../3. komponen/guard.php';
+include '../../3. komponen/guardpembeli.php';
 include '../../1. koneksi/koneksi.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header("Location: pesanan.php"); exit; }

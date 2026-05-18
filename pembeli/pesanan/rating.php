@@ -3,7 +3,7 @@
    HALAMAN BERI RATING
    Rating via form POST, bintang pilih via JS minimal (toggle class).
    ============================================================ */
-include '../../3. komponen/guard.php';
+include '../../3. komponen/guardpembeli.php';
 include '../../1. koneksi/koneksi.php';
 
 $idpesanan  = (int)($_GET['id_order'] ?? 0);

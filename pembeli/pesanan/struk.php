@@ -5,7 +5,7 @@
    pada hari yang sama, urutan berdasarkan id_order.
    Reset otomatis setiap hari (karena berdasarkan tanggal).
    ============================================================ */
-include '../../3. komponen/guard.php';
+include '../../3. komponen/guardpembeli.php';
 include '../../1. koneksi/koneksi.php';
 
 $idpesanan  = (int)($_GET['id_order'] ?? 0);
