@@ -1,56 +1,75 @@
 <?php
+/* ============================================================
+   PROSES REGISTER PEMBELI
+   ============================================================ */
+include "../1. koneksi/koneksi.php";
 
-include "../1. koneksi/koneksi.php"; 
+if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+    header("Location: register.php"); exit;
+}
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+$username = trim($_POST['username'] ?? '');
+$email    = trim($_POST['email']    ?? '');
+$password = trim($_POST['password'] ?? '');
 
-    $username = trim($_POST['username']);
-    $email    = trim($_POST['email']);
-    $password = trim($_POST['password']);
+// Validasi kosong
+if (empty($username) || empty($email) || empty($password)) {
+    header("Location: register.php?error=" . urlencode("Semua kolom wajib diisi!") . "&username=" . urlencode($username) . "&email=" . urlencode($email));
+    exit;
+}
 
-    if (empty($username) || empty($email) || empty($password)) {
-        header("Location: register.php?error=Semua field wajib diisi!&username=" . urlencode($username) . "&email=" . urlencode($email) . "&password=" . urlencode($password));
-        exit;
-    }
+// Validasi username
+if (strlen($username) < 6) {
+    header("Location: register.php?error=" . urlencode("Username minimal 6 karakter!") . "&username=" . urlencode($username) . "&email=" . urlencode($email));
+    exit;
+}
+if (strlen($username) > 50) {
+    header("Location: register.php?error=" . urlencode("Username maksimal 50 karakter!") . "&username=" . urlencode($username) . "&email=" . urlencode($email));
+    exit;
+}
 
-    if (strlen($username) < 6) {
-        header("Location: register.php?error=Username minimal 6 karakter!&username=" . urlencode($username) . "&email=" . urlencode($email) . "&password=" . urlencode($password));
-        exit;
-    }
+// Validasi password
+if (strlen($password) < 8) {
+    header("Location: register.php?error=" . urlencode("Password minimal 8 karakter!") . "&username=" . urlencode($username) . "&email=" . urlencode($email));
+    exit;
+}
+if (strlen($password) > 100) {
+    header("Location: register.php?error=" . urlencode("Password terlalu panjang!") . "&username=" . urlencode($username) . "&email=" . urlencode($email));
+    exit;
+}
 
-    if (strlen($password) < 8) {
-        header("Location: register.php?error=Password minimal 8 karakter!&username=" . urlencode($username) . "&email=" . urlencode($email) . "&password=" . urlencode($password));
-        exit;
-    }
+// Validasi email
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    header("Location: register.php?error=" . urlencode("Format email tidak valid!") . "&username=" . urlencode($username) . "&email=" . urlencode($email));
+    exit;
+}
 
-    $statement = $conn->prepare("SELECT id_user FROM tb_user WHERE email = ? OR username = ?");
-    $statement->bind_param("ss", $email, $username);
-    $statement->execute();
-    $statement->store_result();
+// Cek duplikat
+$cek = $conn->prepare("SELECT id_user FROM tb_user WHERE email=? OR username=?");
+$cek->bind_param("ss", $email, $username);
+$cek->execute();
+$cek->store_result();
+if ($cek->num_rows > 0) {
+    $cek->close();
+    header("Location: register.php?error=" . urlencode("Email atau Username sudah terdaftar!") . "&username=" . urlencode($username) . "&email=" . urlencode($email));
+    exit;
+}
+$cek->close();
 
-    if ($statement->num_rows > 0) {
-        $statement->close();
-        header("Location: register.php?error=Email atau Username sudah terdaftar!&username=" . urlencode($username) . "&email=" . urlencode($email) . "&password=" . urlencode($password));
-        exit;
-    }
-    $statement->close();
+// Simpan ke database
+$hash = password_hash($password, PASSWORD_DEFAULT);
+$role = "pembeli";
 
-    $hash = password_hash($password, PASSWORD_DEFAULT);
-    $role = "pembeli";
+$stmt = $conn->prepare("INSERT INTO tb_user (username, email, password, role) VALUES (?, ?, ?, ?)");
+$stmt->bind_param("ssss", $username, $email, $hash, $role);
 
-    $statement = $conn->prepare("INSERT INTO tb_user (username, email, password, role) 
-                            VALUES (?, ?, ?, ?)");
-    $statement->bind_param("ssss", $username, $email, $hash, $role);
-
-    if ($statement->execute()) {
-        echo "<script>
-                alert('Registrasi berhasil! Silakan login untuk melanjutkan.');
-                window.location='login.php';
-              </script>";
-    } else {
-        header("Location: register.php?error=Gagal mendaftar. Coba lagi nanti!");
-    }
-
-    $statement->close();
+if ($stmt->execute()) {
+    $stmt->close();
+    header("Location: login.php?sukses=" . urlencode("Registrasi berhasil! Silakan login."));
+    exit;
+} else {
+    $stmt->close();
+    header("Location: register.php?error=" . urlencode("Gagal mendaftar, coba lagi nanti.") . "&username=" . urlencode($username) . "&email=" . urlencode($email));
+    exit;
 }
 ?>

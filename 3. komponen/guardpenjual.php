@@ -4,7 +4,10 @@
    Cek login role penjual. Juga ambil id_toko & nama_toko
    ke session kalau belum ada, agar bisa dipakai di semua halaman.
    ============================================================ */
-if (session_status() === PHP_SESSION_NONE) session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_name('sesi_penjual');
+    session_start();
+}
 
 if (empty($_SESSION['id_user']) || ($_SESSION['role'] ?? '') !== 'penjual') {
     header("Location: ../../4. autentifikasi/login.php");

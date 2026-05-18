@@ -79,6 +79,17 @@ switch ($aksi) {
         if (!$menu) { setFlash('Menu tidak ditemukan', 'gagal'); kembalikan($kembali); }
         if ($menu['stok'] <= 0) { setFlash('Stok menu ini sudah habis', 'gagal'); kembalikan($kembali); }
 
+        // Cek status toko — tidak boleh tambah ke keranjang jika toko tutup
+        $cektoko = $conn->prepare("SELECT status_toko FROM tb_toko WHERE id_toko=? AND deleted=0");
+        $cektoko->bind_param("i", (int)$menu['id_toko']);
+        $cektoko->execute();
+        $statustoko = $cektoko->get_result()->fetch_row()[0] ?? 'tutup';
+        $cektoko->close();
+        if ($statustoko !== 'buka') {
+            setFlash('Kantin ' . $menu['nama_toko'] . ' sedang tutup, tidak bisa memesan', 'gagal');
+            kembalikan($kembali);
+        }
+
         $idtokomenu = (int)$menu['id_toko'];
         $namatoko   = $menu['nama_toko'] ?: 'Kantin';
 

@@ -8,6 +8,7 @@
    Sehingga path ke autentifikasi adalah: ../../4. autentifikasi/
    ============================================================ */
 if (session_status() === PHP_SESSION_NONE) {
+    session_name('sesi_pembeli');
     session_start();
 }
 if (empty($_SESSION['id_user']) || ($_SESSION['role'] ?? '') !== 'pembeli') {

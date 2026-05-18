@@ -1,6 +1,7 @@
 <?php
 /* ============================================================
    BERANDA PEMBELI
+   Hanya tampilkan menu dari toko yang statusnya 'buka'.
    ============================================================ */
 include '../../3. komponen/guardpembeli.php';
 include '../../1. koneksi/koneksi.php';
@@ -13,23 +14,38 @@ $kategori = isset($_GET['kategori']) ? $conn->real_escape_string($_GET['kategori
 $cari     = isset($_GET['cari'])     ? $conn->real_escape_string($_GET['cari'])     : '';
 $idtoko   = isset($_GET['toko'])     ? (int)$_GET['toko']                           : 0;
 
-// Daftar toko aktif
-$hasiltoko  = $conn->query("SELECT t.id_toko, t.nama_toko FROM tb_toko t WHERE t.deleted=0 ORDER BY t.id_toko");
+// Daftar toko yang sedang BUKA saja
+$hasiltoko  = $conn->query("SELECT t.id_toko, t.nama_toko FROM tb_toko t WHERE t.deleted=0 AND t.status_toko='buka' ORDER BY t.id_toko");
 $daftartoko = $hasiltoko->fetch_all(MYSQLI_ASSOC);
 
-// Query daftar menu
-$kondisi = ["m.deleted=0", "m.status='aktif'", "m.stok>0"];
+// Cek apakah toko yang dipilih sedang tutup
+$tokotutup = false;
+$namatokoditutup = '';
+if ($idtoko > 0) {
+    $cektoko = $conn->prepare("SELECT nama_toko, status_toko FROM tb_toko WHERE id_toko=? AND deleted=0");
+    $cektoko->bind_param("i", $idtoko);
+    $cektoko->execute();
+    $datatoko = $cektoko->get_result()->fetch_assoc();
+    $cektoko->close();
+    if ($datatoko && $datatoko['status_toko'] === 'tutup') {
+        $tokotutup = true;
+        $namatokoditutup = $datatoko['nama_toko'];
+    }
+}
+
+// Query daftar menu — hanya dari toko yang buka
+$kondisi = ["m.deleted=0", "m.status='aktif'", "m.stok>0", "t.status_toko='buka'"];
 if ($kategori) $kondisi[] = "m.kategori='$kategori'";
 if ($cari)     $kondisi[] = "m.nama_menu LIKE '%$cari%'";
-if ($idtoko)   $kondisi[] = "m.id_toko=$idtoko";
+if ($idtoko && !$tokotutup) $kondisi[] = "m.id_toko=$idtoko";
 $where = implode(' AND ', $kondisi);
 $hasilmenu = $conn->query("SELECT m.*,t.nama_toko FROM tb_menu m LEFT JOIN tb_toko t ON m.id_toko=t.id_toko WHERE $where ORDER BY m.id_menu");
 
-// Kategori unik
-$hasilkat     = $conn->query("SELECT DISTINCT kategori FROM tb_menu WHERE deleted=0 AND status='aktif' AND stok>0 ORDER BY kategori");
-$daftarkat    = $hasilkat->fetch_all(MYSQLI_ASSOC);
+// Kategori unik (hanya dari toko buka)
+$hasilkat  = $conn->query("SELECT DISTINCT m.kategori FROM tb_menu m JOIN tb_toko t ON m.id_toko=t.id_toko WHERE m.deleted=0 AND m.status='aktif' AND m.stok>0 AND t.status_toko='buka' ORDER BY m.kategori");
+$daftarkat = $hasilkat->fetch_all(MYSQLI_ASSOC);
 
-// Nama toko yang sedang aktif
+// Nama toko aktif yang dipilih
 $namatokoaktif = '';
 foreach ($daftartoko as $t) {
     if ((int)$t['id_toko'] === $idtoko) { $namatokoaktif = $t['nama_toko']; break; }
@@ -79,19 +95,17 @@ $pathbase = '..';
 
 <div class="bungkus">
 
-  <!-- PILIH KANTIN -->
+  <!-- PILIH KANTIN (hanya yang buka) -->
   <?php if (!empty($daftartoko)): ?>
   <div class="judulbagian"><i class="fa-solid fa-store"></i> Pilih Kantin</div>
   <div class="geserkantin" style="margin-bottom:16px;">
 
-    <!-- Tombol "Semua" -->
     <a href="index.php" class="itemkantin <?= $idtoko===0?'aktif':'' ?>">
       <div class="ikon"><i class="fa-solid fa-utensils"></i></div>
       <span class="namakan">Semua</span>
     </a>
 
     <?php
-    // Warna inisial bergantian
     $warnalogo = ['utama','kedua'];
     $iw = 0;
     foreach ($daftartoko as $toko):
@@ -110,10 +124,21 @@ $pathbase = '..';
   </div>
   <?php endif; ?>
 
+  <!-- Peringatan toko tutup -->
+  <?php if ($tokotutup): ?>
+  <div class="peringatan peringatangagal" style="margin-bottom:16px;">
+    <i class="fa-solid fa-store-slash"></i>
+    <span>
+      Kantin <strong><?= htmlspecialchars($namatokoditutup) ?></strong> sedang tutup.
+      Silakan pilih kantin lain atau kembali nanti.
+    </span>
+  </div>
+  <?php endif; ?>
+
   <!-- CARI MENU -->
   <div class="formcari">
     <form method="GET" action="index.php">
-      <?php if ($idtoko):   ?><input type="hidden" name="toko" value="<?= $idtoko ?>"><?php endif; ?>
+      <?php if ($idtoko && !$tokotutup): ?><input type="hidden" name="toko" value="<?= $idtoko ?>"><?php endif; ?>
       <?php if ($kategori): ?><input type="hidden" name="kategori" value="<?= htmlspecialchars($kategori) ?>"><?php endif; ?>
       <div class="kotakcari">
         <i class="fa-solid fa-magnifying-glass"></i>
@@ -124,6 +149,7 @@ $pathbase = '..';
   </div>
 
   <!-- FILTER KATEGORI -->
+  <?php if (!$tokotutup): ?>
   <div class="filterkategori">
     <a href="index.php<?= $idtoko?'?toko='.$idtoko:'' ?>" class="chipcategori <?= $kategori===''?'aktif':'' ?>">Semua</a>
     <?php foreach ($daftarkat as $k): ?>
@@ -133,8 +159,10 @@ $pathbase = '..';
     </a>
     <?php endforeach; ?>
   </div>
+  <?php endif; ?>
 
   <!-- DAFTAR MENU -->
+  <?php if (!$tokotutup): ?>
   <div class="judulbagian">
     <i class="fa-solid fa-bowl-food"></i>
     Daftar Menu
@@ -165,7 +193,6 @@ $pathbase = '..';
         <?php endif; ?>
         <div class="hargamenu">Rp <?= number_format($menu['harga'],0,',','.') ?></div>
         <div class="stokmenu">Stok: <?= $menu['stok'] ?></div>
-        <!-- Form submit langsung (tanpa JS) -->
         <form method="POST" action="../keranjang/proseskeranjang.php" class="formtambahcepat">
           <input type="hidden" name="aksi" value="tambah">
           <input type="hidden" name="id_menu" value="<?= $menu['id_menu'] ?>">
@@ -187,6 +214,7 @@ $pathbase = '..';
     <p>Coba kata kunci lain atau pilih kategori berbeda</p>
     <a href="index.php" class="tombolringan">Lihat semua menu</a>
   </div>
+  <?php endif; ?>
   <?php endif; ?>
 
 </div>

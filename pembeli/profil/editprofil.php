@@ -14,7 +14,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $emailbaru    = trim($_POST['email']    ?? '');
     $daftarerror  = [];
 
-    if (strlen($usernamebaru) < 3)                           $daftarerror[] = 'Username minimal 3 karakter';
+    if (strlen($usernamebaru) < 6)                           $daftarerror[] = 'Username minimal 6 karakter';
+    if (strlen($usernamebaru) > 50)                          $daftarerror[] = 'Username maksimal 50 karakter';
     if (!filter_var($emailbaru, FILTER_VALIDATE_EMAIL))      $daftarerror[] = 'Format email tidak valid';
 
     if (empty($daftarerror)) {
@@ -91,7 +92,7 @@ $pathbase = '..';
         <label>Username</label>
         <input type="text" name="username"
                value="<?= htmlspecialchars($user['username'] ?? '') ?>"
-               required minlength="3" maxlength="50"
+               required minlength="6" maxlength="50"
                placeholder="Username...">
       </div>
 

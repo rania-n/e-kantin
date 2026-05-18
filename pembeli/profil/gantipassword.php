@@ -16,8 +16,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($passlama) || empty($passbaru) || empty($konfirmasi)) {
         $error = 'Semua kolom wajib diisi';
-    } elseif (strlen($passbaru) < 6) {
-        $error = 'Password baru minimal 6 karakter';
+    } elseif (strlen($passbaru) < 8) {
+        $error = 'Password baru minimal 8 karakter';
+    } elseif (strlen($passbaru) > 100) {
+        $error = 'Password baru terlalu panjang (maksimal 100 karakter)';
     } elseif ($passbaru !== $konfirmasi) {
         $error = 'Konfirmasi password tidak cocok';
     } else {
@@ -92,7 +94,7 @@ $pathbase = '..';
         <label>Password Baru</label>
         <div class="inputpassword">
           <input type="password" name="password_baru" id="p2"
-                 required minlength="6" placeholder="Minimal 6 karakter...">
+                 required minlength="8" maxlength="100" placeholder="Minimal 8 karakter...">
           <button type="button" class="tombollihatpass" onclick="togglePass('p2')">
             <i class="fa-solid fa-eye"></i>
           </button>

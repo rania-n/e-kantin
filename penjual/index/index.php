@@ -5,82 +5,74 @@
 include '../../1. koneksi/koneksi.php';
 include '../../3. komponen/guardpenjual.php';
 
-$idtoko   = (int)$_SESSION['id_toko'];
+$idtoko     = (int)$_SESSION['id_toko'];
 $statustoko = $_SESSION['status_toko'] ?? 'buka';
 $halamansaatini = 'index';
-
-// ==============================================================
-// PROSES TOGGLE STATUS TOKO
-// ==============================================================
-if (isset($_POST['aksi']) && $_POST['aksi'] === 'toggle_status') {
-    $statusbaru = ($statustoko === 'buka') ? 'tutup' : 'buka';
-    $upd = $conn->prepare("UPDATE tb_toko SET status_toko=? WHERE id_toko=?");
-    $upd->bind_param("si", $statusbaru, $idtoko);
-    $upd->execute();
-    $upd->close();
-    $_SESSION['status_toko'] = $statusbaru;
-    header("Location: index.php");
-    exit;
-}
 
 // ==============================================================
 // AMBIL STATISTIK
 // ==============================================================
 
-// Pesanan hari ini
 $q1 = $conn->prepare("SELECT COUNT(*) FROM tb_order WHERE id_toko=? AND DATE(tanggal_order)=CURDATE() AND deleted=0");
 $q1->bind_param("i", $idtoko); $q1->execute();
 $pesananhari = (int)$q1->get_result()->fetch_row()[0]; $q1->close();
 
-// Pesanan menunggu (perlu aksi)
 $q2 = $conn->prepare("SELECT COUNT(*) FROM tb_order WHERE id_toko=? AND status_order='Menunggu' AND deleted=0");
 $q2->bind_param("i", $idtoko); $q2->execute();
 $pesananmenunggu = (int)$q2->get_result()->fetch_row()[0]; $q2->close();
 
-// Pendapatan hari ini
+$q2b = $conn->prepare("SELECT COUNT(*) FROM tb_order WHERE id_toko=? AND status_order='Diproses' AND deleted=0");
+$q2b->bind_param("i", $idtoko); $q2b->execute();
+$pesanandiproses = (int)$q2b->get_result()->fetch_row()[0]; $q2b->close();
+
 $q3 = $conn->prepare("SELECT COALESCE(SUM(total_harga),0) FROM tb_order WHERE id_toko=? AND DATE(tanggal_order)=CURDATE() AND status_order='Selesai' AND deleted=0");
 $q3->bind_param("i", $idtoko); $q3->execute();
 $pendapatanhari = (float)$q3->get_result()->fetch_row()[0]; $q3->close();
 
-// Rating rata-rata toko
 $q4 = $conn->prepare("SELECT ROUND(AVG(rating_toko),1), COUNT(*) FROM tb_rating WHERE id_toko=?");
 $q4->bind_param("i", $idtoko); $q4->execute();
-$ratingrow = $q4->get_result()->fetch_row(); $q4->close();
-$ratarating  = (float)($ratingrow[0] ?? 0);
-$jmlrating   = (int)($ratingrow[1] ?? 0);
+$ratingrow  = $q4->get_result()->fetch_row(); $q4->close();
+$ratarating = (float)($ratingrow[0] ?? 0);
+$jmlrating  = (int)($ratingrow[1] ?? 0);
 
-// Total menu aktif
 $q5 = $conn->prepare("SELECT COUNT(*) FROM tb_menu WHERE id_toko=? AND status='aktif' AND deleted=0");
 $q5->bind_param("i", $idtoko); $q5->execute();
 $totalmenu = (int)$q5->get_result()->fetch_row()[0]; $q5->close();
 
 // ==============================================================
-// DATA CHART PENDAPATAN 7 HARI
+// CHART PENDAPATAN — periode bisa dipilih
 // ==============================================================
+$periodehari = (int)($_GET['hari'] ?? 7);
+if (!in_array($periodehari, [7, 14, 30, 90])) $periodehari = 7;
+
 $chartdata = [];
-for ($i = 6; $i >= 0; $i--) {
+for ($i = $periodehari - 1; $i >= 0; $i--) {
     $tgl = date('Y-m-d', strtotime("-$i days"));
-    $qc = $conn->prepare("SELECT COALESCE(SUM(total_harga),0) FROM tb_order WHERE id_toko=? AND DATE(tanggal_order)=? AND status_order='Selesai' AND deleted=0");
+    $qc  = $conn->prepare("SELECT COALESCE(SUM(total_harga),0) FROM tb_order WHERE id_toko=? AND DATE(tanggal_order)=? AND status_order='Selesai' AND deleted=0");
     $qc->bind_param("is", $idtoko, $tgl);
     $qc->execute();
-    $pendapatan = (float)$qc->get_result()->fetch_row()[0];
+    $nilai = (float)$qc->get_result()->fetch_row()[0];
     $qc->close();
-    $chartdata[] = ['tgl' => $tgl, 'label' => date('D', strtotime($tgl)), 'nilai' => $pendapatan];
+    // Label singkat: untuk 7/14 hari pakai nama hari, untuk 30/90 pakai tanggal
+    $label = ($periodehari <= 14) ? date('D', strtotime($tgl)) : date('d/m', strtotime($tgl));
+    $chartdata[] = ['tgl' => $tgl, 'label' => $label, 'nilai' => $nilai];
 }
 $maxnilai = max(array_column($chartdata, 'nilai')) ?: 1;
 
 // ==============================================================
-// PESANAN TERBARU (5 terakhir)
+// PESANAN TERBARU — Menunggu & Diproses diutamakan
 // ==============================================================
 $qp = $conn->prepare("SELECT o.id_order, o.tanggal_order, o.total_harga, o.status_order, o.metode_pembayaran, u.username
                        FROM tb_order o JOIN tb_user u ON o.id_user=u.id_user
                        WHERE o.id_toko=? AND o.deleted=0
-                       ORDER BY o.tanggal_order DESC LIMIT 5");
+                       ORDER BY FIELD(o.status_order,'Menunggu','Diproses','Siap Diambil','Selesai','Dibatalkan'),
+                                o.tanggal_order DESC
+                       LIMIT 5");
 $qp->bind_param("i", $idtoko); $qp->execute();
 $pesananterbaru = $qp->get_result()->fetch_all(MYSQLI_ASSOC); $qp->close();
 
 // ==============================================================
-// PRODUK TERLARIS (5 teratas)
+// PRODUK TERLARIS
 // ==============================================================
 $qtl = $conn->prepare("SELECT m.nama_menu, SUM(d.jumlah) AS terjual, SUM(d.subtotal) AS omset
                         FROM tb_detail_order d
@@ -93,7 +85,7 @@ $qtl->bind_param("i", $idtoko); $qtl->execute();
 $terlaris = $qtl->get_result()->fetch_all(MYSQLI_ASSOC); $qtl->close();
 
 // ==============================================================
-// RATING & ULASAN TERBARU
+// RATING & ULASAN TERBARU (5 terakhir)
 // ==============================================================
 $qr = $conn->prepare("SELECT r.rating_toko, r.ulasan, r.created, u.username
                        FROM tb_rating r JOIN tb_user u ON r.id_user=u.id_user
@@ -147,7 +139,7 @@ function bintang(float $r): string {
       <p>Selamat datang, <?= htmlspecialchars($_SESSION['username']) ?> — <?= date('l, d M Y') ?></p>
     </div>
     <!-- Toggle buka/tutup toko -->
-    <form method="POST" action="index.php">
+    <form method="POST" action="prosesindex.php">
       <input type="hidden" name="aksi" value="toggle_status">
       <div class="toggle-toko">
         <label class="saklar">
@@ -168,11 +160,18 @@ function bintang(float $r): string {
     </form>
   </div>
 
-  <!-- Peringatan ada pesanan menunggu -->
-  <?php if ($pesananmenunggu > 0): ?>
+  <!-- Peringatan pesanan yang perlu ditangani -->
+  <?php if ($pesananmenunggu > 0 || $pesanandiproses > 0): ?>
   <div class="peringatan peringatantunggu">
     <i class="fa-solid fa-bell"></i>
-    Ada <strong><?= $pesananmenunggu ?> pesanan</strong> yang menunggu konfirmasimu!
+    <span>
+      <?php if ($pesananmenunggu > 0): ?>
+        <strong><?= $pesananmenunggu ?> pesanan menunggu</strong> konfirmasimu<?= $pesanandiproses > 0 ? ' &amp; ' : '' ?>
+      <?php endif; ?>
+      <?php if ($pesanandiproses > 0): ?>
+        <strong><?= $pesanandiproses ?> pesanan sedang diproses</strong>
+      <?php endif; ?>
+    </span>
     <a href="../manajemenpesanan/manajemenpesanan.php?filter=Menunggu"
        style="margin-left:8px; font-weight:700; color:var(--tunggu); text-decoration:underline;">
       Lihat Sekarang
@@ -219,46 +218,58 @@ function bintang(float $r): string {
     </div>
   </div>
 
-  <!-- CHART PENDAPATAN 7 HARI -->
+  <!-- CHART PENDAPATAN — bisa pilih periode -->
   <div class="kartu">
-    <h3><i class="fa-solid fa-chart-bar"></i> Pendapatan 7 Hari Terakhir</h3>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+      <h3 style="margin:0;border:none;padding:0;"><i class="fa-solid fa-chart-bar"></i> Pendapatan <?= $periodehari ?> Hari Terakhir</h3>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <?php foreach ([7=>'7 Hari', 14=>'14 Hari', 30=>'30 Hari', 90=>'90 Hari'] as $h => $lab): ?>
+        <a href="index.php?hari=<?= $h ?>"
+           class="chip-filter <?= $periodehari===$h?'aktif':'' ?>"
+           style="font-size:12px;padding:5px 12px;">
+          <?= $lab ?>
+        </a>
+        <?php endforeach; ?>
+      </div>
+    </div>
     <div class="area-chart">
-      <svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg" style="min-width:420px;">
-        <!-- Garis grid -->
-        <?php for ($g = 0; $g <= 4; $g++): ?>
-        <?php $y = 20 + ($g * 40); ?>
-        <line x1="60" y1="<?= $y ?>" x2="680" y2="<?= $y ?>" stroke="#E7CBCB" stroke-width="1" stroke-dasharray="4,4"/>
+      <?php
+      // Hitung lebar bar berdasarkan jumlah data
+      $jumlahbar = count($chartdata);
+      $svgw  = max(700, $jumlahbar * 30);
+      $barw  = max(8, min(40, (int)(($svgw - 80) / $jumlahbar) - 4));
+      $gap   = max(4, (int)(($svgw - 80 - $jumlahbar * $barw) / max(1, $jumlahbar - 1)));
+      $startx = 70;
+      $chartH = 160;
+      ?>
+      <svg viewBox="0 0 <?= $svgw ?> 210" xmlns="http://www.w3.org/2000/svg" style="min-width:<?= min(700,$svgw) ?>px;">
+        <?php for ($g = 0; $g <= 4; $g++):
+          $y = 20 + ($g * 40); ?>
+        <line x1="60" y1="<?= $y ?>" x2="<?= $svgw - 10 ?>" y2="<?= $y ?>" stroke="#E7CBCB" stroke-width="1" stroke-dasharray="4,4"/>
         <text x="55" y="<?= $y + 4 ?>" text-anchor="end" fill="#99627A" font-size="9">
           <?= rp(($maxnilai / 4) * (4 - $g)) ?>
         </text>
         <?php endfor; ?>
 
-        <?php
-        $barw  = 60;
-        $gap   = 20;
-        $startx = 70;
-        $chartH = 160; // 20 to 180
-        foreach ($chartdata as $i => $d):
-            $x     = $startx + $i * ($barw + $gap);
-            $barh  = $d['nilai'] > 0 ? ($d['nilai'] / $maxnilai) * $chartH : 2;
-            $y     = 180 - $barh;
-            $isToday = $d['tgl'] === date('Y-m-d');
-            $barcolor = $isToday ? '#643843' : '#99627A';
+        <?php foreach ($chartdata as $i => $d):
+          $x     = $startx + $i * ($barw + $gap);
+          $barh  = $d['nilai'] > 0 ? ($d['nilai'] / $maxnilai) * $chartH : 2;
+          $y     = 180 - $barh;
+          $isToday = $d['tgl'] === date('Y-m-d');
+          $barcolor = $isToday ? '#643843' : '#99627A';
         ?>
         <g class="bar-chart-group">
-          <!-- Bar -->
           <rect x="<?= $x ?>" y="<?= $y ?>" width="<?= $barw ?>" height="<?= $barh ?>"
-                rx="5" fill="<?= $barcolor ?>" class="bar-fill">
+                rx="3" fill="<?= $barcolor ?>" class="bar-fill">
             <title><?= $d['label'] ?> — <?= rp($d['nilai']) ?></title>
           </rect>
-          <!-- Label hari -->
-          <text x="<?= $x + $barw/2 ?>" y="195" text-anchor="middle"
+          <text x="<?= $x + $barw/2 ?>" y="200" text-anchor="middle"
                 fill="<?= $isToday ? '#643843' : '#99627A' ?>"
-                font-size="10" font-weight="<?= $isToday ? '700' : '400' ?>">
+                font-size="<?= $periodehari > 14 ? '8' : '10' ?>"
+                font-weight="<?= $isToday ? '700' : '400' ?>">
             <?= $d['label'] ?>
           </text>
-          <!-- Label nilai di atas bar (jika ada) -->
-          <?php if ($d['nilai'] > 0): ?>
+          <?php if ($d['nilai'] > 0 && $barw >= 20): ?>
           <text x="<?= $x + $barw/2 ?>" y="<?= max($y - 4, 14) ?>" text-anchor="middle"
                 fill="#643843" font-size="8" font-weight="600">
             <?= number_format($d['nilai']/1000, 0) ?>k
@@ -272,7 +283,7 @@ function bintang(float $r): string {
 
   <div class="grid-dua">
 
-    <!-- PESANAN TERBARU -->
+    <!-- PESANAN TERBARU (Menunggu/Diproses diutamakan) -->
     <div class="kartu">
       <h3><i class="fa-solid fa-receipt"></i> Pesanan Terbaru</h3>
       <?php if (empty($pesananterbaru)): ?>
@@ -326,7 +337,12 @@ function bintang(float $r): string {
 
     <!-- RATING & ULASAN TERBARU -->
     <div class="kartu">
-      <h3><i class="fa-solid fa-star"></i> Rating &amp; Ulasan Terbaru</h3>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <h3 style="margin:0;border:none;padding:0;"><i class="fa-solid fa-star"></i> Rating &amp; Ulasan Terbaru</h3>
+        <a href="../ulasan/ulasan.php" style="font-size:12px;color:var(--kedua);font-weight:600;">
+          Lihat Semua <i class="fa-solid fa-arrow-right" style="font-size:10px;"></i>
+        </a>
+      </div>
       <?php if ($ratarating > 0): ?>
       <div style="text-align:center;padding:12px 0;border-bottom:1px solid var(--latar);margin-bottom:10px;">
         <div style="font-size:36px;font-weight:800;color:var(--utama);"><?= $ratarating ?></div>
@@ -375,7 +391,7 @@ function bintang(float $r): string {
         </div>
       </div>
       <a href="../profil/profil.php" class="tombolringan blok mt14">
-        <i class="fa-solid fa-pen"></i> Edit Profil &amp; Toko
+        <i class="fa-solid fa-user-pen"></i> Lihat Profil &amp; Toko
       </a>
     </div>
 

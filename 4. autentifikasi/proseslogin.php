@@ -1,12 +1,12 @@
 <?php
 /* ============================================================
    PROSES LOGIN
-   Validasi login, set session, redirect ke halaman sesuai role.
+   Query DB dulu untuk tahu role, baru set session_name & start session.
+   Ini penting agar penjual & pembeli bisa login di tab berbeda.
    ============================================================ */
 include "../1. koneksi/koneksi.php";
-if (session_status() === PHP_SESSION_NONE) session_start();
+// JANGAN session_start() di sini — harus tahu role dulu
 
-// Hanya proses POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header("Location: login.php");
     exit;
@@ -15,13 +15,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $usernameemail = trim($_POST['usernameemail'] ?? '');
 $password      = trim($_POST['password']      ?? '');
 
-// Validasi kosong
 if (empty($usernameemail) || empty($password)) {
     header("Location: login.php?error=" . urlencode("Username/Email dan Password wajib diisi!"));
     exit;
 }
 
-// Cari user
+// Cari user di database
 $stmt = $conn->prepare("SELECT id_user, username, email, password, role
                          FROM tb_user
                          WHERE (username=? OR email=?) AND deleted=0");
@@ -40,13 +39,23 @@ if (!password_verify($password, $user['password'])) {
     exit;
 }
 
-// Login berhasil — set session
+// Tentukan nama sesi berdasarkan role agar tidak bentrok antar tab
+$namaSesi = match($user['role']) {
+    'penjual' => 'sesi_penjual',
+    'admin'   => 'sesi_admin',
+    default   => 'sesi_pembeli',
+};
+
+session_name($namaSesi);
+session_start();
+
+// Set data session
 $_SESSION['id_user']  = $user['id_user'];
 $_SESSION['username'] = $user['username'];
 $_SESSION['email']    = $user['email'];
 $_SESSION['role']     = $user['role'];
 
-// Kalau penjual, langsung ambil id_toko dan nama_toko ke session
+// Kalau penjual, ambil data toko ke session
 if ($user['role'] === 'penjual') {
     $iduser = (int)$user['id_user'];
     $qt = $conn->prepare("SELECT id_toko, nama_toko, status_toko FROM tb_toko WHERE id_user=? AND deleted=0 LIMIT 1");
@@ -61,7 +70,7 @@ if ($user['role'] === 'penjual') {
     }
 }
 
-// Redirect berdasarkan role
+// Redirect sesuai role
 switch ($user['role']) {
     case 'admin':
         header("Location: ../admin/index/index.php");

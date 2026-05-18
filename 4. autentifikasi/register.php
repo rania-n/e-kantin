@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Register</title>
+<title>Daftar Akun - eKantin</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="autentifikasi.css">
 </head>
@@ -13,13 +13,12 @@
 $error    = $_GET['error']    ?? '';
 $username = $_GET['username'] ?? '';
 $email    = $_GET['email']    ?? '';
-$password = $_GET['password'] ?? '';
 ?>
 
 <form action="prosesregister.php" method="POST">
 <div class="container">
 
-  <h2>Register</h2>
+  <h2>Daftar Akun</h2>
   <div class="sub">Daftar sebagai Pembeli</div>
 
   <?php if (!empty($error)): ?>
@@ -28,31 +27,36 @@ $password = $_GET['password'] ?? '';
     </p>
   <?php endif; ?>
 
-  <input type="text" 
-         id="user" 
-         placeholder="Username" 
-         name="username" 
-         value="<?= htmlspecialchars($username) ?>" 
+  <input type="text"
+         id="user"
+         placeholder="Username"
+         name="username"
+         value="<?= htmlspecialchars($username) ?>"
+         minlength="6"
+         maxlength="50"
          required>
+  <small style="color:#888;font-size:11px;display:block;margin-top:-10px;margin-bottom:14px;">6–50 karakter</small>
 
-  <input type="email" 
-         id="email" 
-         placeholder="Email" 
-         name="email" 
-         value="<?= htmlspecialchars($email) ?>" 
+  <input type="email"
+         id="email"
+         placeholder="Email"
+         name="email"
+         value="<?= htmlspecialchars($email) ?>"
          required>
 
   <div class="pass-wrap">
-    <input type="password" 
-           id="pass" 
-           placeholder="Password" 
-           name="password" 
-           value="<?= htmlspecialchars($password) ?>"
+    <input type="password"
+           id="pass"
+           placeholder="Password"
+           name="password"
+           minlength="8"
+           maxlength="100"
            required>
     <span class="eye" onclick="togglePassword()">👁</span>
   </div>
+  <small style="color:#888;font-size:11px;display:block;margin-top:-10px;margin-bottom:14px;">8–100 karakter</small>
 
-  <button type="submit">Register</button>
+  <button type="submit">Daftar</button>
 
   <div class="link">
     Sudah punya akun? <a href="login.php">Login</a>

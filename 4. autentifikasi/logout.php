@@ -1,7 +1,22 @@
 <?php
+/* ============================================================
+   LOGOUT
+   Menghapus sesi penjual dan pembeli sekaligus agar bersih.
+   ============================================================ */
+
+// Hapus sesi penjual
+session_name('sesi_penjual');
 session_start();
-session_unset();
+$_SESSION = [];
 session_destroy();
-header("Location: ../4. autentifikasi/login.php");
+session_write_close();
+
+// Hapus sesi pembeli
+session_name('sesi_pembeli');
+session_start();
+$_SESSION = [];
+session_destroy();
+
+header("Location: login.php");
 exit;
 ?>

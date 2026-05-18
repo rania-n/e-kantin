@@ -8,8 +8,9 @@ include '../../3. komponen/guardpenjual.php';
 $idtoko = (int)$_SESSION['id_toko'];
 $halamansaatini = 'manajemenmenu';
 
-// Filter
+// Filter & pencarian
 $filter  = $_GET['filter'] ?? 'Semua';
+$cari    = trim($_GET['cari'] ?? '');
 $editid  = (int)($_GET['edit'] ?? 0);
 
 // Flash message
@@ -28,6 +29,10 @@ $kondisi = "id_toko=$idtoko AND deleted=0";
 if ($filter !== 'Semua' && in_array($filter, $kategorilist)) {
     $filteraman = $conn->real_escape_string($filter);
     $kondisi .= " AND kategori='$filteraman'";
+}
+if ($cari !== '') {
+    $cariaman = $conn->real_escape_string($cari);
+    $kondisi .= " AND nama_menu LIKE '%$cariaman%'";
 }
 $hasilmenu = $conn->query("SELECT * FROM tb_menu WHERE $kondisi ORDER BY created DESC");
 
@@ -61,9 +66,23 @@ if ($editid > 0) {
       <h1><i class="fa-solid fa-bowl-food"></i> Kelola Menu</h1>
       <p>Daftar menu yang dijual di <?= htmlspecialchars($_SESSION['nama_toko']??'') ?></p>
     </div>
-    <button onclick="bukaModal('modalTambah')" class="tombolutama">
-      <i class="fa-solid fa-plus"></i> Tambah Menu
-    </button>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+      <!-- Kotak cari menu -->
+      <form method="GET" action="manajemenmenu.php" style="display:flex;gap:0;">
+        <input type="hidden" name="filter" value="<?= htmlspecialchars($filter) ?>">
+        <div class="kotakcari" style="border-radius:10px 0 0 10px;border-right:none;">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" name="cari" value="<?= htmlspecialchars($cari) ?>"
+                 placeholder="Cari nama menu...">
+        </div>
+        <button type="submit" class="tombolutama" style="border-radius:0 10px 10px 0;padding:10px 14px;">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </button>
+      </form>
+      <button onclick="bukaModal('modalTambah')" class="tombolutama">
+        <i class="fa-solid fa-plus"></i> Tambah Menu
+      </button>
+    </div>
   </div>
 
   <?php if ($flashpesan): ?>
@@ -75,11 +94,13 @@ if ($editid > 0) {
 
   <!-- Filter kategori -->
   <div class="filter-bar">
-    <a href="manajemenmenu.php" class="chip-filter <?= $filter === 'Semua' ? 'aktif' : '' ?>">
+    <?php $paramcari = $cari ? '&cari=' . urlencode($cari) : ''; ?>
+    <a href="manajemenmenu.php<?= $cari ? '?cari='.urlencode($cari) : '' ?>"
+       class="chip-filter <?= $filter === 'Semua' ? 'aktif' : '' ?>">
       Semua
     </a>
     <?php foreach ($kategorilist as $k): ?>
-    <a href="manajemenmenu.php?filter=<?= urlencode($k) ?>"
+    <a href="manajemenmenu.php?filter=<?= urlencode($k) ?><?= $paramcari ?>"
        class="chip-filter <?= $filter === $k ? 'aktif' : '' ?>">
       <?= $k ?>
     </a>
@@ -138,11 +159,15 @@ if ($editid > 0) {
   <?php else: ?>
   <div class="kosong">
     <div class="ikon-kosong"><i class="fa-solid fa-bowl-food"></i></div>
-    <h3>Belum ada menu</h3>
-    <p>Tambahkan menu pertamamu untuk mulai menerima pesanan</p>
+    <h3><?= $cari ? 'Menu tidak ditemukan' : 'Belum ada menu' ?></h3>
+    <p><?= $cari ? 'Tidak ada menu dengan nama "' . htmlspecialchars($cari) . '"' : 'Tambahkan menu pertamamu untuk mulai menerima pesanan' ?></p>
+    <?php if ($cari): ?>
+    <a href="manajemenmenu.php?filter=<?= urlencode($filter) ?>" class="tombolringan">Hapus Pencarian</a>
+    <?php else: ?>
     <button onclick="bukaModal('modalTambah')" class="tombolutama">
       <i class="fa-solid fa-plus"></i> Tambah Menu Sekarang
     </button>
+    <?php endif; ?>
   </div>
   <?php endif; ?>
 

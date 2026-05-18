@@ -4,7 +4,10 @@
    Setiap halaman wajib mendefinisikan $pathbase = '..'
    sebelum include file ini.
    ============================================================ */
-if (session_status() === PHP_SESSION_NONE) session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_name('sesi_pembeli');
+    session_start();
+}
 if (!isset($pathbase)) $pathbase = '..';
 
 $halamansaatini = basename($_SERVER['PHP_SELF'], '.php');

@@ -39,6 +39,19 @@ if (empty($daftaritem)) {
 $biayalayanan = 1000;
 $totalbayar   = $subtotal + $biayalayanan;
 
+// Cek apakah toko masih buka sebelum proses order
+$cektoko = $conn->prepare("SELECT status_toko, nama_toko FROM tb_toko WHERE id_toko=? AND deleted=0");
+$cektoko->bind_param("i", $idtoko);
+$cektoko->execute();
+$datatoko = $cektoko->get_result()->fetch_assoc();
+$cektoko->close();
+
+if (!$datatoko || $datatoko['status_toko'] !== 'buka') {
+    $namatokox = $datatoko['nama_toko'] ?? 'Kantin';
+    $_SESSION['flash'] = ['pesan' => "Maaf, kantin {$namatokox} sedang tutup. Pesanan tidak bisa diproses.", 'jenis' => 'gagal'];
+    header("Location: checkout.php?toko=$idtoko"); exit;
+}
+
 // Cek stok semua item sebelum proses
 foreach ($daftaritem as $item) {
     $cek = $conn->prepare("SELECT stok FROM tb_menu WHERE id_menu=? AND deleted=0 AND status='aktif'");

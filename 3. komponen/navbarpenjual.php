@@ -66,12 +66,25 @@ $inisialpenjual = strtoupper(mb_substr($_SESSION['username'] ?? 'P', 0, 2));
       <span>Laporan Penjualan</span>
     </a>
 
+    <a href="../../penjual/ulasan/ulasan.php"
+       class="sidebar-item <?= $halamansaatini === 'ulasan' ? 'aktif' : '' ?>">
+      <i class="fa-solid fa-star"></i>
+      <span>Semua Ulasan</span>
+    </a>
+
     <div class="sidebar-divider"></div>
 
     <a href="../../penjual/profil/profil.php"
        class="sidebar-item <?= in_array($halamansaatini, ['profil','editprofil','gantipassword']) ? 'aktif' : '' ?>">
       <i class="fa-solid fa-user-tie"></i>
       <span>Profil & Toko</span>
+    </a>
+
+    <a href="#"
+       onclick="document.getElementById('modalkontak').classList.add('tampil'); return false;"
+       class="sidebar-item">
+      <i class="fa-solid fa-headset"></i>
+      <span>Hubungi Admin</span>
     </a>
 
   </nav>
@@ -86,6 +99,33 @@ $inisialpenjual = strtoupper(mb_substr($_SESSION['username'] ?? 'P', 0, 2));
   </div>
 
 </aside>
+
+<!-- Modal kontak admin -->
+<div class="modaloverlay" id="modalkontak"
+     onclick="this.classList.remove('tampil')">
+  <div class="isimodal" onclick="event.stopPropagation()" style="max-width:380px;text-align:center;">
+    <div style="font-size:44px; color:var(--kedua); margin-bottom:10px;">
+      <i class="fa-solid fa-headset"></i>
+    </div>
+    <div style="font-size:18px; font-weight:800; color:var(--utama); margin-bottom:6px;">Hubungi Admin</div>
+    <div style="font-size:13px; color:var(--tekssamar); margin-bottom:20px;">
+      Butuh bantuan? Hubungi admin eKantin melalui:
+    </div>
+    <a href="mailto:admin@ekantin.sch.id"
+       class="tombolutama blok" style="margin-bottom:10px;">
+      <i class="fa-solid fa-envelope"></i> admin@ekantin.sch.id
+    </a>
+    <a href="https://wa.me/6281234567890"
+       target="_blank"
+       class="tombolkedua blok" style="margin-bottom:14px;">
+      <i class="fa-brands fa-whatsapp"></i> WhatsApp Admin
+    </a>
+    <button class="tombolringan blok"
+            onclick="document.getElementById('modalkontak').classList.remove('tampil')">
+      Tutup
+    </button>
+  </div>
+</div>
 
 <!-- Modal konfirmasi keluar -->
 <div class="modaloverlay" id="modallogoutpenjual"
