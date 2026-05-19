@@ -951,7 +951,8 @@ ul { list-style: none; }
   opacity: 0; pointer-events: none;
   transition: opacity .2s;
 }
-.modaloverlay.tampil { opacity: 1; pointer-events: all; }
+.modaloverlay.tampil,
+.modaloverlay:target { opacity: 1; pointer-events: all; }
 .isimodal {
   background: var(--putih);
   border-radius: 20px 20px 0 0;
@@ -960,7 +961,8 @@ ul { list-style: none; }
   transform: translateY(100%);
   transition: transform .25s ease;
 }
-.modaloverlay.tampil .isimodal { transform: translateY(0); }
+.modaloverlay.tampil .isimodal,
+.modaloverlay:target .isimodal { transform: translateY(0); }
 .peganganmodal {
   width: 40px; height: 4px;
   background: var(--garis); border-radius: 9999px;
@@ -969,7 +971,8 @@ ul { list-style: none; }
 @media (min-width: 992px) {
   .modaloverlay { align-items: center; }
   .isimodal { border-radius: 16px; transform: scale(.92); max-width: 420px; }
-  .modaloverlay.tampil .isimodal { transform: scale(1); }
+  .modaloverlay.tampil .isimodal,
+  .modaloverlay:target .isimodal { transform: scale(1); }
   .peganganmodal { display: none; }
 }
 

@@ -65,6 +65,11 @@ $profilaktif    = in_array($halamansaatini, ['profil','editprofil','gantipasswor
     <i class="fa-solid fa-user"></i><span>Profil</span>
   </a>
 
+  <!-- Hubungi Admin — buka modal via CSS :target -->
+  <a href="#modal-kontak-pembeli" class="itemnav">
+    <i class="fa-solid fa-headset"></i><span>Hubungi Admin</span>
+  </a>
+
   <!-- Tombol keluar — langsung ke halaman konfirmasi PHP -->
   <a href="../../4. autentifikasi/konfirmasilogout.php?peran=pembeli"
      class="itemnav itemkeluar">
@@ -72,6 +77,32 @@ $profilaktif    = in_array($halamansaatini, ['profil','editprofil','gantipasswor
   </a>
 
 </nav>
+
+<!-- Modal kontak admin pembeli — CSS :target -->
+<div class="modaloverlay" id="modal-kontak-pembeli">
+  <div class="isimodal" style="text-align:center;">
+    <div class="peganganmodal"></div>
+    <div style="font-size:40px;color:var(--kedua);margin-bottom:10px;">
+      <i class="fa-solid fa-headset"></i>
+    </div>
+    <div style="font-size:17px;font-weight:800;color:var(--utama);margin-bottom:6px;">Hubungi Admin</div>
+    <div style="font-size:13px;color:var(--tekssamar);margin-bottom:18px;">
+      Butuh bantuan? Hubungi admin eKantin melalui:
+    </div>
+    <a href="mailto:admin@ekantin.sch.id"
+       class="tombolutama blok" style="margin-bottom:10px;">
+      <i class="fa-solid fa-envelope"></i> admin@ekantin.sch.id
+    </a>
+    <a href="https://wa.me/6281234567890"
+       target="_blank"
+       class="tombolkedua blok" style="margin-bottom:14px;">
+      <i class="fa-brands fa-whatsapp"></i> WhatsApp Admin
+    </a>
+    <a href="#" class="tombolringan blok">
+      <i class="fa-solid fa-xmark"></i> Tutup
+    </a>
+  </div>
+</div>
 
 <!-- Flash message (muncul setelah redirect) -->
 <?php if ($flashpesan): ?>
