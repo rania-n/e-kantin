@@ -118,19 +118,6 @@ function bintang(float $r): string {
     </div>
   </div>
 
-  <!-- Tab navigasi -->
-  <div class="tab-profil">
-    <a href="profil.php?tab=profil" class="tab-item <?= $tabaktif==='profil'?'aktif':'' ?>">
-      <i class="fa-solid fa-user"></i> Profil Saya
-    </a>
-    <a href="profil.php?tab=edit" class="tab-item <?= $tabaktif==='edit'?'aktif':'' ?>">
-      <i class="fa-solid fa-pen"></i> Edit Profil
-    </a>
-    <a href="profil.php?tab=password" class="tab-item <?= $tabaktif==='password'?'aktif':'' ?>">
-      <i class="fa-solid fa-lock"></i> Ganti Password
-    </a>
-  </div>
-
   <!-- ===== TAB: PROFIL SAYA (view) ===== -->
   <?php if ($tabaktif === 'profil'): ?>
   <div class="kartu">
@@ -180,6 +167,14 @@ function bintang(float $r): string {
     </div>
   </div>
 
+  <div style="display:flex;gap:10px;flex-wrap:wrap;">
+    <a href="profil.php?tab=edit" class="tombolutama" style="flex:1;">
+      <i class="fa-solid fa-pen"></i> Edit Profil &amp; Toko
+    </a>
+    <a href="profil.php?tab=password" class="tombolringan" style="flex:1;">
+      <i class="fa-solid fa-lock"></i> Ganti Password
+    </a>
+  </div>
   <?php endif; ?>
 
   <!-- ===== TAB: EDIT PROFIL & TOKO ===== -->

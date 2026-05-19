@@ -16,7 +16,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $aksi    = $_POST['aksi']    ?? '';
 $idmenu  = (int)($_POST['id_menu']  ?? 0);
 $jumlah  = max(1, (int)($_POST['qty']     ?? 1));
-$catatan = trim($_POST['catatan'] ?? '');
 $idtoko  = (int)($_POST['id_toko']  ?? 0);
 $kembali = $_POST['kembali'] ?? 'keranjang'; // 'index' atau 'keranjang' atau 'detail'
 
@@ -80,8 +79,9 @@ switch ($aksi) {
         if ($menu['stok'] <= 0) { setFlash('Stok menu ini sudah habis', 'gagal'); kembalikan($kembali); }
 
         // Cek status toko — tidak boleh tambah ke keranjang jika toko tutup
-        $cektoko = $conn->prepare("SELECT status_toko FROM tb_toko WHERE id_toko=? AND deleted=0");
-        $cektoko->bind_param("i", (int)$menu['id_toko']);
+        $idtokocek = (int)$menu['id_toko'];
+        $cektoko   = $conn->prepare("SELECT status_toko FROM tb_toko WHERE id_toko=? AND deleted=0");
+        $cektoko->bind_param("i", $idtokocek);
         $cektoko->execute();
         $statustoko = $cektoko->get_result()->fetch_row()[0] ?? 'tutup';
         $cektoko->close();
@@ -112,7 +112,6 @@ switch ($aksi) {
 
         if (isset($_SESSION['keranjang'][$idtokomenu][$idmenu])) {
             $_SESSION['keranjang'][$idtokomenu][$idmenu]['qty'] = $qtybaru;
-            if ($catatan) $_SESSION['keranjang'][$idtokomenu][$idmenu]['catatan'] = $catatan;
         } else {
             $_SESSION['keranjang'][$idtokomenu][$idmenu] = [
                 'id_menu'   => $idmenu,
@@ -120,7 +119,6 @@ switch ($aksi) {
                 'harga'     => (int)$menu['harga'],
                 'foto'      => $menu['foto'],
                 'qty'       => $qtybaru,
-                'catatan'   => $catatan,
                 'id_toko'   => $idtokomenu,
                 'nama_toko' => $namatoko,
             ];
