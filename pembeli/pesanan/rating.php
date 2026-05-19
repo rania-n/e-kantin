@@ -71,48 +71,47 @@ $pathbase = '..';
 
   <form method="POST" action="prosesrating.php">
     <input type="hidden" name="id_order" value="<?= $idpesanan ?>">
-    <input type="hidden" name="rating_toko" id="inputnilai" value="0">
 
-    <!-- Rating bintang utama -->
+    <!-- Rating bintang — CSS radio trick (reverse DOM order + flex row-reverse) -->
     <div class="kartu" style="text-align:center;padding:22px 16px;">
       <div style="font-size:15px;font-weight:700;margin-bottom:4px;">Bagaimana pengalamanmu?</div>
-      <div style="font-size:12px;color:var(--tekssamar);margin-bottom:4px;">Klik bintang untuk memberi nilai</div>
+      <div style="font-size:12px;color:var(--tekssamar);margin-bottom:14px;">Pilih bintang (wajib)</div>
 
-      <div class="bintangbesar" id="bintangutama">
-        <?php for ($i = 1; $i <= 5; $i++): ?>
-        <button type="button" class="tombolbintang" data-nilai="<?= $i ?>" onclick="aturNilai(<?= $i ?>)">
-          <i class="fa-solid fa-star"></i>
-        </button>
-        <?php endfor; ?>
+      <div class="bintang-pilih">
+        <!-- Urutan terbalik di DOM agar CSS ~ bekerja dengan benar -->
+        <input type="radio" name="rating_toko" id="b5" value="5" required>
+        <label for="b5" title="Luar Biasa!"><i class="fa-solid fa-star"></i></label>
+        <input type="radio" name="rating_toko" id="b4" value="4">
+        <label for="b4" title="Bagus!"><i class="fa-solid fa-star"></i></label>
+        <input type="radio" name="rating_toko" id="b3" value="3">
+        <label for="b3" title="Cukup"><i class="fa-solid fa-star"></i></label>
+        <input type="radio" name="rating_toko" id="b2" value="2">
+        <label for="b2" title="Kurang"><i class="fa-solid fa-star"></i></label>
+        <input type="radio" name="rating_toko" id="b1" value="1">
+        <label for="b1" title="Sangat Buruk"><i class="fa-solid fa-star"></i></label>
       </div>
-      <div class="keteranganbintang" id="keterangannilai">Pilih bintang di atas</div>
+      <div style="font-size:11px;color:var(--tekssamar);margin-top:8px;">Arahkan ke bintang untuk melihat keterangan</div>
     </div>
 
     <!-- Ulasan teks -->
     <div class="kartu">
       <h3>Tulis Ulasan</h3>
       <div class="kelompokform">
-        <textarea name="ulasan" id="isifulasan" rows="3"
-                  placeholder="Ceritakan pengalamanmu..."></textarea>
+        <textarea name="ulasan" rows="3" placeholder="Ceritakan pengalamanmu..."></textarea>
       </div>
 
-      <!-- Tag cepat -->
+      <!-- Tag cepat — CSS checkbox, nilai dikirim via name="tag[]" -->
       <div style="font-size:12px;color:var(--tekssamar);margin-bottom:8px;">Pilih yang sesuai:</div>
-      <div class="daftartag" id="daftartag">
-        <span class="tagchip" onclick="toggleTag(this)">Enak Banget</span>
-        <span class="tagchip" onclick="toggleTag(this)">Pelayanan Cepat</span>
-        <span class="tagchip" onclick="toggleTag(this)">Worth It</span>
-        <span class="tagchip" onclick="toggleTag(this)">Porsi Besar</span>
-        <span class="tagchip" onclick="toggleTag(this)">Penjual Ramah</span>
-        <span class="tagchip" onclick="toggleTag(this)">Pedas Pas</span>
+      <div class="daftartag">
+        <?php foreach (['Enak Banget','Pelayanan Cepat','Worth It','Porsi Besar','Penjual Ramah','Pedas Pas'] as $tag): ?>
+        <input type="checkbox" name="tag[]" id="tag-<?= md5($tag) ?>"
+               value="<?= htmlspecialchars($tag) ?>" class="tag-input">
+        <label for="tag-<?= md5($tag) ?>" class="tagchip"><?= $tag ?></label>
+        <?php endforeach; ?>
       </div>
-      <!-- Input tersembunyi untuk tag -->
-      <input type="hidden" name="tag_terpilih" id="inputtag" value="">
     </div>
 
-
-    <button type="submit" class="tombolutama blok" style="padding:14px;font-size:15px;"
-            onclick="return validasiRating()">
+    <button type="submit" class="tombolutama blok" style="padding:14px;font-size:15px;">
       <i class="fa-solid fa-paper-plane"></i> Kirim Rating
     </button>
 
@@ -122,46 +121,35 @@ $pathbase = '..';
 </div>
 
 <style>
-.tombolbintang { color: #D1D5DB; }
-.tombolbintang.aktif { color: #F59E0B; }
+/* ===== CSS Star Rating (tanpa JS) ===== */
+.bintang-pilih {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: center;
+  gap: 2px;
+}
+.bintang-pilih input[type="radio"] { display: none; }
+.bintang-pilih label {
+  font-size: 38px;
+  color: #D1D5DB;
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px;
+}
+/* Bintang yang diceklis dan semua setelahnya (nilai lebih rendah) = emas */
+.bintang-pilih input:checked ~ label,
+.bintang-pilih label:hover,
+.bintang-pilih label:hover ~ label {
+  color: #F59E0B;
+}
+
+/* ===== CSS Tag Checkbox ===== */
+.tag-input { display: none; }
+.tag-input:checked + .tagchip {
+  background: var(--utama);
+  color: var(--putihbg);
+  border-color: var(--utama);
+}
 </style>
-<script>
-var nilaiterpilih = 0;
-var keterangan = ['','Sangat Buruk','Kurang Memuaskan','Cukup','Bagus!','Luar Biasa!'];
-
-function aturNilai(nilai) {
-  nilaiterpilih = nilai;
-  document.getElementById('inputnilai').value = nilai;
-  var btns = document.querySelectorAll('#bintangutama .tombolbintang');
-  btns.forEach(function(b, i) { b.classList.toggle('aktif', i < nilai); });
-  document.getElementById('keterangannilai').textContent = keterangan[nilai] || '';
-}
-
-function toggleTag(el) {
-  el.classList.toggle('dipilih');
-  // Kumpulkan semua tag terpilih
-  var dipilih = [];
-  document.querySelectorAll('#daftartag .tagchip.dipilih').forEach(function(t) {
-    dipilih.push(t.textContent.trim());
-  });
-  document.getElementById('inputtag').value = dipilih.join(', ');
-}
-
-function validasiRating() {
-  if (nilaiterpilih === 0) {
-    alert('Pilih rating bintang terlebih dahulu');
-    return false;
-  }
-  // Gabungkan tag ke ulasan
-  var tag = document.getElementById('inputtag').value;
-  var ulasan = document.getElementById('isifulasan').value;
-  if (tag && !ulasan) {
-    document.getElementById('isifulasan').value = tag;
-  } else if (tag && ulasan) {
-    document.getElementById('isifulasan').value = ulasan + '\n' + tag;
-  }
-  return true;
-}
-</script>
 </body>
 </html>

@@ -12,6 +12,13 @@ $nilaitoko  = (int)($_POST['rating_toko'] ?? 0);
 $ulasan     = trim($_POST['ulasan']        ?? '');
 $idpengguna = (int)$_SESSION['id_user'];
 
+// Gabungkan tag yang dipilih ke ulasan (dikirim via checkbox name="tag[]")
+$tags = array_filter(array_map('trim', (array)($_POST['tag'] ?? [])));
+if (!empty($tags)) {
+    $tagstr = implode(', ', $tags);
+    $ulasan = $ulasan ? $ulasan . "\n" . $tagstr : $tagstr;
+}
+
 if (!$idpesanan || $nilaitoko < 1 || $nilaitoko > 5) {
     $_SESSION['flash'] = ['pesan' => 'Data rating tidak valid', 'jenis' => 'gagal'];
     header("Location: pesanan.php?tab=riwayat"); exit;
