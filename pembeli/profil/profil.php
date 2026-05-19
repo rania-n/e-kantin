@@ -124,38 +124,18 @@ $pathbase = '..';
   </div>
 
   <!-- Tombol keluar (mobile only, desktop ada di sidebar) -->
-  <div class="itempengaturan sembunyidesktop" onclick="document.getElementById('modalkeluar').classList.add('tampil')" style="cursor:pointer;">
+  <a href="../../4. autentifikasi/konfirmasilogout.php?peran=pembeli"
+     class="itempengaturan sembunyidesktop" style="color:inherit;">
     <div class="ikonpengaturan merah"><i class="fa-solid fa-right-from-bracket"></i></div>
     <div class="tekspengaturan">
       <div class="judul" style="color:var(--gagal);">Keluar</div>
       <div class="deskripsi">Logout dari akun</div>
     </div>
     <div class="panahpengaturan" style="color:var(--gagal);"><i class="fa-solid fa-chevron-right"></i></div>
-  </div>
+  </a>
 
   <div style="height:24px;"></div>
 
-</div>
-
-<!-- Modal keluar -->
-<div class="modaloverlay" id="modalkeluar" onclick="this.classList.remove('tampil')">
-  <div class="isimodal" onclick="event.stopPropagation()">
-    <div class="peganganmodal"></div>
-    <div style="text-align:center;padding:10px 0 20px;">
-      <div style="font-size:48px;margin-bottom:10px;color:var(--utama);">
-        <i class="fa-solid fa-right-from-bracket"></i>
-      </div>
-      <div style="font-size:18px;font-weight:800;color:var(--utama);margin-bottom:6px;">Yakin ingin keluar?</div>
-      <div style="font-size:13px;color:var(--tekssamar);">Kamu perlu login lagi untuk mengakses akun</div>
-    </div>
-    <a href="../../4. autentifikasi/logout.php"
-       class="tombolutama blok" style="margin-bottom:10px;">
-      <i class="fa-solid fa-right-from-bracket"></i> Ya, Keluar
-    </a>
-    <button class="tombolringan blok" onclick="document.getElementById('modalkeluar').classList.remove('tampil')">
-      Batal
-    </button>
-  </div>
 </div>
 
 </body>

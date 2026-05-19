@@ -91,7 +91,7 @@ $pathbase = '..';
             <input type="hidden" name="aksi" value="hapus">
             <input type="hidden" name="id_toko" value="<?= $idtoko ?>">
             <input type="hidden" name="id_menu" value="<?= $idmenu ?>">
-            <button type="submit" class="tombolhapus" title="Hapus" onclick="return confirm('Hapus item ini?')">
+            <button type="submit" class="tombolhapus" title="Hapus">
               <i class="fa-solid fa-trash-can"></i>
             </button>
           </form>

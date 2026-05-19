@@ -65,9 +65,8 @@ $profilaktif    = in_array($halamansaatini, ['profil','editprofil','gantipasswor
     <i class="fa-solid fa-user"></i><span>Profil</span>
   </a>
 
-  <!-- Tombol keluar (desktop sidebar — dengan konfirmasi modal) -->
-  <a href="#"
-     onclick="document.getElementById('modalkekluarpembeli').classList.add('tampil'); return false;"
+  <!-- Tombol keluar — langsung ke halaman konfirmasi PHP -->
+  <a href="../../4. autentifikasi/konfirmasilogout.php?peran=pembeli"
      class="itemnav itemkeluar">
     <i class="fa-solid fa-right-from-bracket"></i><span>Keluar</span>
   </a>
@@ -89,24 +88,3 @@ $profilaktif    = in_array($halamansaatini, ['profil','editprofil','gantipasswor
   </div>
 </div>
 <?php endif; ?>
-
-<!-- Modal konfirmasi keluar pembeli -->
-<div class="modaloverlay" id="modalkekluarpembeli"
-     onclick="this.classList.remove('tampil')">
-  <div class="isimodal" onclick="event.stopPropagation()" style="max-width:380px;text-align:center;">
-    <div class="peganganmodal"></div>
-    <div style="font-size:44px;color:var(--utama);margin-bottom:10px;">
-      <i class="fa-solid fa-right-from-bracket"></i>
-    </div>
-    <div style="font-size:18px;font-weight:800;color:var(--utama);margin-bottom:6px;">Yakin ingin keluar?</div>
-    <div style="font-size:13px;color:var(--tekssamar);margin-bottom:20px;">Kamu perlu login lagi untuk memesan</div>
-    <a href="../../4. autentifikasi/logout.php"
-       class="tombolutama blok" style="margin-bottom:10px;">
-      <i class="fa-solid fa-right-from-bracket"></i> Ya, Keluar
-    </a>
-    <button class="tombolringan blok"
-            onclick="document.getElementById('modalkekluarpembeli').classList.remove('tampil')">
-      Batal
-    </button>
-  </div>
-</div>

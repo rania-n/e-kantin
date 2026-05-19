@@ -46,13 +46,11 @@ $email    = $_GET['email']    ?? '';
 
   <div class="pass-wrap">
     <input type="password"
-           id="pass"
            placeholder="Password"
            name="password"
            minlength="8"
            maxlength="100"
            required>
-    <span class="eye" onclick="togglePassword()">👁</span>
   </div>
   <small style="color:#888;font-size:11px;display:block;margin-top:-10px;margin-bottom:14px;">8–100 karakter</small>
 
@@ -64,13 +62,6 @@ $email    = $_GET['email']    ?? '';
 
 </div>
 </form>
-
-<script>
-function togglePassword(){
-  const pass = document.getElementById("pass");
-  pass.type = pass.type === "password" ? "text" : "password";
-}
-</script>
 
 </body>
 </html>

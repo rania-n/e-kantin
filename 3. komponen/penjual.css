@@ -170,8 +170,11 @@ ul { list-style: none; }
   inset: 0;
   background: rgba(0,0,0,.5);
   z-index: 999;
+  cursor: pointer;
 }
-.overlay-sidebar.tampil { display: block; }
+
+/* Checkbox tersembunyi untuk sidebar toggle */
+.togel-input { display: none; }
 
 /* ==================================================================
    AREA KONTEN UTAMA
@@ -827,14 +830,20 @@ tbody tr:hover td { background: var(--latar); }
   inset: 0;
   background: rgba(0,0,0,.5);
   z-index: 2000;
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .2s;
 }
-.modaloverlay.tampil { opacity: 1; pointer-events: all; }
+/* Dibuka via JS (.tampil) ATAU via CSS :target */
+.modaloverlay.tampil,
+.modaloverlay:target {
+  display: flex;
+  animation: fadeModal .18s ease;
+}
+@keyframes fadeModal {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
 .isimodal {
   background: var(--putih);
   border-radius: 16px;
@@ -843,10 +852,13 @@ tbody tr:hover td { background: var(--latar); }
   max-width: 500px;
   max-height: 90vh;
   overflow-y: auto;
-  transform: scale(.94);
-  transition: transform .2s;
 }
-.modaloverlay.tampil .isimodal { transform: scale(1); }
+/* Tombol/link penutup yang menutup seluruh backdrop modal */
+.penutup-modal {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
 .modal-judul {
   display: flex;
   justify-content: space-between;
@@ -968,7 +980,9 @@ tbody tr:hover td { background: var(--latar); }
     top: 56px;
     height: calc(100vh - 56px);
   }
-  .sidebar.aktif { transform: translateX(0); }
+  /* CSS checkbox hack: sidebar terbuka saat checkbox dicentang */
+  .togel-input:checked ~ .sidebar { transform: translateX(0); }
+  .togel-input:checked ~ .overlay-sidebar { display: block; }
   .konten { margin-left: 0; padding: 80px 16px 24px; }
   .header-halaman { margin-bottom: 16px; }
   .grid-dua { grid-template-columns: 1fr; }

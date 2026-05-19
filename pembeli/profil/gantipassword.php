@@ -81,35 +81,20 @@ $pathbase = '..';
 
       <div class="kelompokform">
         <label>Password Lama</label>
-        <div class="inputpassword">
-          <input type="password" name="password_lama" id="p1"
-                 required placeholder="Masukkan password lama...">
-          <button type="button" class="tombollihatpass" onclick="togglePass('p1')">
-            <i class="fa-solid fa-eye"></i>
-          </button>
-        </div>
+        <input type="password" name="password_lama"
+               required placeholder="Masukkan password lama...">
       </div>
 
       <div class="kelompokform">
         <label>Password Baru</label>
-        <div class="inputpassword">
-          <input type="password" name="password_baru" id="p2"
-                 required minlength="8" maxlength="100" placeholder="Minimal 8 karakter...">
-          <button type="button" class="tombollihatpass" onclick="togglePass('p2')">
-            <i class="fa-solid fa-eye"></i>
-          </button>
-        </div>
+        <input type="password" name="password_baru"
+               required minlength="8" maxlength="100" placeholder="Minimal 8 karakter...">
       </div>
 
       <div class="kelompokform">
         <label>Konfirmasi Password Baru</label>
-        <div class="inputpassword">
-          <input type="password" name="konfirmasi" id="p3"
-                 required placeholder="Ulangi password baru...">
-          <button type="button" class="tombollihatpass" onclick="togglePass('p3')">
-            <i class="fa-solid fa-eye"></i>
-          </button>
-        </div>
+        <input type="password" name="konfirmasi"
+               required placeholder="Ulangi password baru...">
       </div>
     </div>
 
@@ -121,12 +106,5 @@ $pathbase = '..';
   <div style="height:24px;"></div>
 </div>
 
-<script>
-/* Toggle lihat/sembunyikan password - JS minimal, hanya untuk UX input */
-function togglePass(id) {
-  var el = document.getElementById(id);
-  el.type = el.type === 'password' ? 'text' : 'password';
-}
-</script>
 </body>
 </html>

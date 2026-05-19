@@ -244,32 +244,17 @@ function bintang(float $r): string {
     <form method="POST" action="prosesgantipassword.php">
       <div class="kelompokform">
         <label>Password Lama <span style="color:var(--gagal);">*</span></label>
-        <div class="inputpassword">
-          <input type="password" name="password_lama" id="p1" required placeholder="Password saat ini...">
-          <button type="button" class="tombollihatpass" onclick="togglePass('p1')">
-            <i class="fa-solid fa-eye"></i>
-          </button>
-        </div>
+        <input type="password" name="password_lama" required placeholder="Password saat ini...">
       </div>
       <div class="kelompokform">
         <label>Password Baru <span style="color:var(--gagal);">*</span></label>
-        <div class="inputpassword">
-          <input type="password" name="password_baru" id="p2" required minlength="8" maxlength="100"
-                 placeholder="Minimal 8 karakter...">
-          <button type="button" class="tombollihatpass" onclick="togglePass('p2')">
-            <i class="fa-solid fa-eye"></i>
-          </button>
-        </div>
+        <input type="password" name="password_baru" required minlength="8" maxlength="100"
+               placeholder="Minimal 8 karakter...">
         <small>8–100 karakter</small>
       </div>
       <div class="kelompokform">
         <label>Konfirmasi Password Baru <span style="color:var(--gagal);">*</span></label>
-        <div class="inputpassword">
-          <input type="password" name="konfirmasi" id="p3" required placeholder="Ulangi password baru...">
-          <button type="button" class="tombollihatpass" onclick="togglePass('p3')">
-            <i class="fa-solid fa-eye"></i>
-          </button>
-        </div>
+        <input type="password" name="konfirmasi" required placeholder="Ulangi password baru...">
       </div>
       <div style="display:flex;gap:10px;">
         <a href="profil.php" class="tombolringan">Batal</a>
@@ -282,13 +267,6 @@ function bintang(float $r): string {
   <?php endif; ?>
 
 </main>
-
-<script>
-function togglePass(id) {
-  var el = document.getElementById(id);
-  el.type = el.type === 'password' ? 'text' : 'password';
-}
-</script>
 
 </body>
 </html>

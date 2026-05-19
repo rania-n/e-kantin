@@ -168,32 +168,27 @@ function kelasstatus(string $s): string {
 
         <?php if ($pesanan['status_order'] === 'Menunggu'): ?>
           <a href="prosesmanajemenpesanan.php?aksi=proses&id=<?= $pesanan['id_order'] ?>&filter=<?= urlencode($filter) ?>"
-             class="tombolkecil biru"
-             onclick="return confirm('Mulai proses pesanan ini?')">
+             class="tombolkecil biru">
             <i class="fa-solid fa-fire-burner"></i> Proses
           </a>
           <a href="prosesmanajemenpesanan.php?aksi=batal&id=<?= $pesanan['id_order'] ?>&filter=<?= urlencode($filter) ?>"
-             class="tombolkecil merah"
-             onclick="return confirm('Batalkan pesanan ini?')">
+             class="tombolkecil merah">
             <i class="fa-solid fa-xmark"></i> Batalkan
           </a>
 
         <?php elseif ($pesanan['status_order'] === 'Diproses'): ?>
           <a href="prosesmanajemenpesanan.php?aksi=siap&id=<?= $pesanan['id_order'] ?>&filter=<?= urlencode($filter) ?>"
-             class="tombolkecil hijau"
-             onclick="return confirm('Tandai pesanan siap diambil?')">
+             class="tombolkecil hijau">
             <i class="fa-solid fa-bell"></i> Siap Diambil
           </a>
           <a href="prosesmanajemenpesanan.php?aksi=batal&id=<?= $pesanan['id_order'] ?>&filter=<?= urlencode($filter) ?>"
-             class="tombolkecil merah"
-             onclick="return confirm('Batalkan pesanan ini?')">
+             class="tombolkecil merah">
             <i class="fa-solid fa-xmark"></i> Batalkan
           </a>
 
         <?php elseif ($pesanan['status_order'] === 'Siap Diambil'): ?>
           <a href="prosesmanajemenpesanan.php?aksi=selesai&id=<?= $pesanan['id_order'] ?>&filter=<?= urlencode($filter) ?>"
-             class="tombolkecil aktif-kecil"
-             onclick="return confirm('Konfirmasi pesanan telah diambil dan selesai?')">
+             class="tombolkecil aktif-kecil">
             <i class="fa-solid fa-circle-check"></i> Selesai
           </a>
 

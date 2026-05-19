@@ -1,6 +1,7 @@
 <?php
 /* ============================================================
    KELOLA MENU PENJUAL
+   Modal menggunakan CSS :target — tanpa JavaScript.
    ============================================================ */
 include '../../1. koneksi/koneksi.php';
 include '../../3. komponen/guardpenjual.php';
@@ -8,10 +9,11 @@ include '../../3. komponen/guardpenjual.php';
 $idtoko = (int)$_SESSION['id_toko'];
 $halamansaatini = 'manajemenmenu';
 
-// Filter & pencarian
-$filter  = $_GET['filter'] ?? 'Semua';
-$cari    = trim($_GET['cari'] ?? '');
-$editid  = (int)($_GET['edit'] ?? 0);
+// Filter, pencarian, dan ID aksi dari GET
+$filter   = $_GET['filter'] ?? 'Semua';
+$cari     = trim($_GET['cari'] ?? '');
+$editid   = (int)($_GET['edit']  ?? 0);
+$hapusid  = (int)($_GET['hapus'] ?? 0);
 
 // Flash message
 $flashpesan = ''; $flashjenis = '';
@@ -24,9 +26,12 @@ if (!empty($_SESSION['flash'])) {
 // Kategori yang valid
 $kategorilist = ['Makanan Berat','Makanan Ringan','Makanan Sehat','Minuman Ringan','Minuman Sehat'];
 
+// Validasi filter
+if (!in_array($filter, array_merge(['Semua'], $kategorilist))) $filter = 'Semua';
+
 // Query menu milik toko ini
 $kondisi = "id_toko=$idtoko AND deleted=0";
-if ($filter !== 'Semua' && in_array($filter, $kategorilist)) {
+if ($filter !== 'Semua') {
     $filteraman = $conn->real_escape_string($filter);
     $kondisi .= " AND kategori='$filteraman'";
 }
@@ -36,7 +41,7 @@ if ($cari !== '') {
 }
 $hasilmenu = $conn->query("SELECT * FROM tb_menu WHERE $kondisi ORDER BY created DESC");
 
-// Data edit (jika diminta)
+// Data edit (jika ada ?edit=)
 $dataedit = null;
 if ($editid > 0) {
     $qe = $conn->prepare("SELECT * FROM tb_menu WHERE id_menu=? AND id_toko=? AND deleted=0");
@@ -45,6 +50,9 @@ if ($editid > 0) {
     $dataedit = $qe->get_result()->fetch_assoc();
     $qe->close();
 }
+
+// URL dasar (tanpa hash dan tanpa edit/hapus params) untuk tutup modal
+$urldasar = 'manajemenmenu.php?filter=' . urlencode($filter) . ($cari ? '&cari=' . urlencode($cari) : '');
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -79,9 +87,10 @@ if ($editid > 0) {
           <i class="fa-solid fa-magnifying-glass"></i>
         </button>
       </form>
-      <button onclick="bukaModal('modalTambah')" class="tombolutama">
+      <!-- Tombol tambah menu — buka modal via CSS :target -->
+      <a href="#modal-tambah" class="tombolutama">
         <i class="fa-solid fa-plus"></i> Tambah Menu
-      </button>
+      </a>
     </div>
   </div>
 
@@ -136,20 +145,20 @@ if ($editid > 0) {
         </div>
       </div>
       <div class="aksi-menu">
-        <a href="manajemenmenu.php?edit=<?= $menu['id_menu'] ?>&filter=<?= urlencode($filter) ?>"
-           onclick="bukaModal('modalEdit')"
+        <!-- Edit: reload halaman dengan ?edit=ID#modal-edit agar data edit dimuat -->
+        <a href="manajemenmenu.php?edit=<?= $menu['id_menu'] ?>&filter=<?= urlencode($filter) ?><?= $cari ? '&cari='.urlencode($cari) : '' ?>#modal-edit"
            class="tombolkecil">
           <i class="fa-solid fa-pen"></i> Edit
         </a>
+        <!-- Toggle status: langsung tanpa konfirmasi (bisa dibalik) -->
         <a href="prosesmanajemenmenu.php?aksi=toggle&id=<?= $menu['id_menu'] ?>&filter=<?= urlencode($filter) ?>"
-           class="tombolkecil <?= $menu['status'] === 'aktif' ? 'kuning' : 'hijau' ?>"
-           onclick="return confirm('Ubah status menu ini?')">
+           class="tombolkecil <?= $menu['status'] === 'aktif' ? 'kuning' : 'hijau' ?>">
           <i class="fa-solid fa-<?= $menu['status'] === 'aktif' ? 'ban' : 'check' ?>"></i>
           <?= $menu['status'] === 'aktif' ? 'Nonaktifkan' : 'Aktifkan' ?>
         </a>
-        <a href="prosesmanajemenmenu.php?aksi=hapus&id=<?= $menu['id_menu'] ?>&filter=<?= urlencode($filter) ?>"
-           class="tombolkecil merah"
-           onclick="return confirm('Yakin hapus menu ini? Tindakan ini tidak bisa dibatalkan.')">
+        <!-- Hapus: buka modal konfirmasi via CSS :target -->
+        <a href="manajemenmenu.php?hapus=<?= $menu['id_menu'] ?>&filter=<?= urlencode($filter) ?><?= $cari ? '&cari='.urlencode($cari) : '' ?>#konfirm-hapus"
+           class="tombolkecil merah">
           <i class="fa-solid fa-trash"></i>
         </a>
       </div>
@@ -164,23 +173,24 @@ if ($editid > 0) {
     <?php if ($cari): ?>
     <a href="manajemenmenu.php?filter=<?= urlencode($filter) ?>" class="tombolringan">Hapus Pencarian</a>
     <?php else: ?>
-    <button onclick="bukaModal('modalTambah')" class="tombolutama">
+    <a href="#modal-tambah" class="tombolutama">
       <i class="fa-solid fa-plus"></i> Tambah Menu Sekarang
-    </button>
+    </a>
     <?php endif; ?>
   </div>
   <?php endif; ?>
 
 </main>
 
-<!-- ===== MODAL TAMBAH MENU ===== -->
-<div class="modaloverlay" id="modalTambah" onclick="tutupModal('modalTambah')">
-  <div class="isimodal" onclick="event.stopPropagation()" style="max-width:520px;">
+<!-- ===== MODAL TAMBAH MENU (CSS :target) ===== -->
+<div class="modaloverlay" id="modal-tambah">
+  <a href="<?= $urldasar ?>" class="penutup-modal"></a>
+  <div class="isimodal" style="max-width:520px;position:relative;z-index:1;">
     <div class="modal-judul">
       <h2><i class="fa-solid fa-plus"></i> Tambah Menu Baru</h2>
-      <button class="tombol-tutup-modal" onclick="tutupModal('modalTambah')">
+      <a href="<?= $urldasar ?>" class="tombol-tutup-modal">
         <i class="fa-solid fa-xmark"></i>
-      </button>
+      </a>
     </div>
     <form method="POST" action="prosesmanajemenmenu.php" enctype="multipart/form-data">
       <input type="hidden" name="aksi" value="tambah">
@@ -221,7 +231,7 @@ if ($editid > 0) {
         <small>Format: JPG, PNG, WEBP. Maks. 2MB</small>
       </div>
       <div style="display:flex;gap:10px;margin-top:4px;">
-        <button type="button" class="tombolringan" onclick="tutupModal('modalTambah')">Batal</button>
+        <a href="<?= $urldasar ?>" class="tombolringan">Batal</a>
         <button type="submit" class="tombolutama" style="flex:1;">
           <i class="fa-solid fa-floppy-disk"></i> Simpan Menu
         </button>
@@ -230,13 +240,13 @@ if ($editid > 0) {
   </div>
 </div>
 
-<!-- ===== MODAL EDIT MENU ===== -->
-<div class="modaloverlay" id="modalEdit" onclick="tutupModal('modalEdit')"
-     style="<?= $dataedit ? 'opacity:1;pointer-events:all;' : '' ?>">
-  <div class="isimodal" onclick="event.stopPropagation()" style="max-width:520px;">
+<!-- ===== MODAL EDIT MENU (CSS :target) ===== -->
+<div class="modaloverlay" id="modal-edit">
+  <a href="<?= $urldasar ?>" class="penutup-modal"></a>
+  <div class="isimodal" style="max-width:520px;position:relative;z-index:1;">
     <div class="modal-judul">
       <h2><i class="fa-solid fa-pen"></i> Edit Menu</h2>
-      <a href="manajemenmenu.php?filter=<?= urlencode($filter) ?>" class="tombol-tutup-modal">
+      <a href="<?= $urldasar ?>" class="tombol-tutup-modal">
         <i class="fa-solid fa-xmark"></i>
       </a>
     </div>
@@ -283,7 +293,7 @@ if ($editid > 0) {
         <small>Foto saat ini: <?= htmlspecialchars($dataedit['foto']) ?></small>
       </div>
       <div style="display:flex;gap:10px;margin-top:4px;">
-        <a href="manajemenmenu.php?filter=<?= urlencode($filter) ?>" class="tombolringan">Batal</a>
+        <a href="<?= $urldasar ?>" class="tombolringan">Batal</a>
         <button type="submit" class="tombolutama" style="flex:1;">
           <i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan
         </button>
@@ -295,26 +305,28 @@ if ($editid > 0) {
   </div>
 </div>
 
-<script>
-function bukaModal(id) {
-  document.getElementById(id).classList.add('tampil');
-}
-function tutupModal(id) {
-  document.getElementById(id).classList.remove('tampil');
-  // Kalau tutup modal edit, hapus parameter edit dari URL
-  if (id === 'modalEdit') {
-    var url = new URL(window.location.href);
-    url.searchParams.delete('edit');
-    window.history.replaceState({}, '', url);
-  }
-}
-// Buka modal edit otomatis jika ada parameter ?edit=
-<?php if ($dataedit): ?>
-document.addEventListener('DOMContentLoaded', function() {
-  bukaModal('modalEdit');
-});
+<!-- ===== MODAL KONFIRMASI HAPUS (CSS :target) ===== -->
+<?php if ($hapusid > 0): ?>
+<div class="modaloverlay" id="konfirm-hapus">
+  <a href="<?= $urldasar ?>" class="penutup-modal"></a>
+  <div class="isimodal" style="max-width:380px;text-align:center;position:relative;z-index:1;">
+    <div style="font-size:44px;color:var(--gagal);margin-bottom:10px;">
+      <i class="fa-solid fa-trash"></i>
+    </div>
+    <div style="font-size:17px;font-weight:800;color:var(--utama);margin-bottom:8px;">Hapus Menu?</div>
+    <div style="font-size:13px;color:var(--tekssamar);margin-bottom:20px;">
+      Tindakan ini tidak bisa dibatalkan. Menu akan dihapus secara permanen.
+    </div>
+    <a href="prosesmanajemenmenu.php?aksi=hapus&id=<?= $hapusid ?>&filter=<?= urlencode($filter) ?>"
+       class="tombolutama blok" style="margin-bottom:10px;background:var(--gagal);">
+      <i class="fa-solid fa-trash"></i> Ya, Hapus
+    </a>
+    <a href="<?= $urldasar ?>" class="tombolringan blok">
+      Batal
+    </a>
+  </div>
+</div>
 <?php endif; ?>
-</script>
 
 </body>
 </html>

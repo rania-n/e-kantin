@@ -1,30 +1,32 @@
 <?php
 /* ============================================================
-   SIDEBAR PENJUAL (PHP)
-   Di-include di setiap halaman penjual.
-   Membutuhkan $_SESSION['id_toko'], 'nama_toko', 'status_toko',
-   dan variabel $halamansaatini (diset di setiap halaman).
+   SIDEBAR PENJUAL
+   Sidebar toggle menggunakan CSS checkbox hack (tanpa JS).
+   Modal kontak menggunakan CSS :target (tanpa JS).
    ============================================================ */
 if (!isset($halamansaatini)) {
     $halamansaatini = basename($_SERVER['PHP_SELF'], '.php');
 }
-$namatoko   = htmlspecialchars($_SESSION['nama_toko']   ?? 'Toko Saya');
-$statustoko = $_SESSION['status_toko'] ?? 'buka';
+$namatoko       = htmlspecialchars($_SESSION['nama_toko']   ?? 'Toko Saya');
+$statustoko     = $_SESSION['status_toko'] ?? 'buka';
 $inisialpenjual = strtoupper(mb_substr($_SESSION['username'] ?? 'P', 0, 2));
 ?>
 
+<!-- Checkbox tersembunyi untuk toggle sidebar (CSS hack) -->
+<input type="checkbox" id="togel-sidebar" class="togel-input">
+
 <!-- Header Mobile -->
 <div class="mobile-header">
-  <button class="tombolhambur" onclick="toggleSidebar()" title="Menu">
+  <label for="togel-sidebar" class="tombolhambur" title="Menu">
     <i class="fa-solid fa-bars"></i>
-  </button>
+  </label>
   <div class="judul">
     <i class="fa-solid fa-utensils"></i> eKantin — <?= $namatoko ?>
   </div>
 </div>
 
-<!-- Overlay mobile -->
-<div class="overlay-sidebar" id="overlay" onclick="tutupSidebar()"></div>
+<!-- Overlay mobile (label checkbox = klik untuk tutup sidebar) -->
+<label for="togel-sidebar" class="overlay-sidebar"></label>
 
 <!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar">
@@ -77,12 +79,11 @@ $inisialpenjual = strtoupper(mb_substr($_SESSION['username'] ?? 'P', 0, 2));
     <a href="../../penjual/profil/profil.php"
        class="sidebar-item <?= in_array($halamansaatini, ['profil','editprofil','gantipassword']) ? 'aktif' : '' ?>">
       <i class="fa-solid fa-user-tie"></i>
-      <span>Profil & Toko</span>
+      <span>Profil &amp; Toko</span>
     </a>
 
-    <a href="#"
-       onclick="document.getElementById('modalkontak').classList.add('tampil'); return false;"
-       class="sidebar-item">
+    <!-- Buka modal kontak via CSS :target -->
+    <a href="#modal-kontak" class="sidebar-item">
       <i class="fa-solid fa-headset"></i>
       <span>Hubungi Admin</span>
     </a>
@@ -90,8 +91,7 @@ $inisialpenjual = strtoupper(mb_substr($_SESSION['username'] ?? 'P', 0, 2));
   </nav>
 
   <div class="sidebar-footer">
-    <a href="#"
-       onclick="document.getElementById('modallogoutpenjual').classList.add('tampil'); return false;"
+    <a href="../../4. autentifikasi/konfirmasilogout.php?peran=penjual"
        class="sidebar-item">
       <i class="fa-solid fa-right-from-bracket"></i>
       <span>Keluar</span>
@@ -100,10 +100,10 @@ $inisialpenjual = strtoupper(mb_substr($_SESSION['username'] ?? 'P', 0, 2));
 
 </aside>
 
-<!-- Modal kontak admin -->
-<div class="modaloverlay" id="modalkontak"
-     onclick="this.classList.remove('tampil')">
-  <div class="isimodal" onclick="event.stopPropagation()" style="max-width:380px;text-align:center;">
+<!-- Modal kontak admin — dibuka via CSS :target (#modal-kontak) -->
+<div class="modaloverlay" id="modal-kontak">
+  <a href="#" class="penutup-modal"></a>
+  <div class="isimodal" style="max-width:380px;text-align:center;position:relative;z-index:1;">
     <div style="font-size:44px; color:var(--kedua); margin-bottom:10px;">
       <i class="fa-solid fa-headset"></i>
     </div>
@@ -120,40 +120,8 @@ $inisialpenjual = strtoupper(mb_substr($_SESSION['username'] ?? 'P', 0, 2));
        class="tombolkedua blok" style="margin-bottom:14px;">
       <i class="fa-brands fa-whatsapp"></i> WhatsApp Admin
     </a>
-    <button class="tombolringan blok"
-            onclick="document.getElementById('modalkontak').classList.remove('tampil')">
-      Tutup
-    </button>
-  </div>
-</div>
-
-<!-- Modal konfirmasi keluar -->
-<div class="modaloverlay" id="modallogoutpenjual"
-     onclick="this.classList.remove('tampil')">
-  <div class="isimodal" onclick="event.stopPropagation()" style="max-width:380px;text-align:center;">
-    <div style="font-size:44px; color:var(--utama); margin-bottom:10px;">
-      <i class="fa-solid fa-right-from-bracket"></i>
-    </div>
-    <div style="font-size:18px; font-weight:800; color:var(--utama); margin-bottom:6px;">Yakin ingin keluar?</div>
-    <div style="font-size:13px; color:var(--tekssamar); margin-bottom:20px;">Kamu perlu login lagi untuk mengakses panel penjual</div>
-    <a href="../../4. autentifikasi/logout.php"
-       class="tombolutama blok" style="margin-bottom:10px;">
-      <i class="fa-solid fa-right-from-bracket"></i> Ya, Keluar
+    <a href="#" class="tombolringan blok">
+      <i class="fa-solid fa-xmark"></i> Tutup
     </a>
-    <button class="tombolringan blok"
-            onclick="document.getElementById('modallogoutpenjual').classList.remove('tampil')">
-      Batal
-    </button>
   </div>
 </div>
-
-<script>
-function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('aktif');
-  document.getElementById('overlay').classList.toggle('tampil');
-}
-function tutupSidebar() {
-  document.getElementById('sidebar').classList.remove('aktif');
-  document.getElementById('overlay').classList.remove('tampil');
-}
-</script>

@@ -209,9 +209,6 @@ $pathbase = '..';
     <button onclick="window.print()" class="tombolringan" style="flex:1;">
       <i class="fa-solid fa-print"></i> Cetak
     </button>
-    <button onclick="salinLink()" class="tombolringan" style="flex:1;">
-      <i class="fa-solid fa-share-nodes"></i> Bagikan
-    </button>
   </div>
 
   <?php if ($pesanan['status_order'] === 'Selesai' && !$sudahrating): ?>
@@ -229,14 +226,5 @@ $pathbase = '..';
 
 </div>
 
-<script>
-function salinLink() {
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(window.location.href).then(function() {
-      alert('Link struk berhasil disalin!');
-    });
-  }
-}
-</script>
 </body>
 </html>
