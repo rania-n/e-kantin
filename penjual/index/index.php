@@ -79,6 +79,7 @@ $qtl = $conn->prepare("SELECT m.nama_menu, SUM(d.jumlah) AS terjual, SUM(d.subto
                         JOIN tb_menu m ON d.id_menu=m.id_menu
                         JOIN tb_order o ON d.id_order=o.id_order
                         WHERE m.id_toko=? AND o.deleted=0 AND d.deleted=0
+                          AND o.status_order != 'Dibatalkan'
                         GROUP BY m.id_menu, m.nama_menu
                         ORDER BY terjual DESC LIMIT 5");
 $qtl->bind_param("i", $idtoko); $qtl->execute();
@@ -372,27 +373,6 @@ function bintang(float $r): string {
       </div>
       <?php endforeach; ?>
       <?php endif; ?>
-    </div>
-
-    <!-- INFO TOKO SINGKAT -->
-    <div class="kartu">
-      <h3><i class="fa-solid fa-store"></i> Info Toko</h3>
-      <div style="display:flex;align-items:center;gap:14px;padding:10px 0;">
-        <div style="width:56px;height:56px;border-radius:14px;background:var(--utama);color:var(--putihbg);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;flex-shrink:0;">
-          <?= strtoupper(mb_substr($_SESSION['nama_toko']??'T', 0, 2)) ?>
-        </div>
-        <div>
-          <div style="font-size:16px;font-weight:800;"><?= htmlspecialchars($_SESSION['nama_toko']??'Toko') ?></div>
-          <div style="font-size:12px;color:var(--tekssamar);">Penjual: <?= htmlspecialchars($_SESSION['username']) ?></div>
-          <div class="statustoko <?= $statustoko ?>" style="margin-top:6px;">
-            <i class="fa-solid fa-circle" style="font-size:8px;"></i>
-            <?= $statustoko === 'buka' ? 'Toko Buka' : 'Toko Tutup' ?>
-          </div>
-        </div>
-      </div>
-      <a href="../profil/profil.php" class="tombolringan blok mt14">
-        <i class="fa-solid fa-user-pen"></i> Lihat Profil &amp; Toko
-      </a>
     </div>
 
   </div>

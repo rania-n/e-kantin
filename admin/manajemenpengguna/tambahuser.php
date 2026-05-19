@@ -1,132 +1,100 @@
 <?php
+/* ============================================================
+   TAMBAH PENGGUNA — FORM — ADMIN
+   Mendukung semua role: penjual, pembeli, admin
+   ============================================================ */
 include '../../1. koneksi/koneksi.php';
+include '../../3. komponen/guardadmin.php';
+$halamansaatini = 'user';
 
-if (isset($_POST['submit'])) {
-    $username = mysqli_real_escape_string($conn, $_POST['username']);
-    $email    = mysqli_real_escape_string($conn, $_POST['email']);
-    $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-    $role     = 'penjual'; // Dikunci khusus penjual
-
-    // --- PROSES SELEKSI (Validasi Duplikat) ---
-    $cek_username = mysqli_query($conn, "SELECT username FROM tb_user WHERE username = '$username'");
-    $cek_email = mysqli_query($conn, "SELECT email FROM tb_user WHERE email = '$email'");
-
-    if (mysqli_num_rows($cek_username) > 0) {
-        echo "<script>alert('Gagal! Username ini sudah terdaftar.'); window.history.back();</script>";
-    } else if (mysqli_num_rows($cek_email) > 0) {
-        echo "<script>alert('Gagal! Email ini sudah digunakan.'); window.history.back();</script>";
-    } else {
-        // --- PROSES INSERT USER ---
-        $query_user = "INSERT INTO tb_user (username, email, password, role, deleted) 
-                       VALUES ('$username', '$email', '$password', '$role', 0)";
-        
-        if (mysqli_query($conn, $query_user)) {
-            $id_user_baru = mysqli_insert_id($conn);
-
-            // --- OTOMATIS BUAT TOKO ---
-            $nama_toko = "Toko " . $username;
-            $query_toko = "INSERT INTO tb_toko (id_user, nama_toko, deleted) 
-                           VALUES ('$id_user_baru', '$nama_toko', 0)";
-            mysqli_query($conn, $query_toko);
-
-            echo "<script>alert('Berhasil menambah Penjual dan Toko baru!'); window.location='user.php';</script>";
-        } else {
-            echo "Gagal: " . mysqli_error($conn);
-        }
-    }
+$flashpesan = ''; $flashjenis = '';
+if (!empty($_SESSION['flash'])) {
+    $flashpesan = $_SESSION['flash']['pesan'];
+    $flashjenis = $_SESSION['flash']['jenis'];
+    unset($_SESSION['flash']);
 }
-?>
 
+$roledefault = $_GET['role'] ?? 'penjual';
+if (!in_array($roledefault, ['penjual','pembeli','admin'])) $roledefault = 'penjual';
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <title>Tambah Penjual Baru</title>
-    <link rel="stylesheet" href="../../3. komponen/admin.css">
-    <style>
-        .form-container { 
-            background: white; 
-            padding: 25px; 
-            border-radius: 12px; 
-            max-width: 500px; 
-            margin: 30px auto; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
-        }
-        .form-group { margin-bottom: 20px; }
-        .form-group label { 
-            display: block; 
-            margin-bottom: 8px; 
-            font-weight: 600; 
-            color: #555;
-        }
-        .form-group input { 
-            width: 100%; 
-            padding: 12px; 
-            border: 1px solid #ddd; 
-            border-radius: 8px; 
-            box-sizing: border-box; 
-            transition: 0.3s;
-        }
-        .form-group input:focus {
-            border-color: #845b5b;
-            outline: none;
-            box-shadow: 0 0 0 2px rgba(132, 91, 91, 0.1);
-        }
-        .btn-submit { 
-            background: #845b5b; 
-            color: white; 
-            border: none; 
-            padding: 14px; 
-            cursor: pointer; 
-            border-radius: 8px; 
-            width: 100%; 
-            font-size: 16px; 
-            font-weight: bold;
-        }
-        .btn-submit:hover { background: #6d4a4a; }
-        .btn-batal { 
-            display: block; 
-            text-align: center; 
-            margin-top: 15px; 
-            color: #888; 
-            text-decoration: none; 
-            font-size: 14px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tambah Pengguna - Admin eKantin</title>
+<link rel="stylesheet" href="../../3. komponen/admin.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
-    <?php include '../../3. komponen/sidebaradmin.html'; ?>
-    
-    <div class="content">
-        <div style="text-align: center; margin-top: 20px;">
-            <h2>Tambah Penjual</h2>
-            <p>Sistem akan otomatis membuatkan akun login dan profil toko.</p>
-        </div>
 
-        <div class="form-container">
-            <form action="" method="POST">
-                <!-- Role dikirim secara tersembunyi (Hidden) -->
-                <input type="hidden" name="role" value="penjual">
+<?php include '../../3. komponen/navbaradmin.php'; ?>
 
-                <div class="form-group">
-                    <label>Username / Nama Akun</label>
-                    <input type="text" name="username" required placeholder="Misal: kantin_sehat">
-                </div>
-                
-                <div class="form-group">
-                    <label>Email Aktif</label>
-                    <input type="email" name="email" required placeholder="kantin@sekolah.com">
-                </div>
+<main class="konten">
 
-                <div class="form-group">
-                    <label>Password Akun</label>
-                    <input type="password" name="password" required placeholder="Minimal 8 karakter">
-                </div>
-
-                <button type="submit" name="submit" class="btn-submit">Daftarkan Penjual</button>
-                <a href="user.php" class="btn-batal">Kembali ke Manajemen User</a>
-            </form>
-        </div>
+  <div class="header-halaman">
+    <div class="kiri">
+      <h1><i class="fa-solid fa-user-plus"></i> Tambah Pengguna</h1>
+      <p>Buat akun baru — penjual, pembeli, atau admin</p>
     </div>
+    <a href="user.php" class="tombolringan">
+      <i class="fa-solid fa-arrow-left"></i> Kembali
+    </a>
+  </div>
+
+  <?php if ($flashpesan): ?>
+  <div class="flashpesan flash<?= $flashjenis ?>">
+    <i class="fa-solid fa-<?= $flashjenis === 'sukses' ? 'circle-check' : 'circle-xmark' ?>"></i>
+    <?= htmlspecialchars($flashpesan) ?>
+  </div>
+  <?php endif; ?>
+
+  <div class="kartu">
+    <h3><i class="fa-solid fa-user-circle"></i> Data Pengguna Baru</h3>
+    <form method="POST" action="prosestambahuser.php">
+      <div class="barisform">
+        <div class="kelompokform">
+          <label>Username <span style="color:var(--gagal);">*</span></label>
+          <input type="text" name="username" required minlength="6" maxlength="50"
+                 placeholder="Minimal 6 karakter...">
+          <small>6–50 karakter, harus unik</small>
+        </div>
+        <div class="kelompokform">
+          <label>Email <span style="color:var(--gagal);">*</span></label>
+          <input type="email" name="email" required placeholder="Email aktif...">
+        </div>
+      </div>
+      <div class="barisform">
+        <div class="kelompokform">
+          <label>Password <span style="color:var(--gagal);">*</span></label>
+          <input type="password" name="password" required minlength="8" maxlength="100"
+                 placeholder="Minimal 8 karakter...">
+          <small>8–100 karakter</small>
+        </div>
+        <div class="kelompokform">
+          <label>Peran <span style="color:var(--gagal);">*</span></label>
+          <select name="role" required>
+            <option value="penjual" <?= $roledefault==='penjual'?'selected':'' ?>>Penjual (+ toko otomatis)</option>
+            <option value="pembeli" <?= $roledefault==='pembeli'?'selected':'' ?>>Pembeli</option>
+            <option value="admin"   <?= $roledefault==='admin'  ?'selected':'' ?>>Admin Platform</option>
+          </select>
+        </div>
+      </div>
+      <div class="kelompokform">
+        <label>Nama Toko <span style="color:var(--tekssamar);font-size:11px;">(hanya untuk Penjual)</span></label>
+        <input type="text" name="nama_toko" maxlength="100"
+               placeholder="Nama toko — isi jika peran Penjual...">
+        <small>Toko otomatis dikaitkan ke akun Penjual. Kosongkan untuk Pembeli/Admin.</small>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:6px;flex-wrap:wrap;">
+        <a href="user.php" class="tombolringan">Batal</a>
+        <button type="submit" class="tombolutama" style="flex:1;">
+          <i class="fa-solid fa-floppy-disk"></i> Simpan Pengguna
+        </button>
+      </div>
+    </form>
+  </div>
+
+</main>
 </body>
 </html>

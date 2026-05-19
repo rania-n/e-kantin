@@ -100,28 +100,53 @@ $inisialpenjual = strtoupper(mb_substr($_SESSION['username'] ?? 'P', 0, 2));
 
 </aside>
 
+<!-- Bottom nav mobile (pengganti hamburger di mobile) -->
+<nav class="bottomnav-penjual">
+  <a href="../../penjual/index/index.php"
+     class="tab-penjual <?= in_array($halamansaatini,['index','dashboard'])?'aktif':'' ?>">
+    <i class="fa-solid fa-gauge-high"></i><span>Dashboard</span>
+  </a>
+  <a href="../../penjual/manajemenpesanan/manajemenpesanan.php"
+     class="tab-penjual <?= $halamansaatini==='manajemenpesanan'?'aktif':'' ?>">
+    <i class="fa-solid fa-clipboard-list"></i><span>Pesanan Masuk</span>
+  </a>
+  <a href="../../penjual/manajemenmenu/manajemenmenu.php"
+     class="tab-penjual <?= $halamansaatini==='manajemenmenu'?'aktif':'' ?>">
+    <i class="fa-solid fa-bowl-food"></i><span>Kelola Menu</span>
+  </a>
+  <a href="../../penjual/laporan/laporan.php"
+     class="tab-penjual <?= $halamansaatini==='laporan'?'aktif':'' ?>">
+    <i class="fa-solid fa-chart-bar"></i><span>Laporan</span>
+  </a>
+  <a href="../../penjual/profil/profil.php"
+     class="tab-penjual <?= in_array($halamansaatini,['profil','editprofil','gantipassword'])?'aktif':'' ?>">
+    <i class="fa-solid fa-user-tie"></i><span>Profil</span>
+  </a>
+</nav>
+
 <!-- Modal kontak admin — dibuka via CSS :target (#modal-kontak) -->
 <div class="modaloverlay" id="modal-kontak">
   <a href="#" class="penutup-modal"></a>
-  <div class="isimodal" style="max-width:380px;text-align:center;position:relative;z-index:1;">
-    <div style="font-size:44px; color:var(--kedua); margin-bottom:10px;">
-      <i class="fa-solid fa-headset"></i>
+  <div class="isimodal" style="max-width:360px;position:relative;z-index:1;">
+    <div style="text-align:center;margin-bottom:18px;">
+      <div style="font-size:40px;color:var(--kedua);margin-bottom:8px;">
+        <i class="fa-solid fa-headset"></i>
+      </div>
+      <div style="font-size:17px;font-weight:800;color:var(--utama);margin-bottom:4px;">Hubungi Admin</div>
+      <div style="font-size:13px;color:var(--tekssamar);">
+        Butuh bantuan? Hubungi admin eKantin melalui:
+      </div>
     </div>
-    <div style="font-size:18px; font-weight:800; color:var(--utama); margin-bottom:6px;">Hubungi Admin</div>
-    <div style="font-size:13px; color:var(--tekssamar); margin-bottom:20px;">
-      Butuh bantuan? Hubungi admin eKantin melalui:
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <a href="mailto:admin@ekantin.sch.id" class="tombolutama blok">
+        <i class="fa-solid fa-envelope"></i> Email Admin
+      </a>
+      <a href="https://wa.me/6281234567890" target="_blank" class="tombolkedua blok">
+        <i class="fa-brands fa-whatsapp"></i> WhatsApp Admin
+      </a>
+      <a href="#" class="tombolringan blok">
+        <i class="fa-solid fa-xmark"></i> Tutup
+      </a>
     </div>
-    <a href="mailto:admin@ekantin.sch.id"
-       class="tombolutama blok" style="margin-bottom:10px;">
-      <i class="fa-solid fa-envelope"></i> admin@ekantin.sch.id
-    </a>
-    <a href="https://wa.me/6281234567890"
-       target="_blank"
-       class="tombolkedua blok" style="margin-bottom:14px;">
-      <i class="fa-brands fa-whatsapp"></i> WhatsApp Admin
-    </a>
-    <a href="#" class="tombolringan blok">
-      <i class="fa-solid fa-xmark"></i> Tutup
-    </a>
   </div>
 </div>

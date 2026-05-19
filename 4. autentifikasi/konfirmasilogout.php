@@ -2,15 +2,17 @@
 /* ============================================================
    KONFIRMASI KELUAR - Murni PHP + HTML tanpa JavaScript
    ============================================================ */
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'keluar') {
-    session_name('sesi_penjual');
-    if (session_status() === PHP_SESSION_NONE) session_start();
-    $_SESSION = [];
-    session_destroy();
-    session_write_close();
+$peran = $_POST['peran'] ?? $_GET['peran'] ?? '';
 
-    session_name('sesi_pembeli');
-    session_start();
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'keluar') {
+    // Hanya hapus sesi sesuai peran yang logout — tidak ganggu sesi lain
+    $namaSesi = match($peran) {
+        'penjual' => 'sesi_penjual',
+        'admin'   => 'sesi_admin',
+        default   => 'sesi_pembeli',
+    };
+    session_name($namaSesi);
+    if (session_status() === PHP_SESSION_NONE) session_start();
     $_SESSION = [];
     session_destroy();
     session_write_close();
@@ -19,10 +21,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'keluar'
     exit;
 }
 
-$peran   = $_GET['peran'] ?? '';
 $kembali = match($peran) {
     'penjual' => '../penjual/index/index.php',
     'pembeli' => '../pembeli/index/index.php',
+    'admin'   => '../admin/index/index.php',
     default   => 'login.php',
 };
 ?>
@@ -47,6 +49,7 @@ $kembali = match($peran) {
 
   <form method="POST" action="konfirmasilogout.php">
     <input type="hidden" name="aksi" value="keluar">
+    <input type="hidden" name="peran" value="<?= htmlspecialchars($peran) ?>">
     <button type="submit">
       <i class="fa-solid fa-right-from-bracket"></i> Ya, Keluar
     </button>

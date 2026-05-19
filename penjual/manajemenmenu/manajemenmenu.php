@@ -74,20 +74,16 @@ $urldasar = 'manajemenmenu.php?filter=' . urlencode($filter) . ($cari ? '&cari='
       <h1><i class="fa-solid fa-bowl-food"></i> Kelola Menu</h1>
       <p>Daftar menu yang dijual di <?= htmlspecialchars($_SESSION['nama_toko']??'') ?></p>
     </div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-      <!-- Kotak cari menu -->
-      <form method="GET" action="manajemenmenu.php" style="display:flex;gap:0;">
+    <div class="grup-aksi">
+      <form method="GET" action="manajemenmenu.php">
         <input type="hidden" name="filter" value="<?= htmlspecialchars($filter) ?>">
-        <div class="kotakcari" style="border-radius:10px 0 0 10px;border-right:none;">
+        <div class="kotakcari">
           <i class="fa-solid fa-magnifying-glass"></i>
           <input type="text" name="cari" value="<?= htmlspecialchars($cari) ?>"
                  placeholder="Cari nama menu...">
+          <button type="submit" class="tombolcari"><i class="fa-solid fa-arrow-right"></i></button>
         </div>
-        <button type="submit" class="tombolutama" style="border-radius:0 10px 10px 0;padding:10px 14px;">
-          <i class="fa-solid fa-magnifying-glass"></i>
-        </button>
       </form>
-      <!-- Tombol tambah menu — buka modal via CSS :target -->
       <a href="#modal-tambah" class="tombolutama">
         <i class="fa-solid fa-plus"></i> Tambah Menu
       </a>

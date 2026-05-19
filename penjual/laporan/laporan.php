@@ -230,7 +230,10 @@ function rp(float $n): string { return 'Rp ' . number_format($n, 0, ',', '.'); }
         </tbody>
         <tfoot>
           <tr>
-            <td colspan="4" style="font-weight:700;text-align:right;background:var(--latar);">TOTAL</td>
+            <td style="font-weight:700;background:var(--latar);">TOTAL</td>
+            <td style="background:var(--latar);"></td>
+            <td class="sembunyimobile" style="background:var(--latar);"></td>
+            <td class="sembunyimobile" style="background:var(--latar);"></td>
             <td style="font-weight:800;text-align:right;background:var(--latar);color:var(--utama);"><?= rp($totalpendapatan) ?></td>
           </tr>
         </tfoot>
@@ -262,14 +265,12 @@ function rp(float $n): string { return 'Rp ' . number_format($n, 0, ',', '.'); }
 
 @media (max-width: 600px) {
   .sembunyimobile { display: none; }
-  tfoot td:first-child { display: none; }
-  tfoot td:last-child { text-align: right; }
 }
 
 @media print {
   .takprint { display: none !important; }
   .headercetak { display: block !important; }
-  .sidebar, .mobile-header { display: none !important; }
+  .sidebar, .mobile-header, .bottomnav-penjual { display: none !important; }
   .konten { margin-left: 0 !important; padding: 12px !important; }
   body { background: white !important; }
   .kartu { box-shadow: none !important; border: 1px solid #ddd !important; break-inside: avoid; }

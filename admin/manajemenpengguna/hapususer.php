@@ -1,24 +1,65 @@
 <?php
+/* ============================================================
+   KONFIRMASI HAPUS PENGGUNA — ADMIN
+   ============================================================ */
 include '../../1. koneksi/koneksi.php';
+include '../../3. komponen/guardadmin.php';
+$halamansaatini = 'user';
 
-if (isset($_GET['id'])) {
-    $id = mysqli_real_escape_string($conn, $_GET['id']);
+$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+if (!$id) { header("Location: user.php"); exit; }
 
-    // 1. Soft Delete Toko milik user tersebut
-    $sql_toko = "UPDATE tb_toko SET deleted = 1 WHERE id_user = '$id'";
-    mysqli_query($conn, $sql_toko);
+$qu = $conn->prepare("SELECT id_user, username, email, role FROM tb_user WHERE id_user=? AND deleted=0");
+$qu->bind_param("i", $id); $qu->execute();
+$user = $qu->get_result()->fetch_assoc(); $qu->close();
+if (!$user) { header("Location: user.php"); exit; }
 
-    // 2. Soft Delete User (Update kolom deleted menjadi 1)
-    $sql_user = "UPDATE tb_user SET deleted = 1 WHERE id_user = '$id'";
-    
-    if (mysqli_query($conn, $sql_user)) {
-        header("Location: user.php?status=sukses_hapus");
-        exit(); 
-    } else {
-        echo "Gagal memproses soft delete: " . mysqli_error($conn);
-    }
-} else {
-    header("Location: user.php");
-    exit();
+$toko = null;
+if ($user['role'] === 'penjual') {
+    $qt = $conn->prepare("SELECT nama_toko FROM tb_toko WHERE id_user=? AND deleted=0");
+    $qt->bind_param("i", $id); $qt->execute();
+    $toko = $qt->get_result()->fetch_assoc(); $qt->close();
 }
 ?>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hapus Pengguna - Admin eKantin</title>
+<link rel="stylesheet" href="../../3. komponen/admin.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+
+<?php include '../../3. komponen/navbaradmin.php'; ?>
+
+<main class="konten">
+
+  <div class="kotakkonfirm">
+    <div class="ikon-konfirm"><i class="fa-solid fa-triangle-exclamation"></i></div>
+    <h2>Hapus Pengguna?</h2>
+    <p>
+      Kamu akan menghapus akun <strong><?= htmlspecialchars($user['username']) ?></strong>
+      (<?= htmlspecialchars($user['email']) ?>).
+      <?php if ($toko): ?>
+      Toko <strong>"<?= htmlspecialchars($toko['nama_toko']) ?>"</strong> juga akan ikut dihapus.
+      <?php endif; ?>
+      Tindakan ini tidak dapat dibatalkan.
+    </p>
+    <form method="POST" action="proseshapususer.php">
+      <input type="hidden" name="id_user" value="<?= $id ?>">
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+        <a href="viewuser.php?id=<?= $id ?>" class="tombolringan">
+          <i class="fa-solid fa-xmark"></i> Batal
+        </a>
+        <button type="submit" class="tombolbahaya">
+          <i class="fa-solid fa-trash"></i> Ya, Hapus Permanen
+        </button>
+      </div>
+    </form>
+  </div>
+
+</main>
+</body>
+</html>

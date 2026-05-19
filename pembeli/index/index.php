@@ -58,6 +58,23 @@ $hitungaktif->execute();
 $jumlahaktif = $hitungaktif->get_result()->fetch_row()[0];
 $hitungaktif->close();
 
+// Produk terlaris (dari toko yang buka, hanya tampil di beranda tanpa filter)
+$produkterlaris = [];
+if (!$kategori && !$cari && !$idtoko) {
+    $qtl = $conn->query("SELECT m.id_menu, m.nama_menu, m.harga, m.foto, t.nama_toko, t.id_toko,
+                                SUM(d.jumlah) AS terjual
+                         FROM tb_detail_order d
+                         JOIN tb_menu m ON d.id_menu=m.id_menu
+                         JOIN tb_toko t ON m.id_toko=t.id_toko
+                         JOIN tb_order o ON d.id_order=o.id_order
+                         WHERE d.deleted=0 AND o.deleted=0 AND t.status_toko='buka'
+                           AND m.deleted=0 AND m.status='aktif' AND m.stok>0
+                         GROUP BY m.id_menu, m.nama_menu, m.harga, m.foto, t.nama_toko, t.id_toko
+                         ORDER BY terjual DESC
+                         LIMIT 5");
+    if ($qtl) $produkterlaris = $qtl->fetch_all(MYSQLI_ASSOC);
+}
+
 $pathbase = '..';
 ?>
 <!DOCTYPE html>
@@ -150,13 +167,60 @@ $pathbase = '..';
 
   <!-- FILTER KATEGORI -->
   <?php if (!$tokotutup): ?>
-  <div class="filterkategori">
-    <a href="index.php<?= $idtoko?'?toko='.$idtoko:'' ?>" class="chipcategori <?= $kategori===''?'aktif':'' ?>">Semua</a>
+  <?php
+  $kategoriTetap = ['Makanan Berat','Makanan Ringan','Makanan Sehat','Minuman Ringan','Minuman Sehat'];
+  $katDB = array_column($daftarkat, 'kategori');
+  ?>
+  <div class="filter-bar">
+    <a href="index.php<?= $idtoko?'?toko='.$idtoko:'' ?>"
+       class="chip-filter <?= $kategori===''?'aktif':'' ?>">Semua</a>
+    <?php foreach ($kategoriTetap as $kn): ?>
+    <a href="index.php?kategori=<?= urlencode($kn) ?><?= $idtoko?'&toko='.$idtoko:'' ?>"
+       class="chip-filter <?= $kategori===$kn?'aktif':'' ?>"><?= $kn ?></a>
+    <?php endforeach; ?>
     <?php foreach ($daftarkat as $k): ?>
-    <a href="index.php?kategori=<?= urlencode($k['kategori']) ?><?= $idtoko?'&toko='.$idtoko:'' ?>"
-       class="chipcategori <?= $kategori===$k['kategori']?'aktif':'' ?>">
-      <?= htmlspecialchars($k['kategori']) ?>
-    </a>
+      <?php if (!in_array($k['kategori'], $kategoriTetap)): ?>
+      <a href="index.php?kategori=<?= urlencode($k['kategori']) ?><?= $idtoko?'&toko='.$idtoko:'' ?>"
+         class="chip-filter <?= $kategori===$k['kategori']?'aktif':'' ?>"><?= htmlspecialchars($k['kategori']) ?></a>
+      <?php endif; ?>
+    <?php endforeach; ?>
+  </div>
+  <?php endif; ?>
+
+  <!-- PRODUK TERLARIS -->
+  <?php if (!empty($produkterlaris)): ?>
+  <div class="judulbagian"><i class="fa-solid fa-fire"></i> Produk Terlaris</div>
+  <div class="gridmenu" style="margin-bottom:20px;">
+    <?php foreach ($produkterlaris as $tl): ?>
+    <div class="kartumenu">
+      <a href="../pesanan/detail.php?id=<?= $tl['id_menu'] ?>">
+        <img class="gambarmenu"
+             src="../../2. aset/katalog/<?= htmlspecialchars($tl['foto']) ?>"
+             alt="<?= htmlspecialchars($tl['nama_menu']) ?>"
+             onerror="this.style.background='var(--latar)'">
+      </a>
+      <div class="isikartu">
+        <div class="namamenu"><?= htmlspecialchars($tl['nama_menu']) ?></div>
+        <div class="namakantin">
+          <i class="fa-solid fa-store" style="font-size:10px;"></i>
+          <?= htmlspecialchars($tl['nama_toko']) ?>
+        </div>
+        <div class="hargamenu">Rp <?= number_format($tl['harga'],0,',','.') ?></div>
+        <div class="stokmenu" style="color:var(--tunggu);font-weight:600;">
+          <i class="fa-solid fa-fire" style="font-size:10px;"></i>
+          <?= $tl['terjual'] ?> terjual
+        </div>
+        <form method="POST" action="../keranjang/proseskeranjang.php" class="formtambahcepat">
+          <input type="hidden" name="aksi" value="tambah">
+          <input type="hidden" name="id_menu" value="<?= $tl['id_menu'] ?>">
+          <input type="hidden" name="qty" value="1">
+          <input type="hidden" name="kembali" value="index">
+          <button type="submit" class="tomboltambah" title="Tambah ke keranjang">
+            <i class="fa-solid fa-plus"></i>
+          </button>
+        </form>
+      </div>
+    </div>
     <?php endforeach; ?>
   </div>
   <?php endif; ?>

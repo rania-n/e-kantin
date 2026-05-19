@@ -87,11 +87,6 @@ $pathbase = '..';
     <input type="hidden" name="kembali" value="keranjang">
 
     <div class="kelompokform">
-      <label>Catatan (opsional)</label>
-      <textarea name="catatan" rows="2" placeholder="Misal: jangan pedas, tambah nasi..."></textarea>
-    </div>
-
-    <div class="kelompokform">
       <label>Jumlah</label>
       <div style="display:flex;align-items:center;gap:12px;">
         <input type="number" name="qty" value="1" min="1" max="<?= $menu['stok'] ?>"

@@ -94,13 +94,13 @@ $pathbase = '..';
 
   <!-- Banner berhasil (hanya saat baru pesan) -->
   <?php if (isset($_GET['baru'])): ?>
-  <div class="bannerberhasil">
+  <div class="bannerberhasil takprint">
     <div class="ikonberhasil"><i class="fa-solid fa-circle-check"></i></div>
     <h2>Pesanan Berhasil!</h2>
     <p>Penjual sedang menyiapkan pesananmu</p>
   </div>
   <?php else: ?>
-  <div class="headerkembali">
+  <div class="headerkembali takprint">
     <a href="pesanan.php" class="tombolkembali"><i class="fa-solid fa-arrow-left"></i></a>
     <div class="teksheader">
       <h1>Struk Pesanan</h1>
@@ -205,11 +205,13 @@ $pathbase = '..';
   </div>
 
   <!-- Aksi -->
+  <?php if ($pesanan['status_order'] === 'Selesai'): ?>
   <div style="display:flex;gap:10px;margin-bottom:12px;" class="takprint">
-    <button onclick="window.print()" class="tombolringan" style="flex:1;">
-      <i class="fa-solid fa-print"></i> Cetak
+    <button onclick="window.print()" class="tombolutama" style="flex:1;">
+      <i class="fa-solid fa-print"></i> Cetak Struk
     </button>
   </div>
+  <?php endif; ?>
 
   <?php if ($pesanan['status_order'] === 'Selesai' && !$sudahrating): ?>
   <a href="rating.php?id_order=<?= $idpesanan ?>" class="tombolutama blok takprint" style="margin-bottom:10px;">

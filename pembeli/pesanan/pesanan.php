@@ -42,12 +42,14 @@ function ambilItemPesanan($conn, int $idpesanan): array {
     return $q->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 
-// Fungsi: cek sudah rating
-function sudahRating($conn, int $idpesanan, int $idpengguna): bool {
-    $q = $conn->prepare("SELECT id_rating FROM tb_rating WHERE id_order=? AND id_user=?");
+// Fungsi: ambil data rating (null jika belum)
+function ambilRating($conn, int $idpesanan, int $idpengguna): ?array {
+    $q = $conn->prepare("SELECT rating_toko, ulasan FROM tb_rating WHERE id_order=? AND id_user=? AND deleted=0");
     $q->bind_param("ii", $idpesanan, $idpengguna);
     $q->execute();
-    return $q->get_result()->num_rows > 0;
+    $row = $q->get_result()->fetch_assoc();
+    $q->close();
+    return $row ?: null;
 }
 
 // Fungsi: timeline aktif
@@ -145,8 +147,9 @@ $pathbase = '..';
   <?php foreach ($daftarpesanan as $p):
     $nomer    = 'EK-' . str_pad($p['id_order'], 6, '0', STR_PAD_LEFT);
     $namatoko = $p['nama_toko'] ?? 'Kantin';
-    $items    = ambilItemPesanan($conn, $p['id_order']);
-    $rating   = sudahRating($conn, $p['id_order'], $idpengguna);
+    $items       = ambilItemPesanan($conn, $p['id_order']);
+    $ratingdata  = ambilRating($conn, $p['id_order'], $idpengguna);
+    $rating      = $ratingdata !== null;
     $siap     = $p['status_order'] === 'Siap Diambil';
     $selesai  = $p['status_order'] === 'Selesai';
     $kelas    = kelasStatusPesanan($p['status_order']);
@@ -204,17 +207,15 @@ $pathbase = '..';
     <div class="bawahpesanan">
       <div class="totalpesanan">Rp <?= number_format($p['total_harga'],0,',','.') ?></div>
       <div class="aksipesanan">
+        <?php if ($selesai): ?>
         <a href="struk.php?id_order=<?= $p['id_order'] ?>" class="tombolkecil">
           <i class="fa-solid fa-receipt"></i> Struk
         </a>
+        <?php endif; ?>
         <?php if ($tab==='riwayat' && $selesai && !$rating): ?>
         <a href="rating.php?id_order=<?= $p['id_order'] ?>" class="tombolkecil utama">
           <i class="fa-solid fa-star"></i> Rating
         </a>
-        <?php elseif ($tab==='riwayat' && $selesai && $rating): ?>
-        <span style="font-size:12px;color:var(--tunggu);font-weight:700;">
-          <i class="fa-solid fa-star"></i> Sudah dirating
-        </span>
         <?php endif; ?>
       </div>
     </div>
@@ -222,6 +223,20 @@ $pathbase = '..';
     <div style="font-size:11px;color:var(--tekssamar);margin-top:8px;">
       <i class="fa-solid fa-wallet"></i> <?= htmlspecialchars($p['metode_pembayaran']) ?>
     </div>
+
+    <?php if ($tab==='riwayat' && $selesai && $rating && $ratingdata): ?>
+    <div style="margin-top:10px;padding:10px;background:var(--latar);border-radius:10px;font-size:12px;">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+        <?php for ($bi=1;$bi<=5;$bi++): ?>
+          <i class="fa-solid fa-star" style="color:<?= $bi<=$ratingdata['rating_toko']?'#F59E0B':'#D1D5DB' ?>;font-size:13px;"></i>
+        <?php endfor; ?>
+        <strong style="color:var(--utama);"><?= $ratingdata['rating_toko'] ?>/5</strong>
+      </div>
+      <?php if (!empty($ratingdata['ulasan'])): ?>
+      <div style="color:var(--teks);font-style:italic;">"<?= htmlspecialchars($ratingdata['ulasan']) ?>"</div>
+      <?php endif; ?>
+    </div>
+    <?php endif; ?>
 
   </div>
   <?php endforeach; ?>

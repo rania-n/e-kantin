@@ -84,6 +84,7 @@ function kelasstatus(string $s): string {
         <i class="fa-solid fa-magnifying-glass"></i>
         <input type="text" name="cari" value="<?= htmlspecialchars($cari) ?>"
                placeholder="Cari pesanan atau nama pembeli...">
+        <button type="submit" class="tombolcari"><i class="fa-solid fa-arrow-right"></i></button>
       </div>
     </form>
   </div>
@@ -193,17 +194,10 @@ function kelasstatus(string $s): string {
           </a>
 
         <?php elseif ($pesanan['status_order'] === 'Selesai'): ?>
-          <span class="tombolkecil" style="cursor:default;opacity:.6;">
-            <i class="fa-solid fa-circle-check"></i> Selesai
-          </span>
+          <a href="struk.php?id=<?= $pesanan['id_order'] ?>" class="tombolkecil hijau">
+            <i class="fa-solid fa-print"></i> Cetak Struk
+          </a>
         <?php endif; ?>
-
-        <!-- Tombol cetak struk selalu tersedia -->
-        <a href="struk.php?id=<?= $pesanan['id_order'] ?>"
-           target="_blank"
-           class="tombolkecil">
-          <i class="fa-solid fa-print"></i> Cetak
-        </a>
 
       </div>
 

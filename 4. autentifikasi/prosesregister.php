@@ -60,7 +60,7 @@ $cek->close();
 $hash = password_hash($password, PASSWORD_DEFAULT);
 $role = "pembeli";
 
-$stmt = $conn->prepare("INSERT INTO tb_user (username, email, password, role) VALUES (?, ?, ?, ?)");
+$stmt = $conn->prepare("INSERT INTO tb_user (username, email, password, role, deleted) VALUES (?, ?, ?, ?, 0)");
 $stmt->bind_param("ssss", $username, $email, $hash, $role);
 
 if ($stmt->execute()) {

@@ -74,7 +74,7 @@ function bintang(float $r): string {
 
 <?php include '../../3. komponen/navbarpenjual.php'; ?>
 
-<main class="konten" style="max-width:740px;">
+<main class="konten">
 
   <div class="header-halaman">
     <div class="kiri">
@@ -120,65 +120,100 @@ function bintang(float $r): string {
 
   <!-- ===== TAB: PROFIL SAYA (view) ===== -->
   <?php if ($tabaktif === 'profil'): ?>
-  <div class="kartu">
-    <h3><i class="fa-solid fa-user-circle"></i> Informasi Akun</h3>
-    <div class="baris-info">
-      <div class="label-info">Username</div>
-      <div class="nilai-info"><?= htmlspecialchars($user['username'] ?? '') ?></div>
-    </div>
-    <div class="baris-info">
-      <div class="label-info">Email</div>
-      <div class="nilai-info"><?= htmlspecialchars($user['email'] ?? '') ?></div>
-    </div>
-    <div class="baris-info">
-      <div class="label-info">Peran</div>
-      <div class="nilai-info">Penjual</div>
-    </div>
-    <div class="baris-info">
-      <div class="label-info">Member Sejak</div>
-      <div class="nilai-info"><?= !empty($user['created']) ? date('d M Y', strtotime($user['created'])) : '-' ?></div>
-    </div>
-  </div>
-
-  <div class="kartu">
-    <h3><i class="fa-solid fa-store"></i> Informasi Toko</h3>
-    <div class="baris-info">
-      <div class="label-info">Nama Toko</div>
-      <div class="nilai-info"><?= htmlspecialchars($toko['nama_toko'] ?? '') ?></div>
-    </div>
-    <div class="baris-info">
-      <div class="label-info">Status Toko</div>
-      <div class="nilai-info">
-        <span class="badge <?= ($toko['status_toko'] ?? 'tutup') === 'buka' ? 'siap' : 'dibatalkan' ?>">
-          <?= ($toko['status_toko'] ?? 'tutup') === 'buka' ? 'Toko Buka' : 'Toko Tutup' ?>
-        </span>
+  <div class="grid-dua">
+    <div class="kartu">
+      <h3><i class="fa-solid fa-user-circle"></i> Informasi Akun</h3>
+      <div class="baris-info">
+        <div class="label-info">Username</div>
+        <div class="nilai-info"><?= htmlspecialchars($user['username'] ?? '') ?></div>
+      </div>
+      <div class="baris-info">
+        <div class="label-info">Email</div>
+        <div class="nilai-info"><?= htmlspecialchars($user['email'] ?? '') ?></div>
+      </div>
+      <div class="baris-info">
+        <div class="label-info">Peran</div>
+        <div class="nilai-info">Penjual</div>
+      </div>
+      <div class="baris-info">
+        <div class="label-info">Member Sejak</div>
+        <div class="nilai-info"><?= !empty($user['created']) ? date('d M Y', strtotime($user['created'])) : '-' ?></div>
       </div>
     </div>
-    <div class="baris-info">
-      <div class="label-info">Rating Toko</div>
-      <div class="nilai-info">
-        <?php if ($ratarating > 0): ?>
-        <?= bintang($ratarating) ?> <span style="font-weight:700;color:var(--tunggu);margin-left:4px;"><?= $ratarating ?></span>
-        (<?= $jmlrating ?> ulasan)
-        <?php else: ?>
-        Belum ada rating
-        <?php endif; ?>
+
+    <div class="kartu">
+      <h3><i class="fa-solid fa-store"></i> Informasi Toko</h3>
+      <div class="baris-info">
+        <div class="label-info">Nama Toko</div>
+        <div class="nilai-info"><?= htmlspecialchars($toko['nama_toko'] ?? '') ?></div>
+      </div>
+      <div class="baris-info">
+        <div class="label-info">Status Toko</div>
+        <div class="nilai-info">
+          <span class="badge <?= ($toko['status_toko'] ?? 'tutup') === 'buka' ? 'siap' : 'dibatalkan' ?>">
+            <?= ($toko['status_toko'] ?? 'tutup') === 'buka' ? 'Toko Buka' : 'Toko Tutup' ?>
+          </span>
+        </div>
+      </div>
+      <div class="baris-info">
+        <div class="label-info">Rating Toko</div>
+        <div class="nilai-info">
+          <?php if ($ratarating > 0): ?>
+          <?= bintang($ratarating) ?> <span style="font-weight:700;color:var(--tunggu);margin-left:4px;"><?= $ratarating ?></span>
+          (<?= $jmlrating ?> ulasan)
+          <?php else: ?>
+          Belum ada rating
+          <?php endif; ?>
+        </div>
       </div>
     </div>
   </div>
 
   <div style="display:flex;gap:10px;flex-wrap:wrap;">
-    <a href="profil.php?tab=edit" class="tombolutama" style="flex:1;">
+    <a href="profil.php?tab=edit" class="tombolutama" style="flex:1;min-width:180px;">
       <i class="fa-solid fa-pen"></i> Edit Profil &amp; Toko
     </a>
-    <a href="profil.php?tab=password" class="tombolringan" style="flex:1;">
+    <a href="profil.php?tab=password" class="tombolringan" style="flex:1;min-width:180px;">
       <i class="fa-solid fa-lock"></i> Ganti Password
     </a>
   </div>
+
+  <!-- Mobile-only: Bantuan & Logout -->
+  <div class="sembunyi-desktop" style="margin-top:20px;">
+    <a href="#modal-kontak"
+       style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--putih);
+              border-radius:12px;border:1px solid var(--garis);text-decoration:none;
+              color:var(--teks);margin-bottom:10px;">
+      <div style="width:40px;height:40px;border-radius:10px;background:var(--latar);
+                  color:var(--utama);display:flex;align-items:center;justify-content:center;">
+        <i class="fa-solid fa-headset"></i>
+      </div>
+      <div style="flex:1;">
+        <div style="font-weight:700;font-size:14px;">Hubungi Admin</div>
+        <div style="font-size:12px;opacity:.7;">Bantuan &amp; informasi</div>
+      </div>
+      <i class="fa-solid fa-chevron-right" style="opacity:.4;"></i>
+    </a>
+    <a href="../../4. autentifikasi/konfirmasilogout.php?peran=penjual"
+       style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--putih);
+              border-radius:12px;border:1px solid var(--garis);text-decoration:none;color:inherit;">
+      <div style="width:40px;height:40px;border-radius:10px;background:#FEE2E2;
+                  color:var(--gagal);display:flex;align-items:center;justify-content:center;">
+        <i class="fa-solid fa-right-from-bracket"></i>
+      </div>
+      <div style="flex:1;">
+        <div style="font-weight:700;font-size:14px;color:var(--gagal);">Keluar</div>
+        <div style="font-size:12px;opacity:.7;">Logout dari akun</div>
+      </div>
+      <i class="fa-solid fa-chevron-right" style="opacity:.4;color:var(--gagal);"></i>
+    </a>
+  </div>
+
   <?php endif; ?>
 
   <!-- ===== TAB: EDIT PROFIL & TOKO ===== -->
   <?php if ($tabaktif === 'edit'): ?>
+  <div>
   <div class="kartu">
     <h3><i class="fa-solid fa-pen"></i> Edit Informasi Akun &amp; Toko</h3>
     <form method="POST" action="proseseditprofil.php">
@@ -222,10 +257,12 @@ function bintang(float $r): string {
       </div>
     </form>
   </div>
+  </div>
   <?php endif; ?>
 
   <!-- ===== TAB: GANTI PASSWORD ===== -->
   <?php if ($tabaktif === 'password'): ?>
+  <div>
   <div class="kartu">
     <h3><i class="fa-solid fa-lock"></i> Ganti Password</h3>
     <form method="POST" action="prosesgantipassword.php">
@@ -250,6 +287,7 @@ function bintang(float $r): string {
         </button>
       </div>
     </form>
+  </div>
   </div>
   <?php endif; ?>
 

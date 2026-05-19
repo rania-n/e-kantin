@@ -91,6 +91,7 @@ function bintang(float $r, int $ukuran = 13): string {
         <i class="fa-solid fa-magnifying-glass"></i>
         <input type="text" name="cari" value="<?= htmlspecialchars($cari) ?>"
                placeholder="Cari nama pembeli atau isi ulasan...">
+        <button type="submit" class="tombolcari"><i class="fa-solid fa-arrow-right"></i></button>
       </div>
     </form>
   </div>

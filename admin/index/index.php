@@ -1,323 +1,318 @@
+<?php
+/* ============================================================
+   DASHBOARD ADMIN
+   ============================================================ */
+include '../../1. koneksi/koneksi.php';
+include '../../3. komponen/guardadmin.php';
+$halamansaatini = 'index';
+
+// Filter periode chart
+$hari = (int)($_GET['hari'] ?? 7);
+if (!in_array($hari, [7, 14, 30])) $hari = 7;
+
+// ===== STATISTIK UTAMA =====
+$q = $conn->query("SELECT role, COUNT(*) AS jml FROM tb_user WHERE deleted=0 GROUP BY role");
+$statuser = ['admin'=>0,'penjual'=>0,'pembeli'=>0];
+while ($r = $q->fetch_assoc()) $statuser[$r['role']] = (int)$r['jml'];
+$totaluser = array_sum($statuser);
+
+$qtoko = $conn->query("SELECT COUNT(*) FROM tb_toko WHERE deleted=0");
+$totaltoko = (int)$qtoko->fetch_row()[0];
+
+$qmenu = $conn->query("SELECT COUNT(*) FROM tb_menu WHERE status='aktif' AND deleted=0");
+$totalmenu = (int)$qmenu->fetch_row()[0];
+
+$qorder = $conn->query("SELECT COUNT(*), COALESCE(SUM(total_harga),0) FROM tb_order WHERE deleted=0");
+$rorder = $qorder->fetch_row();
+$totalorder   = (int)$rorder[0];
+
+$qselesai = $conn->query("SELECT COALESCE(SUM(total_harga),0) FROM tb_order WHERE status_order='Selesai' AND deleted=0");
+$revenueselesai = (float)$qselesai->fetch_row()[0];
+
+$qhari = $conn->query("SELECT COUNT(*) FROM tb_order WHERE DATE(tanggal_order)=CURDATE() AND deleted=0");
+$orderhari = (int)$qhari->fetch_row()[0];
+
+$quserbaru = $conn->query("SELECT COUNT(*) FROM tb_user WHERE DATE(created)=CURDATE() AND deleted=0");
+$userbaru = (int)$quserbaru->fetch_row()[0];
+
+// ===== CHART N HARI =====
+$chartdata = [];
+for ($i = $hari - 1; $i >= 0; $i--) {
+    $tgl = date('Y-m-d', strtotime("-$i days"));
+    $qc  = $conn->prepare("SELECT COALESCE(SUM(total_harga),0) FROM tb_order WHERE DATE(tanggal_order)=? AND status_order='Selesai' AND deleted=0");
+    $qc->bind_param("s", $tgl); $qc->execute();
+    $nilai = (float)$qc->get_result()->fetch_row()[0]; $qc->close();
+    // Label: 7 hari → nama hari, 14/30 hari → tanggal singkat
+    $label = $hari === 7 ? date('D', strtotime($tgl)) : date('d/m', strtotime($tgl));
+    $chartdata[] = ['tgl' => $tgl, 'label' => $label, 'nilai' => $nilai];
+}
+$maxnilai = max(array_column($chartdata, 'nilai')) ?: 1;
+
+// ===== TOP 5 PRODUK =====
+$qtl = $conn->query("SELECT m.nama_menu, t.nama_toko, SUM(d.jumlah) AS terjual, SUM(d.subtotal) AS omset
+                     FROM tb_detail_order d
+                     JOIN tb_menu m ON d.id_menu=m.id_menu
+                     JOIN tb_toko t ON m.id_toko=t.id_toko
+                     JOIN tb_order o ON d.id_order=o.id_order
+                     WHERE d.deleted=0 AND o.deleted=0 AND o.status_order != 'Dibatalkan'
+                     GROUP BY m.id_menu, m.nama_menu, t.nama_toko
+                     ORDER BY terjual DESC LIMIT 5");
+$terlaris = $qtl->fetch_all(MYSQLI_ASSOC);
+
+// ===== PERFORMA TOKO — subquery agar tidak ada row multiplication =====
+$qtoko2 = $conn->query("SELECT t.id_toko, t.nama_toko, t.status_toko,
+                                (SELECT COUNT(*) FROM tb_order o WHERE o.id_toko=t.id_toko AND o.deleted=0) AS total_order,
+                                (SELECT COALESCE(SUM(o2.total_harga),0) FROM tb_order o2 WHERE o2.id_toko=t.id_toko AND o2.deleted=0) AS omset,
+                                (SELECT COALESCE(ROUND(AVG(r.rating_toko),1),0) FROM tb_rating r WHERE r.id_toko=t.id_toko AND r.deleted=0) AS rating
+                         FROM tb_toko t
+                         WHERE t.deleted=0
+                         ORDER BY omset DESC");
+$perftoko = $qtoko2->fetch_all(MYSQLI_ASSOC);
+
+// ===== PENGGUNA TERBARU =====
+$qnew = $conn->query("SELECT id_user, username, email, role, created FROM tb_user WHERE deleted=0 ORDER BY created DESC LIMIT 5");
+$penggunabarufull = $qnew->fetch_all(MYSQLI_ASSOC);
+
+function rp(float $n): string { return 'Rp ' . number_format($n, 0, ',', '.'); }
+
+// Nilai uang disingkat agar tidak jebol kartu stat
+function singkat(float $n): string {
+    if ($n >= 1_000_000_000) {
+        $v = $n / 1_000_000_000;
+        return 'Rp ' . rtrim(rtrim(number_format($v, 1, ',', ''), '0'), ',') . ' M';
+    }
+    if ($n >= 1_000_000) {
+        $v = $n / 1_000_000;
+        return 'Rp ' . rtrim(rtrim(number_format($v, 1, ',', ''), '0'), ',') . ' Jt';
+    }
+    return 'Rp ' . number_format($n, 0, ',', '.');
+}
+
+$n      = count($chartdata);
+$svgw   = max(700, $n * 30);
+$barw   = max(8, min(40, (int)(($svgw - 80) / $n) - 4));
+$gap    = max(4, (int)(($svgw - 80 - $n * $barw) / max(1, $n - 1)));
+$startx = 70; $chartH = 160;
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard e-Kantin</title>
-
-    <link rel="stylesheet" href="../../3. komponen/admin.css">
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Admin - eKantin</title>
+<link rel="stylesheet" href="../../3. komponen/admin.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
-
 <body>
 
-    <?php include '../../3. komponen/sidebaradmin.html'; ?>
-
-
-
-    <div class="content">
-
-            <div class="header">
-
-                <div>
-
-                    <h2>Dashboard</h2>
-
-                    <p>e-Kantin</p>
-
-                </div>
-            </div>
-
-
-
-            <div class="period-selector">
-
-                <input type="radio" id="today" name="period" checked>
-
-                <label for="today">Hari Ini</label>
-
-                <input type="radio" id="week" name="period">
-
-                <label for="week">Minggu</label>
-
-                <input type="radio" id="month" name="period">
-
-                <label for="month">Bulan</label>
-
-                <input type="radio" id="year" name="period">
-
-                <label for="year">Tahun</label>
-
-            </div>
-
-
-
-            <div class="stats">
-
-                <div class="card">
-
-                    <h4>Total Pembeli</h4>
-
-                    <h2>1284</h2>
-
-                    <p>892 aktif</p>
-
-                </div>
-
-                <div class="card">
-
-                    <h4>Total Penjual</h4>
-
-                    <h2>5</h2>
-
-                    <p>4 aktif</p>
-
-                </div>
-
-                <div class="card">
-
-                    <h4>Total Produk</h4>
-
-                    <h2>156</h2>
-
-                    <p>142 tersedia</p>
-
-                </div>
-
-                <div class="card">
-
-                    <h4>Total Toko</h4>
-
-                    <h2>3</h2>
-
-                    <p>3 aktif</p>
-
-                </div>
-
-            </div>
-
-
-
-            <div class="grid">
-
-                <div class="card">
-
-                    <h3>Produk Terlaris</h3>
-
-                    <div class="item"><span>#1</span><p>Nasi Goreng</p><b>Rp 3.6 Jt</b></div>
-
-                    <div class="item"><span>#2</span><p>Mie Ayam</p><b>Rp 2.9 Jt</b></div>
-
-                    <div class="item"><span>#3</span><p>Es Teh</p><b>Rp 1.9 Jt</b></div>
-
-                    <div class="item"><span>#4</span><p>Bakso</p><b>Rp 3.1 Jt</b></div>
-
-                    <div class="item"><span>#5</span><p>Soto Ayam</p><b>Rp 2.6 Jt</b></div>
-
-                </div>
-
-
-
-                <div class="card">
-
-                    <h3>Penjualan Kategori</h3>
-
-                    <div class="bar"><p>Makanan</p><div class="progress"><div style="width:66%"></div></div></div>
-
-                    <div class="bar"><p>Minuman</p><div class="progress"><div style="width:17%"></div></div></div>
-
-                    <div class="bar"><p>Snack</p><div class="progress"><div style="width:11%"></div></div></div>
-
-                    <div class="bar"><p>Buah</p><div class="progress"><div style="width:4%"></div></div></div>
-
-                </div>
-
-            </div>
-
+<?php include '../../3. komponen/navbaradmin.php'; ?>
+
+<main class="konten">
+
+  <div class="header-halaman">
+    <div class="kiri">
+      <h1><i class="fa-solid fa-gauge-high"></i> Dashboard Admin</h1>
+      <p>Selamat datang, <?= htmlspecialchars($_SESSION['username']) ?> — <?= date('l, d M Y') ?></p>
+    </div>
+    <a href="../laporan/laporan.php" class="tombolutama">
+      <i class="fa-solid fa-chart-bar"></i> Laporan Platform
+    </a>
+  </div>
+
+  <!-- STATISTIK UTAMA -->
+  <div class="grid-stat">
+    <div class="kartu-stat">
+      <div class="ikon-stat"><i class="fa-solid fa-users"></i></div>
+      <div class="isi-stat">
+        <div class="nilai"><?= $totaluser ?></div>
+        <div class="label">Total Pengguna</div>
+        <div class="sub"><?= $statuser['pembeli'] ?> pembeli · <?= $statuser['penjual'] ?> penjual</div>
+      </div>
+    </div>
+    <div class="kartu-stat">
+      <div class="ikon-stat"><i class="fa-solid fa-store"></i></div>
+      <div class="isi-stat">
+        <div class="nilai"><?= $totaltoko ?></div>
+        <div class="label">Total Toko</div>
+        <div class="sub"><?= $totalmenu ?> menu aktif</div>
+      </div>
+    </div>
+    <div class="kartu-stat">
+      <div class="ikon-stat"><i class="fa-solid fa-receipt"></i></div>
+      <div class="isi-stat">
+        <div class="nilai"><?= $totalorder ?></div>
+        <div class="label">Total Pesanan</div>
+        <div class="sub"><?= $orderhari ?> pesanan hari ini</div>
+      </div>
+    </div>
+    <div class="kartu-stat">
+      <div class="ikon-stat"><i class="fa-solid fa-coins"></i></div>
+      <div class="isi-stat">
+        <div class="nilai"><?= singkat($revenueselesai) ?></div>
+        <div class="label">Total Revenue</div>
+        <div class="sub">Pesanan selesai</div>
+      </div>
+    </div>
+    <div class="kartu-stat">
+      <div class="ikon-stat"><i class="fa-solid fa-user-plus"></i></div>
+      <div class="isi-stat">
+        <div class="nilai"><?= $userbaru ?></div>
+        <div class="label">User Baru Hari Ini</div>
+        <div class="sub"><?= $statuser['admin'] ?> admin terdaftar</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHART REVENUE -->
+  <div class="kartu">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <h3 style="margin:0;border:none;padding:0;">
+        <i class="fa-solid fa-chart-bar"></i> Revenue Platform — <?= $hari ?> Hari Terakhir
+      </h3>
+      <div class="filter-bar" style="margin:0;gap:6px;">
+        <a href="index.php?hari=7"  class="chip-filter <?= $hari === 7  ? 'aktif' : '' ?>">7 Hari</a>
+        <a href="index.php?hari=14" class="chip-filter <?= $hari === 14 ? 'aktif' : '' ?>">14 Hari</a>
+        <a href="index.php?hari=30" class="chip-filter <?= $hari === 30 ? 'aktif' : '' ?>">30 Hari</a>
+      </div>
+    </div>
+    <div class="area-chart">
+      <svg viewBox="0 0 <?= $svgw ?> 210" xmlns="http://www.w3.org/2000/svg" style="min-width:<?= min(700,$svgw) ?>px;">
+        <?php for ($g = 0; $g <= 4; $g++): $gy = 20 + ($g * 40); ?>
+        <line x1="60" y1="<?= $gy ?>" x2="<?= $svgw - 10 ?>" y2="<?= $gy ?>" stroke="#E7CBCB" stroke-width="1" stroke-dasharray="4,4"/>
+        <text x="55" y="<?= $gy+4 ?>" text-anchor="end" fill="#99627A" font-size="9"><?= singkat(($maxnilai/4)*(4-$g)) ?></text>
+        <?php endfor; ?>
+        <?php foreach ($chartdata as $i => $d):
+          $x    = $startx + $i * ($barw + $gap);
+          $barh = $d['nilai'] > 0 ? ($d['nilai'] / $maxnilai) * $chartH : 2;
+          $by   = 180 - $barh;
+          $isToday = $d['tgl'] === date('Y-m-d');
+        ?>
+        <rect x="<?= $x ?>" y="<?= $by ?>" width="<?= $barw ?>" height="<?= $barh ?>"
+              rx="3" fill="<?= $isToday ? '#643843' : '#99627A' ?>">
+          <title><?= $d['label'] ?> — <?= rp($d['nilai']) ?></title>
+        </rect>
+        <text x="<?= $x + $barw/2 ?>" y="200" text-anchor="middle"
+              fill="<?= $isToday ? '#643843' : '#99627A' ?>"
+              font-size="<?= $hari > 14 ? '8' : '10' ?>"
+              font-weight="<?= $isToday ? '700' : '400' ?>"><?= $d['label'] ?></text>
+        <?php if ($d['nilai'] > 0 && $barw >= 20): ?>
+        <text x="<?= $x + $barw/2 ?>" y="<?= max($by-4, 14) ?>" text-anchor="middle" fill="#643843" font-size="8" font-weight="600">
+          <?= number_format($d['nilai']/1000, 0) ?>k
+        </text>
+        <?php endif; ?>
+        <?php endforeach; ?>
+      </svg>
+    </div>
+  </div>
+
+  <div class="grid-dua">
+
+    <!-- TOP PRODUK -->
+    <div class="kartu">
+      <h3><i class="fa-solid fa-fire"></i> Produk Terlaris Platform</h3>
+      <?php if (empty($terlaris)): ?>
+      <div class="kosong" style="padding:20px;"><p>Belum ada data penjualan</p></div>
+      <?php else: ?>
+      <?php $medal = ['emas','perak','perunggu']; ?>
+      <?php foreach ($terlaris as $i => $t): ?>
+      <div class="baris-produk">
+        <div class="rangking-produk <?= $medal[$i] ?? '' ?>">#<?= $i+1 ?></div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+            <?= htmlspecialchars($t['nama_menu']) ?>
+          </div>
+          <div style="font-size:11px;color:var(--tekssamar);">
+            <?= htmlspecialchars($t['nama_toko']) ?> · <?= rp($t['omset']) ?>
+          </div>
+        </div>
+        <div style="font-size:13px;font-weight:700;color:var(--utama);white-space:nowrap;">
+          <?= $t['terjual'] ?> terjual
+        </div>
+      </div>
+      <?php endforeach; ?>
+      <?php endif; ?>
     </div>
 
+    <!-- PENGGUNA TERBARU -->
+    <div class="kartu">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <h3 style="margin:0;border:none;padding:0;">
+          <i class="fa-solid fa-user-plus"></i> Pengguna Terbaru
+        </h3>
+        <a href="../manajemenpengguna/user.php" style="font-size:12px;color:var(--kedua);font-weight:600;">Lihat Semua →</a>
+      </div>
+      <?php if (empty($penggunabarufull)): ?>
+      <div class="kosong" style="padding:20px;"><p>Belum ada pengguna</p></div>
+      <?php else: ?>
+      <?php foreach ($penggunabarufull as $u): ?>
+      <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--latar);">
+        <div class="avatar-tabel"><?= strtoupper(mb_substr($u['username'],0,2)) ?></div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+            <?= htmlspecialchars($u['username']) ?>
+          </div>
+          <div style="font-size:11px;color:var(--tekssamar);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+            <?= htmlspecialchars($u['email']) ?>
+          </div>
+        </div>
+        <span class="badge <?= $u['role'] ?>"><?= ucfirst($u['role']) ?></span>
+      </div>
+      <?php endforeach; ?>
+      <?php endif; ?>
+    </div>
+
+  </div>
+
+  <!-- PERFORMA TOKO -->
+  <div class="kartu">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <h3 style="margin:0;border:none;padding:0;">
+        <i class="fa-solid fa-store"></i> Performa Toko
+      </h3>
+      <a href="../manajemenpengguna/user.php?role=penjual" style="font-size:12px;color:var(--kedua);font-weight:600;">Kelola Penjual →</a>
+    </div>
+    <div class="tabel-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Nama Toko</th>
+            <th>Status</th>
+            <th class="tengah">Total Pesanan</th>
+            <th class="tengah">Rating</th>
+            <th class="kanan">Total Omset</th>
+            <th class="tengah">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php if (empty($perftoko)): ?>
+          <tr><td colspan="6"><div class="kosong" style="padding:20px;"><p>Belum ada toko</p></div></td></tr>
+          <?php else: ?>
+          <?php foreach ($perftoko as $t): ?>
+          <tr>
+            <td><strong><?= htmlspecialchars($t['nama_toko']) ?></strong></td>
+            <td>
+              <span class="badge <?= $t['status_toko'] === 'buka' ? 'buka' : 'tutup' ?>">
+                <?= $t['status_toko'] === 'buka' ? 'Buka' : 'Tutup' ?>
+              </span>
+            </td>
+            <td class="tengah"><?= $t['total_order'] ?></td>
+            <td class="tengah"><?= $t['rating'] > 0 ? $t['rating'] . ' ★' : '—' ?></td>
+            <td class="kanan" style="font-weight:700;color:var(--utama);"><?= rp($t['omset']) ?></td>
+            <td class="tengah">
+              <div class="aksi-grup" style="justify-content:center;">
+                <a href="../manajementoko/viewtoko.php?id=<?= $t['id_toko'] ?>" class="tombol-aksi" title="Lihat">
+                  <i class="fa-solid fa-eye"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+          <?php endforeach; ?>
+          <?php endif; ?>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
 </body>
-
-</html>
-
-
-
-<!DOCTYPE html>
-
-<html lang="id">
-
-<head>
-
-    <meta charset="UTF-8">
-
-    <title>Dashboard e-Kantin</title>
-
-    <link rel="stylesheet" href="../../3. komponen/admin.css">
-
-</head>
-
-
-
-<body>
-
-
-
-<?php include '../../3. komponen/sidebaradmin.html'; ?>
-
-
-
-<div class="content">
-
-
-
-    <div class="header">
-
-        <div>
-
-            <h2>Dashboard</h2>
-
-            <p>e-Kantin</p>
-
-        </div>
-
-    </div>
-
-
-
-    <!-- STATS -->
-
-    <div class="stats">
-
-        <div class="card">
-
-            <h4>Total Pembeli</h4>
-
-            <h2><?= $pembeli['total'] ?></h2>
-
-            <p><?= $pembeli['aktif'] ?> aktif</p>
-
-        </div>
-
-
-
-        <div class="card">
-
-            <h4>Total Penjual</h4>
-
-            <h2><?= $penjual['total'] ?></h2>
-
-            <p><?= $penjual['aktif'] ?> aktif</p>
-
-        </div>
-
-
-
-        <div class="card">
-
-            <h4>Total Produk</h4>
-
-            <h2><?= $produk['total'] ?></h2>
-
-            <p><?= $produk['tersedia'] ?> tersedia</p>
-
-        </div>
-
-
-
-        <div class="card">
-
-            <h4>Total Toko</h4>
-
-            <h2><?= $toko['total'] ?></h2>
-
-            <p>aktif</p>
-
-        </div>
-
-    </div>
-
-
-
-    <!-- GRID -->
-
-    <div class="grid">
-
-
-
-        <!-- PRODUK TERLARIS -->
-
-        <div class="card">
-
-            <h3>Produk Terlaris</h3>
-
-
-
-            <?php
-
-            $rank = 1;
-
-            while($row = mysqli_fetch_assoc($q_terlaris)) { ?>
-
-                <div class="item">
-
-                    <span>#<?= $rank++ ?></span>
-
-                    <p><?= $row['nama_menu'] ?></p>
-
-                    <b><?= $row['total_terjual'] ?> terjual</b>
-
-                </div>
-
-            <?php } ?>
-
-
-
-        </div>
-
-
-
-        <!-- KATEGORI -->
-
-        <div class="card">
-
-            <h3>Penjualan Kategori</h3>
-
-
-
-            <?php foreach($kategori_data as $k):
-
-                $persen = $total_all > 0 ? ($k['total'] / $total_all) * 100 : 0;
-
-            ?>
-
-                <div class="bar">
-
-                    <p><?= $k['kategori'] ?></p>
-
-                    <div class="progress">
-
-                        <div style="width:<?= round($persen) ?>%"></div>
-
-                    </div>
-
-                </div>
-
-            <?php endforeach; ?>
-
-
-
-        </div>
-
-
-
-    </div>
-
-
-
-</div>
-
-
-
-</body>
-
 </html>
