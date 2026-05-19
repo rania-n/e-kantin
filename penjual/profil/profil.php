@@ -1,7 +1,7 @@
 <?php
 /* ============================================================
-   PROFIL & TOKO PENJUAL
-   Tab: Profil Saya (view) | Edit Profil & Toko | Ganti Password
+   profil dan toko penjual
+   tab: profil saya (view) | edit profil dan toko | ganti password
    ============================================================ */
 include '../../1. koneksi/koneksi.php';
 include '../../3. komponen/guardpenjual.php';
@@ -10,7 +10,6 @@ $idpengguna = (int)$_SESSION['id_user'];
 $idtoko     = (int)$_SESSION['id_toko'];
 $halamansaatini = 'profil';
 
-// Ambil data user & toko
 $qu = $conn->prepare("SELECT * FROM tb_user WHERE id_user=? AND deleted=0");
 $qu->bind_param("i", $idpengguna); $qu->execute();
 $user = $qu->get_result()->fetch_assoc(); $qu->close();
@@ -19,7 +18,7 @@ $qt = $conn->prepare("SELECT * FROM tb_toko WHERE id_toko=? AND deleted=0");
 $qt->bind_param("i", $idtoko); $qt->execute();
 $toko = $qt->get_result()->fetch_assoc(); $qt->close();
 
-// Statistik toko
+// statistik toko
 $qs1 = $conn->prepare("SELECT COUNT(*) FROM tb_order WHERE id_toko=? AND deleted=0");
 $qs1->bind_param("i", $idtoko); $qs1->execute();
 $totalpesanan = (int)$qs1->get_result()->fetch_row()[0]; $qs1->close();
@@ -38,9 +37,11 @@ $qs4 = $conn->prepare("SELECT COUNT(*) FROM tb_menu WHERE id_toko=? AND status='
 $qs4->bind_param("i", $idtoko); $qs4->execute();
 $totalmenu = (int)$qs4->get_result()->fetch_row()[0]; $qs4->close();
 
-$inisial = strtoupper(mb_substr($user['username'] ?? 'P', 0, 2));
+// inisial dari nama toko (bukan username)
+$namatoko  = $toko['nama_toko'] ?? $user['username'] ?? 'T';
+$inisial   = strtoupper(mb_substr($namatoko, 0, 2));
+$fotoprofil = $toko['foto_toko'] ?? '';
 
-// Flash message dari proses file
 $flashpesan = ''; $flashjenis = '';
 if (!empty($_SESSION['flash'])) {
     $flashpesan = $_SESSION['flash']['pesan'];
@@ -52,6 +53,11 @@ $tabaktif = $_GET['tab'] ?? 'profil';
 if (!in_array($tabaktif, ['profil', 'edit', 'password'])) $tabaktif = 'profil';
 
 function rp(float $n): string { return 'Rp ' . number_format($n, 0, ',', '.'); }
+function singkat(float $n): string {
+    if ($n >= 1_000_000_000) { $v=$n/1_000_000_000; return 'Rp '.rtrim(rtrim(number_format($v,1,',',''),'0'),',').' M'; }
+    if ($n >= 1_000_000)     { $v=$n/1_000_000;     return 'Rp '.rtrim(rtrim(number_format($v,1,',',''),'0'),',').' Jt'; }
+    return 'Rp ' . number_format($n, 0, ',', '.');
+}
 function bintang(float $r): string {
     $out = '';
     for ($i = 1; $i <= 5; $i++) {
@@ -66,7 +72,7 @@ function bintang(float $r): string {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Profil &amp; Toko - eKantin</title>
+<title>Profil &amp; Toko - jajankita</title>
 <link rel="stylesheet" href="../../3. komponen/penjual.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
@@ -90,15 +96,21 @@ function bintang(float $r): string {
   </div>
   <?php endif; ?>
 
-  <!-- Hero profil -->
+  <!-- hero profil — avatar kotak dari foto toko atau inisial nama toko -->
   <div class="hero-profil">
-    <div class="avatar"><?= $inisial ?></div>
-    <div class="nama"><?= htmlspecialchars($user['username'] ?? '') ?></div>
+    <div class="avatar">
+      <?php if ($fotoprofil && file_exists("../../2. aset/profil/" . $fotoprofil)): ?>
+        <img src="../../2. aset/profil/<?= htmlspecialchars($fotoprofil) ?>" alt="foto toko">
+      <?php else: ?>
+        <?= $inisial ?>
+      <?php endif; ?>
+    </div>
+    <div class="nama"><?= htmlspecialchars($namatoko) ?></div>
     <div class="sub"><?= htmlspecialchars($user['email'] ?? '') ?></div>
     <span class="labelperan">
-      <i class="fa-solid fa-store"></i> Penjual — <?= htmlspecialchars($toko['nama_toko'] ?? '') ?>
+      <i class="fa-solid fa-user-tie"></i> <?= htmlspecialchars($user['username'] ?? '') ?>
     </span>
-    <div style="display:flex;gap:16px;justify-content:center;margin-top:14px;flex-wrap:wrap;">
+    <div style="display:flex;gap:20px;justify-content:center;margin-top:16px;flex-wrap:wrap;">
       <div style="text-align:center;">
         <div style="font-size:20px;font-weight:800;"><?= $totalpesanan ?></div>
         <div style="font-size:11px;opacity:.8;">Pesanan</div>
@@ -112,111 +124,66 @@ function bintang(float $r): string {
         <div style="font-size:11px;opacity:.8;"><?= $jmlrating ?> Ulasan</div>
       </div>
       <div style="text-align:center;">
-        <div style="font-size:14px;font-weight:800;"><?= rp($totalpendapatan) ?></div>
-        <div style="font-size:11px;opacity:.8;">Total Pendapatan</div>
+        <div style="font-size:15px;font-weight:800;"><?= singkat($totalpendapatan) ?></div>
+        <div style="font-size:11px;opacity:.8;">Pendapatan</div>
       </div>
     </div>
   </div>
 
-  <!-- ===== TAB: PROFIL SAYA (view) ===== -->
+  <!-- tab view profil -->
   <?php if ($tabaktif === 'profil'): ?>
-  <div class="grid-dua">
-    <div class="kartu">
-      <h3><i class="fa-solid fa-user-circle"></i> Informasi Akun</h3>
-      <div class="baris-info">
-        <div class="label-info">Username</div>
-        <div class="nilai-info"><?= htmlspecialchars($user['username'] ?? '') ?></div>
-      </div>
-      <div class="baris-info">
-        <div class="label-info">Email</div>
-        <div class="nilai-info"><?= htmlspecialchars($user['email'] ?? '') ?></div>
-      </div>
-      <div class="baris-info">
-        <div class="label-info">Peran</div>
-        <div class="nilai-info">Penjual</div>
-      </div>
-      <div class="baris-info">
-        <div class="label-info">Member Sejak</div>
-        <div class="nilai-info"><?= !empty($user['created']) ? date('d M Y', strtotime($user['created'])) : '-' ?></div>
-      </div>
+
+  <a href="profil.php?tab=edit" class="itempengaturan">
+    <div class="ikonpengaturan">
+      <i class="fa-solid fa-pen"></i>
     </div>
-
-    <div class="kartu">
-      <h3><i class="fa-solid fa-store"></i> Informasi Toko</h3>
-      <div class="baris-info">
-        <div class="label-info">Nama Toko</div>
-        <div class="nilai-info"><?= htmlspecialchars($toko['nama_toko'] ?? '') ?></div>
-      </div>
-      <div class="baris-info">
-        <div class="label-info">Status Toko</div>
-        <div class="nilai-info">
-          <span class="badge <?= ($toko['status_toko'] ?? 'tutup') === 'buka' ? 'siap' : 'dibatalkan' ?>">
-            <?= ($toko['status_toko'] ?? 'tutup') === 'buka' ? 'Toko Buka' : 'Toko Tutup' ?>
-          </span>
-        </div>
-      </div>
-      <div class="baris-info">
-        <div class="label-info">Rating Toko</div>
-        <div class="nilai-info">
-          <?php if ($ratarating > 0): ?>
-          <?= bintang($ratarating) ?> <span style="font-weight:700;color:var(--tunggu);margin-left:4px;"><?= $ratarating ?></span>
-          (<?= $jmlrating ?> ulasan)
-          <?php else: ?>
-          Belum ada rating
-          <?php endif; ?>
-        </div>
-      </div>
+    <div class="tekspengaturan">
+      <div class="judul">Edit Profil &amp; Toko</div>
+      <div class="deskripsi">Ubah nama toko, username, email, dan foto toko</div>
     </div>
-  </div>
+    <i class="fa-solid fa-chevron-right panahpengaturan"></i>
+  </a>
 
-  <div style="display:flex;gap:10px;flex-wrap:wrap;">
-    <a href="profil.php?tab=edit" class="tombolutama" style="flex:1;min-width:180px;">
-      <i class="fa-solid fa-pen"></i> Edit Profil &amp; Toko
-    </a>
-    <a href="profil.php?tab=password" class="tombolringan" style="flex:1;min-width:180px;">
-      <i class="fa-solid fa-lock"></i> Ganti Password
-    </a>
-  </div>
+  <a href="profil.php?tab=password" class="itempengaturan">
+    <div class="ikonpengaturan biru">
+      <i class="fa-solid fa-lock"></i>
+    </div>
+    <div class="tekspengaturan">
+      <div class="judul">Ganti Password</div>
+      <div class="deskripsi">Perbarui kata sandi akunmu</div>
+    </div>
+    <i class="fa-solid fa-chevron-right panahpengaturan"></i>
+  </a>
 
-  <!-- Mobile-only: Bantuan & Logout -->
-  <div class="sembunyi-desktop" style="margin-top:20px;">
-    <a href="#modal-kontak"
-       style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--putih);
-              border-radius:12px;border:1px solid var(--garis);text-decoration:none;
-              color:var(--teks);margin-bottom:10px;">
-      <div style="width:40px;height:40px;border-radius:10px;background:var(--latar);
-                  color:var(--utama);display:flex;align-items:center;justify-content:center;">
-        <i class="fa-solid fa-headset"></i>
-      </div>
-      <div style="flex:1;">
-        <div style="font-weight:700;font-size:14px;">Hubungi Admin</div>
-        <div style="font-size:12px;opacity:.7;">Bantuan &amp; informasi</div>
-      </div>
-      <i class="fa-solid fa-chevron-right" style="opacity:.4;"></i>
-    </a>
-    <a href="../../4. autentifikasi/konfirmasilogout.php?peran=penjual"
-       style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--putih);
-              border-radius:12px;border:1px solid var(--garis);text-decoration:none;color:inherit;">
-      <div style="width:40px;height:40px;border-radius:10px;background:#FEE2E2;
-                  color:var(--gagal);display:flex;align-items:center;justify-content:center;">
-        <i class="fa-solid fa-right-from-bracket"></i>
-      </div>
-      <div style="flex:1;">
-        <div style="font-weight:700;font-size:14px;color:var(--gagal);">Keluar</div>
-        <div style="font-size:12px;opacity:.7;">Logout dari akun</div>
-      </div>
-      <i class="fa-solid fa-chevron-right" style="opacity:.4;color:var(--gagal);"></i>
-    </a>
-  </div>
+  <a href="../laporan/laporan.php" class="itempengaturan">
+    <div class="ikonpengaturan hijau">
+      <i class="fa-solid fa-chart-bar"></i>
+    </div>
+    <div class="tekspengaturan">
+      <div class="judul">Laporan Penjualan</div>
+      <div class="deskripsi">Lihat rekap pendapatan dan statistik toko</div>
+    </div>
+    <i class="fa-solid fa-chevron-right panahpengaturan"></i>
+  </a>
+
+  <a href="../../4. autentifikasi/konfirmasilogout.php?peran=penjual" class="itempengaturan">
+    <div class="ikonpengaturan merah">
+      <i class="fa-solid fa-right-from-bracket"></i>
+    </div>
+    <div class="tekspengaturan">
+      <div class="judul" style="color:var(--gagal);">Keluar</div>
+      <div class="deskripsi">Logout dari akun penjual</div>
+    </div>
+    <i class="fa-solid fa-chevron-right panahpengaturan"></i>
+  </a>
 
   <?php endif; ?>
 
-  <!-- ===== TAB: EDIT PROFIL & TOKO ===== -->
+  <!-- tab edit profil dan toko -->
   <?php if ($tabaktif === 'edit'): ?>
-  <div>
   <div class="kartu">
-    <h3><i class="fa-solid fa-pen"></i> Edit Informasi Akun &amp; Toko</h3>
-    <form method="POST" action="proseseditprofil.php">
+    <h3><i class="fa-solid fa-pen"></i> Edit Profil &amp; Toko</h3>
+    <form method="POST" action="proseseditprofil.php" enctype="multipart/form-data">
       <div class="barisform">
         <div class="kelompokform">
           <label>Username <span style="color:var(--gagal);">*</span></label>
@@ -239,15 +206,18 @@ function bintang(float $r): string {
                value="<?= htmlspecialchars($toko['nama_toko'] ?? '') ?>"
                required maxlength="100" placeholder="Nama tokomu...">
       </div>
-      <div class="barisform">
-        <div class="kelompokform">
-          <label>Peran</label>
-          <input type="text" value="Penjual" disabled>
+      <div class="kelompokform">
+        <label>Foto Toko</label>
+        <?php if ($fotoprofil && file_exists("../../2. aset/profil/" . $fotoprofil)): ?>
+        <div style="margin-bottom:8px;">
+          <img src="../../2. aset/profil/<?= htmlspecialchars($fotoprofil) ?>"
+               alt="foto toko saat ini"
+               style="width:80px;height:80px;object-fit:cover;border-radius:14px;border:2px solid var(--garis);">
         </div>
-        <div class="kelompokform">
-          <label>Member Sejak</label>
-          <input type="text" value="<?= !empty($user['created']) ? date('d M Y', strtotime($user['created'])) : '-' ?>" disabled>
-        </div>
+        <?php endif; ?>
+        <input type="file" name="foto_toko" accept="image/jpeg,image/png,image/webp"
+               style="padding:8px;border:1.5px solid var(--garis);border-radius:8px;width:100%;font-size:13px;">
+        <small>jpg, png, atau webp — maks 2mb. Kosongkan jika tidak ingin mengubah.</small>
       </div>
       <div style="display:flex;gap:10px;">
         <a href="profil.php" class="tombolringan">Batal</a>
@@ -257,12 +227,10 @@ function bintang(float $r): string {
       </div>
     </form>
   </div>
-  </div>
   <?php endif; ?>
 
-  <!-- ===== TAB: GANTI PASSWORD ===== -->
+  <!-- tab ganti password -->
   <?php if ($tabaktif === 'password'): ?>
-  <div>
   <div class="kartu">
     <h3><i class="fa-solid fa-lock"></i> Ganti Password</h3>
     <form method="POST" action="prosesgantipassword.php">
@@ -288,10 +256,8 @@ function bintang(float $r): string {
       </div>
     </form>
   </div>
-  </div>
   <?php endif; ?>
 
 </main>
-
 </body>
 </html>

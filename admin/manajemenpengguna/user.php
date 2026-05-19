@@ -52,7 +52,7 @@ if (!empty($_SESSION['flash'])) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Manajemen Pengguna - Admin eKantin</title>
+<title>Manajemen Pengguna - jajankita</title>
 <link rel="stylesheet" href="../../3. komponen/admin.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
@@ -65,7 +65,7 @@ if (!empty($_SESSION['flash'])) {
   <div class="header-halaman">
     <div class="kiri">
       <h1><i class="fa-solid fa-users"></i> Manajemen Pengguna</h1>
-      <p>Kelola semua akun pengguna platform eKantin</p>
+      <p>Kelola semua akun pengguna platform jajankita</p>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <a href="eksporuser.php?role=<?= htmlspecialchars($rolefilter) ?>&cari=<?= urlencode($cari) ?>" class="tombolringan">

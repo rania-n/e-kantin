@@ -131,8 +131,8 @@ ul { list-style: none; }
    ================================================================== */
 .grid-stat {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px; margin-bottom: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px; margin-bottom: 20px;
 }
 .kartu-stat {
   background: var(--putih); border-radius: 14px; padding: 16px 18px;

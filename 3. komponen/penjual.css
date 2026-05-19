@@ -187,8 +187,11 @@ ul { list-style: none; }
   width: calc(100% - var(--sidebarlebar));
 }
 
-/* Pembatas lebar untuk halaman struk (di dalam .konten) */
-.konten-sempit { }
+/* pembatas lebar untuk halaman struk */
+.konten-sempit {
+  max-width: 480px;
+  margin: 0 auto;
+}
 
 /* ==================================================================
    HEADER HALAMAN
@@ -238,9 +241,9 @@ ul { list-style: none; }
    ================================================================== */
 .grid-stat {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-  margin-bottom: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
 }
 .kartu-stat {
   background: var(--putih);
@@ -265,10 +268,13 @@ ul { list-style: none; }
   flex-shrink: 0;
 }
 .kartu-stat .isi-stat .nilai {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 800;
   color: var(--utama);
   line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .kartu-stat .isi-stat .label {
   font-size: 12px;
@@ -742,6 +748,24 @@ tbody tr:hover td { background: var(--latar); }
 .teks-toggle .status-text { font-size: 14px; font-weight: 700; }
 .teks-toggle .info-text   { font-size: 12px; color: var(--tekssamar); }
 
+/* tombol toggle toko tanpa js — menggantikan checkbox onchange */
+.tombol-toggle-toko {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 18px; border-radius: 10px;
+  font-size: 14px; font-weight: 700;
+  border: none; cursor: pointer;
+  transition: opacity .15s;
+}
+.tombol-toggle-toko:hover { opacity: .85; }
+.tombol-toggle-toko.toko-buka {
+  background: var(--suksesbg); color: var(--sukses);
+  border: 1.5px solid var(--sukses);
+}
+.tombol-toggle-toko.toko-tutup {
+  background: var(--gagalbg); color: var(--gagal);
+  border: 1.5px solid var(--gagal);
+}
+
 /* ==================================================================
    PROFIL PENJUAL
    ================================================================== */
@@ -754,17 +778,22 @@ tbody tr:hover td { background: var(--latar); }
   margin-bottom: 18px;
 }
 .avatar {
-  width: 72px; height: 72px;
-  border-radius: 50%;
+  width: 80px; height: 80px;
+  border-radius: 14px;
   background: rgba(255,255,255,.2);
   color: var(--putihbg);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 800;
   margin: 0 auto 10px;
   border: 3px solid rgba(255,255,255,.3);
+  overflow: hidden;
+}
+.avatar img {
+  width: 100%; height: 100%;
+  object-fit: cover;
 }
 .hero-profil .nama     { font-size: 18px; font-weight: 700; margin-bottom: 2px; }
 .hero-profil .sub      { font-size: 12px; opacity: .8; }
@@ -777,6 +806,30 @@ tbody tr:hover td { background: var(--latar); }
   margin-top: 8px;
   border: 1px dashed rgba(255,255,255,.35);
 }
+
+/* item pengaturan — seperti punya pembeli, untuk tab profil view */
+.itempengaturan {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px; background: var(--putih);
+  border-radius: 12px; border: 1px solid var(--garis);
+  margin-bottom: 10px;
+  text-decoration: none; color: var(--teks);
+  cursor: pointer; transition: background .15s;
+}
+.itempengaturan:hover { background: var(--latar); }
+.ikonpengaturan {
+  width: 40px; height: 40px; border-radius: 10px;
+  background: var(--latar); color: var(--utama);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; flex-shrink: 0;
+}
+.ikonpengaturan.hijau   { background: var(--suksesbg); color: var(--sukses); }
+.ikonpengaturan.merah   { background: var(--gagalbg);  color: var(--gagal); }
+.ikonpengaturan.biru    { background: var(--infobg);   color: var(--info); }
+.tekspengaturan { flex: 1; }
+.tekspengaturan .judul     { font-size: 14px; font-weight: 700; }
+.tekspengaturan .deskripsi { font-size: 12px; color: var(--tekssamar); }
+.panahpengaturan { color: var(--tekssamar); font-size: 13px; }
 
 /* Password input dengan tombol lihat */
 .inputpassword { position: relative; }
@@ -958,12 +1011,14 @@ tbody tr:hover td { background: var(--latar); }
 .teksheader p  { font-size: 12px; color: var(--tekssamar); }
 
 .antirian {
-  background: var(--utama); color: var(--putihbg);
-  border-radius: 14px; padding: 16px;
-  text-align: center; margin-bottom: 14px;
+  text-align: center;
+  padding: 16px; margin: 14px 0;
+  background: var(--tunggubg);
+  border-radius: 10px;
+  border: 1.5px dashed var(--tunggu);
 }
-.angkaantrian { font-size: 56px; font-weight: 900; line-height: 1; letter-spacing: -2px; }
-.labelantrian { font-size: 12px; opacity: .8; margin-top: 6px; }
+.angkaantrian { font-size: 48px; font-weight: 800; color: var(--utama); line-height: 1; margin-bottom: 4px; }
+.labelantrian { font-size: 12px; color: var(--tekssamar); font-weight: 600; }
 
 .bungkusstruk {
   background: var(--putih); border-radius: 16px; overflow: hidden;

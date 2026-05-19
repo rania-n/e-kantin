@@ -1,6 +1,7 @@
 <?php
 /* ============================================================
-   STRUK PESANAN PENJUAL
+   struk pesanan penjual
+   tampilan identik dengan pembeli, cetak via ?cetak=1
    ============================================================ */
 include '../../1. koneksi/koneksi.php';
 include '../../3. komponen/guardpenjual.php';
@@ -8,6 +9,7 @@ include '../../3. komponen/guardpenjual.php';
 $idtoko    = (int)$_SESSION['id_toko'];
 $idpesanan = (int)($_GET['id'] ?? 0);
 $halamansaatini = 'manajemenpesanan';
+$cetak = isset($_GET['cetak']);
 
 if (!$idpesanan) { header("Location: manajemenpesanan.php"); exit; }
 
@@ -29,7 +31,7 @@ $antrian = (int)$qa->get_result()->fetch_row()[0]; $qa->close();
 $subtotalitem = array_sum(array_column($items, 'subtotal'));
 $biayalayanan = $pesanan['total_harga'] - $subtotalitem;
 $nomerpesanan = 'EK-' . str_pad($idpesanan, 6, '0', STR_PAD_LEFT);
-$namatoko     = htmlspecialchars($_SESSION['nama_toko'] ?? 'eKantin');
+$namatoko     = htmlspecialchars($_SESSION['nama_toko'] ?? 'jajankita');
 
 function kelasstatus(string $s): string {
     return match($s) {
@@ -53,9 +55,17 @@ function ikonStatus(string $s): string {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Struk <?= $nomerpesanan ?> - eKantin</title>
+<title>Struk <?= $nomerpesanan ?> - jajankita</title>
 <link rel="stylesheet" href="../../3. komponen/penjual.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<?php if ($cetak): ?>
+<style>
+  .takprint { display: none !important; }
+  .navbarpenjual { display: none !important; }
+  .konten { margin-left: 0 !important; padding: 0 !important; }
+  body { background: white !important; }
+</style>
+<?php endif; ?>
 </head>
 <body>
 
@@ -64,7 +74,7 @@ function ikonStatus(string $s): string {
 <main class="konten">
 <div class="konten-sempit">
 
-  <!-- Header kembali -->
+  <!-- header kembali -->
   <div class="headerkembali takprint">
     <a href="manajemenpesanan.php" class="tombolkembali"><i class="fa-solid fa-arrow-left"></i></a>
     <div class="teksheader">
@@ -73,23 +83,25 @@ function ikonStatus(string $s): string {
     </div>
   </div>
 
-  <!-- Nomor antrian -->
+  <!-- nomor antrian — style tunggubg identik pembeli -->
   <div class="antirian">
-    <div style="font-size:11px;margin-bottom:4px;opacity:.8;">NOMOR ANTRIAN HARI INI</div>
     <div class="angkaantrian"><?= str_pad($antrian, 3, '0', STR_PAD_LEFT) ?></div>
-    <div class="labelantrian"><?= $namatoko ?> &mdash; <?= date('d M Y', strtotime($pesanan['tanggal_order'])) ?></div>
+    <div class="labelantrian">
+      Nomor Antrian di <?= $namatoko ?> &mdash; <?= date('d M Y', strtotime($pesanan['tanggal_order'])) ?>
+    </div>
   </div>
 
-  <!-- Struk -->
+  <!-- struk -->
   <div class="bungkusstruk">
 
     <div class="kepalastruk">
       <div class="ikonstruk"><i class="fa-solid fa-receipt"></i></div>
-      <h2>eKantin &mdash; Struk Digital</h2>
+      <h2>jajankita &mdash; Struk Digital</h2>
       <p>Simpan sebagai bukti pembayaran</p>
     </div>
 
     <div class="isistruk">
+
       <div class="barisstruk">
         <span class="labelstruk">No. Pesanan</span>
         <span class="nilaistruk" style="font-family:monospace;color:var(--utama);"><?= $nomerpesanan ?></span>
@@ -152,11 +164,12 @@ function ikonStatus(string $s): string {
         <span class="label"><i class="fa-solid fa-coins"></i> Total Bayar</span>
         <span class="nilai">Rp <?= number_format($pesanan['total_harga'],0,',','.') ?></span>
       </div>
+
     </div>
 
     <div class="kakistruk">
       <i class="fa-solid fa-heart"></i>
-      <p>Terima kasih telah memesan di eKantin!</p>
+      <p>Terima kasih telah memesan di jajankita!</p>
       <p style="margin-top:4px;font-size:11px;">
         <?= $nomerpesanan ?> &nbsp;|&nbsp; <?= date('d/m/Y H:i', strtotime($pesanan['tanggal_order'])) ?>
       </p>
@@ -164,14 +177,15 @@ function ikonStatus(string $s): string {
 
   </div>
 
-  <!-- Tombol aksi -->
+  <!-- tombol aksi -->
   <?php if ($pesanan['status_order'] === 'Selesai'): ?>
-  <div style="display:flex;gap:10px;margin-bottom:12px;" class="takprint">
-    <button onclick="window.print()" class="tombolutama" style="flex:1;">
+  <div class="takprint" style="margin-bottom:10px;">
+    <a href="struk.php?id=<?= $idpesanan ?>&cetak=1" target="_blank" class="tombolutama blok">
       <i class="fa-solid fa-print"></i> Cetak Struk
-    </button>
+    </a>
   </div>
   <?php endif; ?>
+
   <a href="manajemenpesanan.php" class="tombolringan blok takprint" style="margin-bottom:10px;">
     <i class="fa-solid fa-arrow-left"></i> Kembali ke Pesanan
   </a>

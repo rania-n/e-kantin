@@ -1,115 +1,168 @@
+/* ==============================================================
+   gaya halaman autentifikasi jajankita
+   login, register, konfirmasi logout
+   font: Poppins (selaras dengan seluruh aplikasi)
+   ============================================================== */
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Poppins', sans-serif;
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+
+*, *::before, *::after {
+  margin: 0; padding: 0; box-sizing: border-box;
+}
+
+:root {
+  --utama:   #643843;
+  --kedua:   #99627A;
+  --latar:   #EFD9D4;
+  --putihbg: #F8EBF1;
+  --putih:   #FFFFFF;
+  --garis:   #E7CBCB;
+  --teks:    #643843;
+  --tekssamar: #99627A;
+  --gagal:   #DC2626;
+  --sukses:  #16A34A;
 }
 
 body {
+  font-family: 'Poppins', 'Segoe UI', sans-serif;
   min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #E7CBCB, #643843);
-  padding: clamp(16px, 4vw, 60px);
+  background: var(--latar);
+  padding: 20px 16px;
 }
 
+/* kartu utama formulir */
 .container {
-  width: min(75vw, 900px);
-  min-height: 55vh;
-  background: white;
-  padding: clamp(28px, 5vw, 65px);
-  border-radius: clamp(16px, 2vw, 26px);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  width: 100%;
+  max-width: 420px;
+  background: var(--putih);
+  border-radius: 20px;
+  padding: 36px 32px;
+  box-shadow: 0 8px 32px rgba(100,56,67,.15);
+  border: 1px solid var(--garis);
 }
 
+/* logo dan nama aplikasi */
+.logo-auth {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.logo-auth .ikon-logo {
+  width: 56px; height: 56px;
+  border-radius: 14px;
+  background: var(--utama);
+  color: var(--putihbg);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  margin: 0 auto 10px;
+}
+.logo-auth .nama-logo {
+  font-size: 22px; font-weight: 800; color: var(--utama);
+  letter-spacing: -.5px;
+}
+.logo-auth .tagline-logo {
+  font-size: 12px; color: var(--tekssamar);
+  margin-top: 2px;
+}
+
+/* judul dan subjudul formulir */
 h2 {
-  text-align: center;
-  font-size: clamp(26px, 4vw, 42px);
-  margin-bottom: 10px;
-  color: #150c09;
+  font-size: 18px; font-weight: 700; color: var(--teks);
+  margin-bottom: 4px;
 }
-
 .sub {
-  text-align: center;
-  font-size: clamp(14px, 2vw, 20px);
-  color: #777;
-  margin-bottom: clamp(24px, 4vw, 40px);
+  font-size: 13px; color: var(--tekssamar);
+  margin-bottom: 20px;
 }
 
-input {
+/* pesan error dan sukses */
+.pesan-error {
+  background: #FEE2E2; color: var(--gagal);
+  border: 1px solid #FCA5A5;
+  border-radius: 10px; padding: 10px 14px;
+  font-size: 13px; font-weight: 600;
+  margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+.pesan-sukses {
+  background: #DCFCE7; color: var(--sukses);
+  border: 1px solid #BBF7D0;
+  border-radius: 10px; padding: 10px 14px;
+  font-size: 13px; font-weight: 600;
+  margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+/* label grup */
+.grup-input {
+  margin-bottom: 14px;
+}
+.grup-input label {
+  display: block;
+  font-size: 11px; font-weight: 700;
+  color: var(--tekssamar);
+  text-transform: uppercase; letter-spacing: .4px;
+  margin-bottom: 6px;
+}
+
+/* input umum */
+input[type="text"],
+input[type="email"],
+input[type="password"] {
   width: 100%;
-  padding: clamp(13px, 2vw, 22px);
-  font-size: clamp(15px, 2vw, 22px);
-  margin-bottom: clamp(14px, 2vw, 22px);
-  border-radius: clamp(9px, 1.5vw, 14px);
-  border: 1px solid #ccc;
-  transition: all 0.3s ease;
-}
-
-input:focus {
+  padding: 11px 14px;
+  font-size: 14px;
+  font-family: 'Poppins', sans-serif;
+  color: var(--teks);
+  border: 1.5px solid var(--garis);
+  border-radius: 10px;
+  background: var(--putih);
   outline: none;
-  border-color: #643843;
-  box-shadow: 0 0 0 3px rgba(100, 56, 67, 0.1);
+  transition: border-color .15s;
+}
+input:focus { border-color: var(--kedua); }
+
+.keterangan {
+  font-size: 11px; color: var(--tekssamar);
+  margin-top: 4px;
 }
 
-.pass-wrap {
-  position: relative;
-}
+/* pembungkus input password */
+.pass-wrap { position: relative; }
+.pass-wrap input { padding-right: 42px; }
 
-.eye {
-  position: absolute;
-  right: clamp(12px, 2vw, 20px);
-  top: clamp(13px, 2vw, 22px);
+/* tombol submit utama */
+button[type="submit"] {
+  width: 100%; padding: 12px 20px;
+  background: var(--utama); color: var(--putihbg);
+  border: none; border-radius: 10px;
+  font-size: 15px; font-weight: 700;
+  font-family: 'Poppins', sans-serif;
   cursor: pointer;
-  font-size: clamp(15px, 2vw, 20px);
-  color: #777;
+  transition: background .15s;
+  margin-top: 6px;
 }
+button[type="submit"]:hover { background: #4d2b35; }
 
-button {
-  width: 100%;
-  padding: clamp(14px, 2vw, 22px);
-  font-size: clamp(15px, 2vw, 22px);
-  border: none;
-  border-radius: clamp(9px, 1.5vw, 14px);
-  background: #643843;
-  color: white;
-  cursor: pointer;
-  font-weight: 600;
-  margin-top: 8px;
-  transition: all 0.3s ease;
-}
-
-button:hover {
-  background: #8a4f5e;
-  transform: translateY(-2px);
-}
-
-.google {
-  background: white;
-  color: #333;
-  border: 1px solid #ccc;
-  margin-top: 12px;
-}
-
-.google:hover {
-  background: #f8f8f8;
-}
-
+/* link bawah (sudah punya akun / belum punya akun) */
 .link {
   text-align: center;
-  margin-top: clamp(14px, 2vw, 24px);
-  font-size: clamp(13px, 1.5vw, 18px);
+  margin-top: 18px;
+  font-size: 13px; color: var(--tekssamar);
 }
+.link a { color: var(--utama); font-weight: 700; }
+.link a:hover { text-decoration: underline; }
 
-@media (max-width: 600px) {
-  .container {
-    width: 100%;
-    min-height: auto;
-    padding: clamp(24px, 5vw, 45px);
-  }
+/* link kembali ke landing */
+.kembali-landing {
+  text-align: center;
+  margin-top: 12px;
+  font-size: 12px; color: var(--tekssamar);
 }
+.kembali-landing a {
+  color: var(--tekssamar);
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.kembali-landing a:hover { color: var(--utama); }

@@ -6,9 +6,8 @@ include '../../1. koneksi/koneksi.php';
 include '../../3. komponen/guardadmin.php';
 $halamansaatini = 'index';
 
-// Filter periode chart
-$hari = (int)($_GET['hari'] ?? 7);
-if (!in_array($hari, [7, 14, 30])) $hari = 7;
+// chart selalu 7 hari terakhir, tanpa filter
+$hari = 7;
 
 // ===== STATISTIK UTAMA =====
 $q = $conn->query("SELECT role, COUNT(*) AS jml FROM tb_user WHERE deleted=0 GROUP BY role");
@@ -62,7 +61,7 @@ $terlaris = $qtl->fetch_all(MYSQLI_ASSOC);
 // ===== PERFORMA TOKO — subquery agar tidak ada row multiplication =====
 $qtoko2 = $conn->query("SELECT t.id_toko, t.nama_toko, t.status_toko,
                                 (SELECT COUNT(*) FROM tb_order o WHERE o.id_toko=t.id_toko AND o.deleted=0) AS total_order,
-                                (SELECT COALESCE(SUM(o2.total_harga),0) FROM tb_order o2 WHERE o2.id_toko=t.id_toko AND o2.deleted=0) AS omset,
+                                (SELECT COALESCE(SUM(o2.total_harga),0) FROM tb_order o2 WHERE o2.id_toko=t.id_toko AND o2.status_order='Selesai' AND o2.deleted=0) AS omset,
                                 (SELECT COALESCE(ROUND(AVG(r.rating_toko),1),0) FROM tb_rating r WHERE r.id_toko=t.id_toko AND r.deleted=0) AS rating
                          FROM tb_toko t
                          WHERE t.deleted=0
@@ -99,7 +98,7 @@ $startx = 70; $chartH = 160;
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard Admin - eKantin</title>
+<title>Dashboard Admin - jajankita</title>
 <link rel="stylesheet" href="../../3. komponen/admin.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
@@ -167,13 +166,11 @@ $startx = 70; $chartH = 160;
   <div class="kartu">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
       <h3 style="margin:0;border:none;padding:0;">
-        <i class="fa-solid fa-chart-bar"></i> Revenue Platform — <?= $hari ?> Hari Terakhir
+        <i class="fa-solid fa-chart-bar"></i> Revenue Platform — 7 Hari Terakhir
       </h3>
-      <div class="filter-bar" style="margin:0;gap:6px;">
-        <a href="index.php?hari=7"  class="chip-filter <?= $hari === 7  ? 'aktif' : '' ?>">7 Hari</a>
-        <a href="index.php?hari=14" class="chip-filter <?= $hari === 14 ? 'aktif' : '' ?>">14 Hari</a>
-        <a href="index.php?hari=30" class="chip-filter <?= $hari === 30 ? 'aktif' : '' ?>">30 Hari</a>
-      </div>
+      <a href="../laporan/laporan.php" style="font-size:12px;color:var(--kedua);font-weight:600;white-space:nowrap;">
+        Lihat Semua Laporan →
+      </a>
     </div>
     <div class="area-chart">
       <svg viewBox="0 0 <?= $svgw ?> 210" xmlns="http://www.w3.org/2000/svg" style="min-width:<?= min(700,$svgw) ?>px;">
@@ -279,7 +276,7 @@ $startx = 70; $chartH = 160;
             <th>Status</th>
             <th class="tengah">Total Pesanan</th>
             <th class="tengah">Rating</th>
-            <th class="kanan">Total Omset</th>
+            <th class="kanan">Pendapatan Selesai</th>
             <th class="tengah">Aksi</th>
           </tr>
         </thead>

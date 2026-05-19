@@ -33,7 +33,7 @@ $kembali = match($peran) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Konfirmasi Keluar - eKantin</title>
+<title>Konfirmasi Keluar - jajankita</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="autentifikasi.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -45,7 +45,7 @@ $kembali = match($peran) {
     <i class="fa-solid fa-right-from-bracket"></i>
   </div>
   <h2>Yakin ingin keluar?</h2>
-  <div class="sub">Kamu perlu login lagi untuk mengakses eKantin</div>
+  <div class="sub">Kamu perlu login lagi untuk mengakses jajankita</div>
 
   <form method="POST" action="konfirmasilogout.php">
     <input type="hidden" name="aksi" value="keluar">

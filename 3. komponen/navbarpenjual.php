@@ -21,7 +21,7 @@ $inisialpenjual = strtoupper(mb_substr($_SESSION['username'] ?? 'P', 0, 2));
     <i class="fa-solid fa-bars"></i>
   </label>
   <div class="judul">
-    <i class="fa-solid fa-utensils"></i> eKantin — <?= $namatoko ?>
+    <i class="fa-solid fa-utensils"></i> jajankita — <?= $namatoko ?>
   </div>
 </div>
 
@@ -33,7 +33,7 @@ $inisialpenjual = strtoupper(mb_substr($_SESSION['username'] ?? 'P', 0, 2));
 
   <div class="sidebar-logo">
     <div class="namaapp">
-      <i class="fa-solid fa-utensils"></i> eKantin
+      <i class="fa-solid fa-utensils"></i> jajankita
     </div>
     <div class="namatoko"><?= $namatoko ?></div>
     <div class="statustoko <?= $statustoko === 'buka' ? 'buka' : 'tutup' ?>">
@@ -134,7 +134,7 @@ $inisialpenjual = strtoupper(mb_substr($_SESSION['username'] ?? 'P', 0, 2));
       </div>
       <div style="font-size:17px;font-weight:800;color:var(--utama);margin-bottom:4px;">Hubungi Admin</div>
       <div style="font-size:13px;color:var(--tekssamar);">
-        Butuh bantuan? Hubungi admin eKantin melalui:
+        Butuh bantuan? Hubungi admin jajankita melalui:
       </div>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px;">

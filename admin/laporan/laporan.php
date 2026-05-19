@@ -1,73 +1,89 @@
 <?php
 /* ============================================================
-   LAPORAN PLATFORM — ADMIN
+   laporan platform admin
+   filter: 7 hari, 14 hari, 30 hari, atau custom tanggal
+   cetak: tambahkan ?cetak=1 pada url untuk mode cetak
    ============================================================ */
 include '../../1. koneksi/koneksi.php';
 include '../../3. komponen/guardadmin.php';
 $halamansaatini = 'laporan';
 
-// Filter periode (default: 30 hari)
-$periode = $_GET['periode'] ?? '30';
-if (!in_array($periode, ['7','30','90','365'])) $periode = '30';
-$tglmulai = date('Y-m-d', strtotime("-$periode days"));
+$cetak = isset($_GET['cetak']);
 
-// Ringkasan platform
-$qr1 = $conn->prepare("SELECT COUNT(*), COALESCE(SUM(total_harga),0) FROM tb_order WHERE DATE(tanggal_order)>=? AND deleted=0");
-$qr1->bind_param("s", $tglmulai); $qr1->execute();
-$r1 = $qr1->get_result()->fetch_row(); $qr1->close();
-$totalorder = (int)$r1[0]; $totalomset = (float)$r1[1];
+// filter periode
+$periode = $_GET['periode'] ?? '7';
+if (!in_array($periode, ['7','14','30','custom'])) $periode = '7';
 
-$qr2 = $conn->prepare("SELECT COALESCE(SUM(total_harga),0) FROM tb_order WHERE DATE(tanggal_order)>=? AND status_order='Selesai' AND deleted=0");
-$qr2->bind_param("s", $tglmulai); $qr2->execute();
+if ($periode === 'custom') {
+    $dari   = isset($_GET['dari'])   && $_GET['dari']   ? $_GET['dari']   : date('Y-m-d', strtotime('-7 days'));
+    $sampai = isset($_GET['sampai']) && $_GET['sampai'] ? $_GET['sampai'] : date('Y-m-d');
+    $tglmulai = date('Y-m-d', strtotime($dari));
+    $tgljin   = date('Y-m-d', strtotime($sampai));
+    if ($tgljin < $tglmulai) $tgljin = $tglmulai;
+} else {
+    $tglmulai = date('Y-m-d', strtotime("-$periode days"));
+    $tgljin   = date('Y-m-d');
+    $dari = $tglmulai; $sampai = $tgljin;
+}
+
+// ringkasan platform
+$qr1 = $conn->prepare("SELECT COUNT(*) FROM tb_order WHERE DATE(tanggal_order) BETWEEN ? AND ? AND deleted=0");
+$qr1->bind_param("ss", $tglmulai, $tgljin); $qr1->execute();
+$totalorder = (int)$qr1->get_result()->fetch_row()[0]; $qr1->close();
+
+$qr2 = $conn->prepare("SELECT COALESCE(SUM(total_harga),0) FROM tb_order WHERE DATE(tanggal_order) BETWEEN ? AND ? AND status_order='Selesai' AND deleted=0");
+$qr2->bind_param("ss", $tglmulai, $tgljin); $qr2->execute();
 $revenueselesai = (float)$qr2->get_result()->fetch_row()[0]; $qr2->close();
 
-$qr3 = $conn->prepare("SELECT COUNT(*) FROM tb_user WHERE DATE(created)>=? AND deleted=0");
-$qr3->bind_param("s", $tglmulai); $qr3->execute();
+$qr3 = $conn->prepare("SELECT COUNT(*) FROM tb_user WHERE DATE(created) BETWEEN ? AND ? AND deleted=0");
+$qr3->bind_param("ss", $tglmulai, $tgljin); $qr3->execute();
 $userbarujml = (int)$qr3->get_result()->fetch_row()[0]; $qr3->close();
 
-// Status pesanan breakdown
-$qstat = $conn->prepare("SELECT status_order, COUNT(*) AS jml FROM tb_order WHERE DATE(tanggal_order)>=? AND deleted=0 GROUP BY status_order");
-$qstat->bind_param("s", $tglmulai); $qstat->execute();
+// status pesanan breakdown
+$qstat = $conn->prepare("SELECT status_order, COUNT(*) AS jml FROM tb_order WHERE DATE(tanggal_order) BETWEEN ? AND ? AND deleted=0 GROUP BY status_order");
+$qstat->bind_param("ss", $tglmulai, $tgljin); $qstat->execute();
 $statpesanan = []; $res = $qstat->get_result();
 while ($rs = $res->fetch_assoc()) $statpesanan[$rs['status_order']] = (int)$rs['jml'];
 $qstat->close();
 
-// Performa toko di periode ini
+// performa toko di periode ini — hanya kolom pendapatan selesai
 $qtoko = $conn->prepare("SELECT t.id_toko, t.nama_toko, t.status_toko,
                                  COUNT(DISTINCT o.id_order) AS total_order,
-                                 COALESCE(SUM(o.total_harga),0) AS omset,
                                  COALESCE(SUM(CASE WHEN o.status_order='Selesai' THEN o.total_harga ELSE 0 END),0) AS pendapatan
                           FROM tb_toko t
-                          LEFT JOIN tb_order o ON t.id_toko=o.id_toko AND DATE(o.tanggal_order)>=? AND o.deleted=0
+                          LEFT JOIN tb_order o ON t.id_toko=o.id_toko
+                            AND DATE(o.tanggal_order) BETWEEN ? AND ? AND o.deleted=0
                           WHERE t.deleted=0
                           GROUP BY t.id_toko, t.nama_toko, t.status_toko
-                          ORDER BY omset DESC");
-$qtoko->bind_param("s", $tglmulai); $qtoko->execute();
+                          ORDER BY pendapatan DESC");
+$qtoko->bind_param("ss", $tglmulai, $tgljin); $qtoko->execute();
 $perftoko = $qtoko->get_result()->fetch_all(MYSQLI_ASSOC); $qtoko->close();
 
-// Top produk platform
+// top produk platform
 $qtl = $conn->prepare("SELECT m.nama_menu, t.nama_toko, SUM(d.jumlah) AS terjual, SUM(d.subtotal) AS omset
                         FROM tb_detail_order d
                         JOIN tb_menu m ON d.id_menu=m.id_menu
                         JOIN tb_toko t ON m.id_toko=t.id_toko
                         JOIN tb_order o ON d.id_order=o.id_order
-                        WHERE DATE(o.tanggal_order)>=? AND d.deleted=0 AND o.deleted=0
-                          AND o.status_order != 'Dibatalkan'
+                        WHERE DATE(o.tanggal_order) BETWEEN ? AND ?
+                          AND d.deleted=0 AND o.deleted=0 AND o.status_order != 'Dibatalkan'
                         GROUP BY m.id_menu, m.nama_menu, t.nama_toko
                         ORDER BY terjual DESC LIMIT 10");
-$qtl->bind_param("s", $tglmulai); $qtl->execute();
+$qtl->bind_param("ss", $tglmulai, $tgljin); $qtl->execute();
 $terlaris = $qtl->get_result()->fetch_all(MYSQLI_ASSOC); $qtl->close();
 
-// Chart harian (sesuai periode, max 30 titik)
+// chart harian selama rentang (maks 30 titik)
+$selisih = (int)ceil((strtotime($tgljin) - strtotime($tglmulai)) / 86400) + 1;
+$langkah = max(1, (int)ceil($selisih / 30));
 $chartdata = [];
-$langkah = $periode <= 30 ? 1 : (int)ceil($periode / 30);
-for ($i = $periode - 1; $i >= 0; $i -= $langkah) {
-    $tgl   = date('Y-m-d', strtotime("-$i days"));
-    $tglak = date('Y-m-d', strtotime("-" . max(0, $i - $langkah + 1) . " days"));
+for ($i = 0; $i < $selisih; $i += $langkah) {
+    $tgl1  = date('Y-m-d', strtotime($tglmulai) + $i * 86400);
+    $tgl2  = date('Y-m-d', strtotime($tglmulai) + min($i + $langkah - 1, $selisih - 1) * 86400);
     $qc    = $conn->prepare("SELECT COALESCE(SUM(total_harga),0) FROM tb_order WHERE DATE(tanggal_order) BETWEEN ? AND ? AND status_order='Selesai' AND deleted=0");
-    $qc->bind_param("ss", $tgl, $tglak); $qc->execute();
+    $qc->bind_param("ss", $tgl1, $tgl2); $qc->execute();
     $nilai = (float)$qc->get_result()->fetch_row()[0]; $qc->close();
-    $chartdata[] = ['tgl'=>$tgl,'label'=>date($periode<=30?'d/m':'W',$i===0?time():strtotime($tgl)),'nilai'=>$nilai];
+    $label = $langkah === 1 ? date('d/m', strtotime($tgl1)) : date('d/m', strtotime($tgl1));
+    $chartdata[] = ['tgl'=>$tgl1,'label'=>$label,'nilai'=>$nilai];
 }
 $maxnilai = max(array_column($chartdata,'nilai')) ?: 1;
 
@@ -77,16 +93,35 @@ function singkat(float $n): string {
     if ($n >= 1_000_000)     { $v=$n/1_000_000;     return 'Rp '.rtrim(rtrim(number_format($v,1,',',''),'0'),',').' Jt'; }
     return 'Rp ' . number_format($n, 0, ',', '.');
 }
-$labelperiode = ['7'=>'7 Hari','30'=>'30 Hari','90'=>'3 Bulan','365'=>'1 Tahun'];
+
+$labelperiode = ['7'=>'7 Hari','14'=>'14 Hari','30'=>'30 Hari','custom'=>'Custom'];
+$labelterpilih = $periode === 'custom'
+    ? date('d M Y', strtotime($tglmulai)) . ' – ' . date('d M Y', strtotime($tgljin))
+    : $labelperiode[$periode] . ' Terakhir';
+
+$n      = count($chartdata);
+$svgw   = max(700, $n * 30);
+$barw   = max(8, min(40, (int)(($svgw - 80) / $n) - 4));
+$gap    = max(4, (int)(($svgw - 80 - $n * $barw) / max(1, $n - 1)));
+$startx = 70; $chartH = 160;
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Laporan Platform - Admin eKantin</title>
+<title>Laporan Platform - Admin jajankita</title>
 <link rel="stylesheet" href="../../3. komponen/admin.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<?php if ($cetak): ?>
+<style>
+  .takprint { display: none !important; }
+  .navbaradmin { display: none !important; }
+  .konten { margin-left: 0 !important; padding: 12px !important; }
+  body { background: white !important; }
+  @page { size: A4; margin: 12mm; }
+</style>
+<?php endif; ?>
 </head>
 <body>
 
@@ -94,46 +129,64 @@ $labelperiode = ['7'=>'7 Hari','30'=>'30 Hari','90'=>'3 Bulan','365'=>'1 Tahun']
 
 <main class="konten">
 
-  <div class="header-halaman">
+  <div class="header-halaman takprint">
     <div class="kiri">
       <h1><i class="fa-solid fa-chart-bar"></i> Laporan Platform</h1>
-      <p>Ringkasan performa eKantin — <?= $labelperiode[$periode] ?> terakhir</p>
+      <p>Ringkasan performa jajankita — <?= $labelterpilih ?></p>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <a href="eksporlaporan.php?periode=<?= $periode ?>" class="tombolringan">
-        <i class="fa-solid fa-file-csv"></i> Ekspor CSV
-      </a>
-      <button onclick="window.print()" class="tombolringan takprint">
+      <a href="laporan.php?periode=<?= $periode ?><?= $periode==='custom'?'&dari='.$dari.'&sampai='.$sampai:'' ?>&cetak=1"
+         class="tombolringan" target="_blank">
         <i class="fa-solid fa-print"></i> Cetak
-      </button>
+      </a>
     </div>
   </div>
 
-  <!-- Filter Periode -->
-  <div class="filter-bar takprint">
-    <?php foreach (['7'=>'7 Hari','30'=>'30 Hari','90'=>'3 Bulan','365'=>'1 Tahun'] as $val=>$lab): ?>
-    <a href="laporan.php?periode=<?= $val ?>" class="chip-filter <?= $periode === $val ? 'aktif' : '' ?>">
-      <?= $lab ?>
-    </a>
-    <?php endforeach; ?>
+  <!-- filter periode -->
+  <div class="takprint" style="margin-bottom:18px;">
+    <div class="filter-bar" style="margin-bottom:10px;">
+      <a href="laporan.php?periode=7"  class="chip-filter <?= $periode==='7'  ?'aktif':'' ?>">7 Hari</a>
+      <a href="laporan.php?periode=14" class="chip-filter <?= $periode==='14' ?'aktif':'' ?>">14 Hari</a>
+      <a href="laporan.php?periode=30" class="chip-filter <?= $periode==='30' ?'aktif':'' ?>">30 Hari</a>
+      <a href="laporan.php?periode=custom&dari=<?= $dari ?>&sampai=<?= $sampai ?>"
+         class="chip-filter <?= $periode==='custom' ?'aktif':'' ?>">Custom</a>
+    </div>
+    <?php if ($periode === 'custom'): ?>
+    <form method="GET" action="laporan.php" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
+      <input type="hidden" name="periode" value="custom">
+      <div>
+        <label style="font-size:11px;font-weight:700;color:var(--tekssamar);display:block;margin-bottom:4px;">DARI</label>
+        <input type="date" name="dari" value="<?= $dari ?>"
+               style="padding:8px 12px;border:1.5px solid var(--garis);border-radius:8px;font-size:13px;">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:var(--tekssamar);display:block;margin-bottom:4px;">SAMPAI</label>
+        <input type="date" name="sampai" value="<?= $sampai ?>"
+               style="padding:8px 12px;border:1.5px solid var(--garis);border-radius:8px;font-size:13px;">
+      </div>
+      <button type="submit" class="tombolutama" style="align-self:flex-end;">
+        <i class="fa-solid fa-filter"></i> Terapkan
+      </button>
+    </form>
+    <?php endif; ?>
   </div>
 
-  <!-- Ringkasan -->
+  <!-- ringkasan statistik -->
   <div class="grid-stat">
     <div class="kartu-stat">
       <div class="ikon-stat"><i class="fa-solid fa-receipt"></i></div>
       <div class="isi-stat">
         <div class="nilai"><?= $totalorder ?></div>
         <div class="label">Total Pesanan</div>
-        <div class="sub">Periode <?= $labelperiode[$periode] ?></div>
+        <div class="sub"><?= $labelterpilih ?></div>
       </div>
     </div>
     <div class="kartu-stat">
       <div class="ikon-stat"><i class="fa-solid fa-coins"></i></div>
       <div class="isi-stat">
-        <div class="nilai" style="font-size:15px;"><?= rp($revenueselesai) ?></div>
-        <div class="label">Revenue Selesai</div>
-        <div class="sub">Dari total <?= rp($totalomset) ?></div>
+        <div class="nilai" style="font-size:15px;"><?= singkat($revenueselesai) ?></div>
+        <div class="label">Pendapatan Selesai</div>
+        <div class="sub">Pesanan status Selesai</div>
       </div>
     </div>
     <div class="kartu-stat">
@@ -149,22 +202,15 @@ $labelperiode = ['7'=>'7 Hari','30'=>'30 Hari','90'=>'3 Bulan','365'=>'1 Tahun']
       <div class="isi-stat">
         <div class="nilai"><?= $userbarujml ?></div>
         <div class="label">Pengguna Baru</div>
-        <div class="sub">Periode <?= $labelperiode[$periode] ?></div>
+        <div class="sub"><?= $labelterpilih ?></div>
       </div>
     </div>
   </div>
 
-  <!-- Chart Revenue -->
+  <!-- chart revenue -->
   <div class="kartu">
-    <h3><i class="fa-solid fa-chart-bar"></i> Revenue Platform — <?= $labelperiode[$periode] ?> Terakhir</h3>
+    <h3><i class="fa-solid fa-chart-bar"></i> Revenue Platform — <?= $labelterpilih ?></h3>
     <div class="area-chart">
-      <?php
-      $n      = count($chartdata);
-      $svgw   = max(700, $n * 30);
-      $barw   = max(8, min(40, (int)(($svgw - 80) / $n) - 4));
-      $gap    = max(4, (int)(($svgw - 80 - $n * $barw) / max(1, $n - 1)));
-      $startx = 70; $chartH = 160;
-      ?>
       <svg viewBox="0 0 <?=$svgw?> 210" xmlns="http://www.w3.org/2000/svg" style="min-width:<?=min(700,$svgw)?>px;">
         <?php for($g=0;$g<=4;$g++):$y=20+($g*40);?>
         <line x1="60" y1="<?=$y?>" x2="<?=$svgw-10?>" y2="<?=$y?>" stroke="#E7CBCB" stroke-width="1" stroke-dasharray="4,4"/>
@@ -180,7 +226,7 @@ $labelperiode = ['7'=>'7 Hari','30'=>'30 Hari','90'=>'3 Bulan','365'=>'1 Tahun']
           <title><?=$d['label']?> — <?=rp($d['nilai'])?></title>
         </rect>
         <text x="<?=$x+$barw/2?>" y="200" text-anchor="middle" fill="<?=$isToday?'#643843':'#99627A'?>"
-              font-size="<?=$periode>30?'8':'9'?>" font-weight="<?=$isToday?'700':'400'?>"><?=$d['label']?></text>
+              font-size="<?=$n>20?'7':'9'?>" font-weight="<?=$isToday?'700':'400'?>"><?=$d['label']?></text>
         <?php if($d['nilai']>0&&$barw>=20):?>
         <text x="<?=$x+$barw/2?>" y="<?=max($by-4,14)?>" text-anchor="middle" fill="#643843" font-size="8" font-weight="600">
           <?=number_format($d['nilai']/1000,0)?>k
@@ -193,11 +239,11 @@ $labelperiode = ['7'=>'7 Hari','30'=>'30 Hari','90'=>'3 Bulan','365'=>'1 Tahun']
 
   <div class="grid-dua">
 
-    <!-- Top Produk Platform -->
+    <!-- top produk platform -->
     <div class="kartu">
       <h3><i class="fa-solid fa-fire"></i> Produk Terlaris Platform</h3>
       <?php if (empty($terlaris)): ?>
-      <div class="kosong" style="padding:20px;"><p>Belum ada data penjualan</p></div>
+      <div class="kosong" style="padding:20px;"><p>Belum ada data penjualan pada periode ini</p></div>
       <?php else: ?>
       <?php $medal = ['emas','perak','perunggu']; ?>
       <?php foreach ($terlaris as $i => $t): ?>
@@ -219,7 +265,7 @@ $labelperiode = ['7'=>'7 Hari','30'=>'30 Hari','90'=>'3 Bulan','365'=>'1 Tahun']
       <?php endif; ?>
     </div>
 
-    <!-- Status Pesanan -->
+    <!-- breakdown status pesanan -->
     <div class="kartu">
       <h3><i class="fa-solid fa-list-check"></i> Breakdown Status Pesanan</h3>
       <?php
@@ -237,7 +283,7 @@ $labelperiode = ['7'=>'7 Hari','30'=>'30 Hari','90'=>'3 Bulan','365'=>'1 Tahun']
 
   </div>
 
-  <!-- Performa Toko -->
+  <!-- performa toko — hanya kolom pendapatan selesai -->
   <div class="kartu">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
       <h3 style="margin:0;border:none;padding:0;"><i class="fa-solid fa-store"></i> Performa Toko</h3>
@@ -249,12 +295,14 @@ $labelperiode = ['7'=>'7 Hari','30'=>'30 Hari','90'=>'3 Bulan','365'=>'1 Tahun']
             <th>Nama Toko</th>
             <th class="tengah">Status</th>
             <th class="tengah">Total Pesanan</th>
-            <th class="kanan" title="Semua pesanan masuk termasuk yang dibatalkan">Total Omset ⓘ</th>
-            <th class="kanan" title="Hanya pesanan dengan status Selesai">Pendapatan Selesai ⓘ</th>
+            <th class="kanan">Pendapatan Selesai</th>
             <th class="tengah takprint">Aksi</th>
           </tr>
         </thead>
         <tbody>
+          <?php if (empty($perftoko)): ?>
+          <tr><td colspan="5"><div class="kosong" style="padding:20px;"><p>Belum ada toko</p></div></td></tr>
+          <?php else: ?>
           <?php foreach ($perftoko as $t): ?>
           <tr>
             <td><strong><?= htmlspecialchars($t['nama_toko']) ?></strong></td>
@@ -264,7 +312,6 @@ $labelperiode = ['7'=>'7 Hari','30'=>'30 Hari','90'=>'3 Bulan','365'=>'1 Tahun']
               </span>
             </td>
             <td class="tengah"><?= $t['total_order'] ?></td>
-            <td class="kanan"><?= rp($t['omset']) ?></td>
             <td class="kanan" style="font-weight:700;color:var(--sukses);"><?= rp($t['pendapatan']) ?></td>
             <td class="tengah takprint">
               <a href="../manajementoko/viewtoko.php?id=<?= $t['id_toko'] ?>" class="tombol-aksi" title="Detail">
@@ -273,15 +320,17 @@ $labelperiode = ['7'=>'7 Hari','30'=>'30 Hari','90'=>'3 Bulan','365'=>'1 Tahun']
             </td>
           </tr>
           <?php endforeach; ?>
+          <?php endif; ?>
         </tbody>
+        <?php if (!empty($perftoko)): ?>
         <tfoot>
           <tr>
-            <td colspan="3"><strong>TOTAL</strong></td>
-            <td class="kanan"><strong><?= rp(array_sum(array_column($perftoko,'omset'))) ?></strong></td>
+            <td colspan="3"><strong>TOTAL PLATFORM</strong></td>
             <td class="kanan" style="color:var(--sukses);"><strong><?= rp(array_sum(array_column($perftoko,'pendapatan'))) ?></strong></td>
             <td class="takprint"></td>
           </tr>
         </tfoot>
+        <?php endif; ?>
       </table>
     </div>
   </div>

@@ -76,45 +76,45 @@ ul { list-style: none; }
    Desktop ≥769px : sidebar tetap kiri, warna putih (kontras penjual gelap)
    ============================================================== */
 
-/* ===== SIDEBAR DESKTOP ===== */
+/* ===== SIDEBAR DESKTOP — warna gelap selaras dengan admin dan penjual ===== */
 .navbarpembeli {
   position: fixed; top: 0; left: 0;
   width: var(--sidebarlebar); height: 100vh;
-  background: var(--putih);
-  border-right: 1px solid var(--garis);
+  background: var(--utama);
+  border-right: none;
   display: flex; flex-direction: column;
   z-index: 1000;
   overflow-y: auto; overflow-x: hidden;
-  box-shadow: 2px 0 10px rgba(100,56,67,.04);
+  box-shadow: 2px 0 12px rgba(100,56,67,.18);
 }
 .logosidebar {
   padding: 20px 18px 16px;
-  border-bottom: 1px solid var(--garis);
+  border-bottom: 1px solid rgba(255,255,255,.12);
   margin-bottom: 8px;
 }
 .logosidebar .namaapp {
-  font-size: 18px; font-weight: 800; color: var(--utama);
+  font-size: 18px; font-weight: 800; color: var(--putihbg);
   display: flex; align-items: center; gap: 8px; margin-bottom: 2px;
 }
 .logosidebar .namaapp i { font-size: 18px; }
-.logosidebar .taglineapp { font-size: 11px; color: var(--tekssamar); }
+.logosidebar .taglineapp { font-size: 11px; color: rgba(255,255,255,.65); }
 .sidebar-nav-pembeli {
   flex: 1; padding: 8px 12px;
   display: flex; flex-direction: column; gap: 2px;
 }
 .sidebar-footer-pembeli {
-  padding: 12px; border-top: 1px solid var(--garis);
+  padding: 12px; border-top: 1px solid rgba(255,255,255,.12);
 }
 .itemnav {
   display: flex; align-items: center; gap: 12px;
-  padding: 12px 16px; border-radius: 10px;
-  color: var(--tekssamar); font-size: 13px; font-weight: 500;
+  padding: 12px 14px; border-radius: 10px;
+  color: rgba(255,255,255,.78); font-size: 13px; font-weight: 500;
   transition: background .15s, color .15s;
   cursor: pointer; position: relative;
 }
-.itemnav i { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
-.itemnav:hover { background: var(--latar); color: var(--utama); }
-.itemnav.aktif { background: var(--utama); color: var(--putihbg); font-weight: 700; }
+.itemnav i { font-size: 15px; width: 20px; text-align: center; flex-shrink: 0; }
+.itemnav:hover { background: rgba(255,255,255,.12); color: var(--putihbg); }
+.itemnav.aktif { background: rgba(255,255,255,.2); color: var(--putihbg); font-weight: 700; }
 .lencanakeranjang {
   margin-left: auto;
   background: var(--gagal); color: var(--putih);
@@ -123,19 +123,19 @@ ul { list-style: none; }
   border-radius: 9999px;
   display: flex; align-items: center; justify-content: center;
 }
-.itemnav.aktif .lencanakeranjang { background: rgba(255,255,255,.3); color: var(--putih); }
-.itemkeluar { color: var(--gagal); }
-.itemkeluar:hover { background: var(--gagalbg); color: var(--gagal); }
+.itemnav.aktif .lencanakeranjang { background: rgba(220,38,38,.8); color: var(--putih); }
+.itemkeluar { color: rgba(255,130,110,.9); }
+.itemkeluar:hover { background: rgba(220,38,38,.25); color: rgba(255,160,140,1); }
 
-/* ===== MOBILE: bottom tab bar ===== */
+/* ===== MOBILE: bottom tab bar — background gelap selaras desktop ===== */
 @media (max-width: 768px) {
   .navbarpembeli {
     top: auto; bottom: 0; left: 0; right: 0;
     width: 100%; height: var(--headertinggi);
     flex-direction: row;
     border-right: none;
-    border-top: 2px solid var(--garis);
-    box-shadow: 0 -2px 12px rgba(100,56,67,.09);
+    border-top: 1px solid rgba(255,255,255,.12);
+    box-shadow: 0 -2px 14px rgba(100,56,67,.25);
     overflow: visible;
     padding: 0;
   }
@@ -152,36 +152,49 @@ ul { list-style: none; }
     gap: 4px; padding: 6px 4px;
     border-radius: 0; height: 100%;
     font-size: 10px; font-weight: 600;
+    color: rgba(255,255,255,.6);
   }
   .itemnav i { font-size: 20px; width: auto; }
-  .itemnav:hover { background: none; color: var(--tekssamar); }
+  .itemnav:hover { background: rgba(255,255,255,.08); color: var(--putihbg); }
   .itemnav.aktif {
-    background: none; color: var(--utama);
+    background: none; color: var(--putihbg);
     font-weight: 700;
   }
-  /* Garis aktif di atas tab */
+  /* garis aktif di atas tab */
   .itemnav.aktif::before {
     content: '';
     position: absolute; top: 0; left: 20%; right: 20%;
     height: 3px; border-radius: 0 0 4px 4px;
-    background: var(--utama);
+    background: var(--putihbg);
   }
-  /* Badge keranjang di mobile */
+  /* badge keranjang di mobile */
   .lencanakeranjang {
     position: absolute; top: 5px; right: 50%;
     transform: translateX(12px);
     margin-left: 0;
-    border: 2px solid var(--putih);
+    border: 2px solid var(--utama);
     background: var(--gagal); color: var(--putih);
   }
   .itemnav.aktif .lencanakeranjang { background: var(--gagal); color: var(--putih); }
-  /* Keluar & Hubungi Admin hanya di sidebar desktop / halaman profil */
+  /* keluar dan hubungi admin hanya di sidebar desktop */
   .itemkeluar, .itemnav-kontak { display: none; }
 }
 
 /* ==============================================================
    FLASH MESSAGE (pesan sukses/gagal setelah redirect)
    ============================================================== */
+
+/* wrapper flash — background utama agar nyambung dengan sapaan di beranda */
+.flash-wrapper {
+  background: var(--utama);
+  padding: 0 16px 10px;
+}
+@media (min-width: 769px) {
+  .flash-wrapper { padding: 0 28px 12px; }
+}
+/* flash di dalam wrapper tidak perlu margin bawah karena sudah ada padding wrapper */
+.flash-wrapper .flashpesan { margin-bottom: 0; border-radius: 10px; }
+
 .flashpesan {
   padding: 12px 16px;
   border-radius: 10px;
@@ -193,6 +206,42 @@ ul { list-style: none; }
 .flashgagal  { background: var(--gagalbg);  color: var(--gagal);  border: 1px solid #FCA5A5; }
 .flashinfo   { background: var(--infobg);   color: var(--info);   border: 1px solid #BFDBFE; }
 .flashtunggu { background: var(--tunggubg); color: var(--tunggu); border: 1px solid #FDE68A; }
+
+/* ==============================================================
+   NOTIFIKASI SISTEM DAN PESANAN
+   ============================================================== */
+
+/* banner pengumuman admin — background utama menyambung dengan sapaan */
+.notif-sistem {
+  background: var(--utama);
+  color: rgba(255,255,255,.9);
+  padding: 10px 16px;
+  font-size: 13px; font-weight: 600;
+  display: flex; align-items: center; gap: 8px;
+  border-bottom: 1px solid rgba(255,255,255,.12);
+}
+@media (min-width: 769px) {
+  .notif-sistem { padding: 10px 28px; }
+}
+
+/* banner pesanan siap diambil — warna hijau sukses */
+.notif-siap {
+  background: var(--sukses);
+  color: var(--putih);
+  padding: 10px 16px;
+  font-size: 13px; font-weight: 600;
+  display: flex; align-items: center; gap: 8px;
+}
+.notif-siap .notif-link {
+  margin-left: auto;
+  color: var(--putih);
+  font-weight: 800;
+  text-decoration: underline;
+  white-space: nowrap;
+}
+@media (min-width: 769px) {
+  .notif-siap { padding: 10px 28px; }
+}
 
 /* ==============================================================
    SAPAAN BERANDA

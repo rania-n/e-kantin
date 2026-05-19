@@ -69,6 +69,7 @@ if (!$kategori && !$cari && !$idtoko) {
                          JOIN tb_order o ON d.id_order=o.id_order
                          WHERE d.deleted=0 AND o.deleted=0 AND t.status_toko='buka'
                            AND m.deleted=0 AND m.status='aktif' AND m.stok>0
+                           AND o.status_order != 'Dibatalkan'
                          GROUP BY m.id_menu, m.nama_menu, m.harga, m.foto, t.nama_toko, t.id_toko
                          ORDER BY terjual DESC
                          LIMIT 5");
@@ -82,7 +83,7 @@ $pathbase = '..';
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Beranda - eKantin</title>
+<title>Beranda - jajankita</title>
 <link rel="stylesheet" href="../../3. komponen/pembeli.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>

@@ -48,7 +48,7 @@ $pathbase = '..';
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Profil - eKantin</title>
+<title>Profil - jajankita</title>
 <link rel="stylesheet" href="../../3. komponen/pembeli.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
@@ -131,7 +131,7 @@ $pathbase = '..';
     <div class="ikonpengaturan"><i class="fa-solid fa-circle-info"></i></div>
     <div class="tekspengaturan">
       <div class="judul">Tentang Aplikasi</div>
-      <div class="deskripsi">eKantin v1.0</div>
+      <div class="deskripsi">jajankita v1.0</div>
     </div>
     <div class="panahpengaturan"><i class="fa-solid fa-chevron-right"></i></div>
   </div>

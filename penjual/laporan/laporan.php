@@ -1,13 +1,15 @@
 <?php
 /* ============================================================
-   LAPORAN PENJUALAN
-   Filter: hari ini / minggu ini / bulan ini / periode custom
+   laporan penjualan
+   filter: hari ini / minggu ini / bulan ini / custom tanggal
+   cetak: tambahkan ?cetak=1 pada url
    ============================================================ */
 include '../../1. koneksi/koneksi.php';
 include '../../3. komponen/guardpenjual.php';
 
 $idtoko = (int)$_SESSION['id_toko'];
 $halamansaatini = 'laporan';
+$cetak = isset($_GET['cetak']);
 
 $periode  = $_GET['periode'] ?? 'bulan';
 $tglawal  = '';
@@ -39,7 +41,7 @@ switch ($periode) {
         $labelprd = 'Bulan Ini (' . date('M Y') . ')';
 }
 
-// Total pendapatan
+// ringkasan pendapatan
 $q1 = $conn->prepare("SELECT COALESCE(SUM(total_harga),0), COUNT(*) FROM tb_order WHERE id_toko=? AND status_order='Selesai' AND deleted=0 AND DATE(tanggal_order) BETWEEN ? AND ?");
 $q1->bind_param("iss", $idtoko, $tglawal, $tglakhir); $q1->execute();
 $r1 = $q1->get_result()->fetch_row(); $q1->close();
@@ -54,7 +56,7 @@ $totaldibatal = (int)$r2[1];
 
 $ratarata = $totalpesananselesai > 0 ? $totalpendapatan / $totalpesananselesai : 0;
 
-// Produk terlaris
+// produk terlaris
 $qtl = $conn->prepare("SELECT m.nama_menu, SUM(d.jumlah) AS terjual, SUM(d.subtotal) AS omset
                         FROM tb_detail_order d
                         JOIN tb_menu m ON d.id_menu=m.id_menu
@@ -67,7 +69,7 @@ $qtl = $conn->prepare("SELECT m.nama_menu, SUM(d.jumlah) AS terjual, SUM(d.subto
 $qtl->bind_param("iss", $idtoko, $tglawal, $tglakhir); $qtl->execute();
 $terlaris = $qtl->get_result()->fetch_all(MYSQLI_ASSOC); $qtl->close();
 
-// Daftar pesanan selesai
+// daftar pesanan selesai
 $qo = $conn->prepare("SELECT o.id_order, o.tanggal_order, o.total_harga, o.metode_pembayaran, u.username
                        FROM tb_order o JOIN tb_user u ON o.id_user=u.id_user
                        WHERE o.id_toko=? AND o.status_order='Selesai' AND o.deleted=0
@@ -76,16 +78,51 @@ $qo = $conn->prepare("SELECT o.id_order, o.tanggal_order, o.total_harga, o.metod
 $qo->bind_param("iss", $idtoko, $tglawal, $tglakhir); $qo->execute();
 $daftarorder = $qo->get_result()->fetch_all(MYSQLI_ASSOC); $qo->close();
 
+// chart harian pendapatan (maks 30 titik)
+$selisih = (int)ceil((strtotime($tglakhir) - strtotime($tglawal)) / 86400) + 1;
+$langkah = max(1, (int)ceil($selisih / 30));
+$chartdata = [];
+for ($i = 0; $i < $selisih; $i += $langkah) {
+    $tgl1  = date('Y-m-d', strtotime($tglawal) + $i * 86400);
+    $tgl2  = date('Y-m-d', strtotime($tglawal) + min($i + $langkah - 1, $selisih - 1) * 86400);
+    $qc    = $conn->prepare("SELECT COALESCE(SUM(total_harga),0) FROM tb_order WHERE id_toko=? AND DATE(tanggal_order) BETWEEN ? AND ? AND status_order='Selesai' AND deleted=0");
+    $qc->bind_param("iss", $idtoko, $tgl1, $tgl2); $qc->execute();
+    $nilai = (float)$qc->get_result()->fetch_row()[0]; $qc->close();
+    $chartdata[] = ['tgl'=>$tgl1,'label'=>date('d/m', strtotime($tgl1)),'nilai'=>$nilai];
+}
+$maxnilai = max(array_column($chartdata,'nilai')) ?: 1;
+
 function rp(float $n): string { return 'Rp ' . number_format($n, 0, ',', '.'); }
+function singkat(float $n): string {
+    if ($n >= 1_000_000_000) { $v=$n/1_000_000_000; return 'Rp '.rtrim(rtrim(number_format($v,1,',',''),'0'),',').' M'; }
+    if ($n >= 1_000_000)     { $v=$n/1_000_000;     return 'Rp '.rtrim(rtrim(number_format($v,1,',',''),'0'),',').' Jt'; }
+    return 'Rp ' . number_format($n, 0, ',', '.');
+}
+
+$n      = count($chartdata);
+$svgw   = max(700, $n * 30);
+$barw   = max(8, min(40, (int)(($svgw - 80) / $n) - 4));
+$gap    = max(4, (int)(($svgw - 80 - $n * $barw) / max(1, $n - 1)));
+$startx = 70; $chartH = 160;
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Laporan Penjualan - eKantin</title>
+<title>Laporan Penjualan - jajankita</title>
 <link rel="stylesheet" href="../../3. komponen/penjual.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<?php if ($cetak): ?>
+<style>
+  .takprint { display: none !important; }
+  .navbarpenjual { display: none !important; }
+  .konten { margin-left: 0 !important; padding: 12px !important; }
+  body { background: white !important; }
+  .kartu { box-shadow: none !important; border: 1px solid #ddd !important; break-inside: avoid; }
+  @page { size: A4 portrait; margin: 15mm; }
+</style>
+<?php endif; ?>
 </head>
 <body>
 
@@ -98,77 +135,137 @@ function rp(float $n): string { return 'Rp ' . number_format($n, 0, ',', '.'); }
       <h1><i class="fa-solid fa-chart-bar"></i> Laporan Penjualan</h1>
       <p><?= $labelprd ?></p>
     </div>
-    <button onclick="window.print()" class="tombolutama">
+    <a href="laporan.php?periode=<?= $periode ?>&dari=<?= $tglawal ?>&sampai=<?= $tglakhir ?>&cetak=1"
+       target="_blank" class="tombolutama">
       <i class="fa-solid fa-print"></i> Cetak Laporan
-    </button>
-  </div>
-
-  <!-- HEADER CETAK (hanya muncul saat print) -->
-  <div class="headercetak">
-    <div style="text-align:center;margin-bottom:14px;">
-      <div style="font-size:18px;font-weight:800;"><?= htmlspecialchars($_SESSION['nama_toko']??'') ?></div>
-      <div style="font-size:13px;">Laporan Penjualan — <?= $labelprd ?></div>
-      <div style="font-size:11px;color:#666;">Dicetak: <?= date('d M Y H:i') ?></div>
-    </div>
-    <hr style="border-color:#ccc;margin-bottom:14px;">
-  </div>
-
-  <!-- Filter periode -->
-  <div class="filter-bar takprint" style="margin-bottom:16px;flex-wrap:wrap;align-items:center;gap:10px;">
-    <?php foreach (['hari'=>'Hari Ini','minggu'=>'Minggu Ini','bulan'=>'Bulan Ini'] as $p => $label): ?>
-    <a href="laporan.php?periode=<?= $p ?>"
-       class="chip-filter <?= $periode===$p?'aktif':'' ?>">
-      <?= $label ?>
     </a>
-    <?php endforeach; ?>
-
-    <form method="GET" action="laporan.php" class="formcustomrange takprint">
-      <input type="hidden" name="periode" value="custom">
-      <input type="date" name="dari"
-             value="<?= $periode==='custom' ? $tglawal : date('Y-m-01') ?>">
-      <span style="font-size:13px;color:var(--tekssamar);">s.d.</span>
-      <input type="date" name="sampai"
-             value="<?= $periode==='custom' ? $tglakhir : date('Y-m-d') ?>">
-      <button type="submit" class="chip-filter <?= $periode==='custom'?'aktif':'' ?>">Tampilkan</button>
-    </form>
   </div>
 
-  <!-- RINGKASAN -->
-  <div class="ringkasan-laporan">
-    <div class="kotak-laporan">
-      <div class="nilai"><?= rp($totalpendapatan) ?></div>
-      <div class="label">Total Pendapatan</div>
+  <!-- header cetak (tersembunyi saat normal) -->
+  <?php if ($cetak): ?>
+  <div style="text-align:center;margin-bottom:18px;">
+    <div style="font-size:18px;font-weight:800;"><?= htmlspecialchars($_SESSION['nama_toko']??'Toko') ?></div>
+    <div style="font-size:13px;">Laporan Penjualan — <?= $labelprd ?></div>
+    <div style="font-size:11px;color:#666;">Dicetak: <?= date('d M Y H:i') ?></div>
+    <hr style="border-color:#ccc;margin:12px 0;">
+  </div>
+  <?php endif; ?>
+
+  <!-- filter periode -->
+  <div class="takprint" style="margin-bottom:16px;">
+    <div class="filter-bar" style="margin-bottom:10px;flex-wrap:wrap;">
+      <?php foreach (['hari'=>'Hari Ini','minggu'=>'Minggu Ini','bulan'=>'Bulan Ini'] as $p => $lab): ?>
+      <a href="laporan.php?periode=<?= $p ?>" class="chip-filter <?= $periode===$p?'aktif':'' ?>"><?= $lab ?></a>
+      <?php endforeach; ?>
+      <a href="laporan.php?periode=custom&dari=<?= $tglawal ?>&sampai=<?= $tglakhir ?>"
+         class="chip-filter <?= $periode==='custom'?'aktif':'' ?>">Custom</a>
     </div>
-    <div class="kotak-laporan">
-      <div class="nilai"><?= $totalpesananselesai ?></div>
-      <div class="label">Pesanan Selesai</div>
+    <?php if ($periode === 'custom'): ?>
+    <form method="GET" action="laporan.php" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
+      <input type="hidden" name="periode" value="custom">
+      <div>
+        <label style="font-size:11px;font-weight:700;color:var(--tekssamar);display:block;margin-bottom:4px;">DARI</label>
+        <input type="date" name="dari" value="<?= $tglawal ?>"
+               style="padding:8px 12px;border:1.5px solid var(--garis);border-radius:8px;font-size:13px;font-family:inherit;">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:var(--tekssamar);display:block;margin-bottom:4px;">SAMPAI</label>
+        <input type="date" name="sampai" value="<?= $tglakhir ?>"
+               style="padding:8px 12px;border:1.5px solid var(--garis);border-radius:8px;font-size:13px;font-family:inherit;">
+      </div>
+      <button type="submit" class="tombolutama" style="align-self:flex-end;">
+        <i class="fa-solid fa-filter"></i> Terapkan
+      </button>
+    </form>
+    <?php endif; ?>
+  </div>
+
+  <!-- ringkasan statistik — konsisten dengan grid-stat -->
+  <div class="grid-stat">
+    <div class="kartu-stat">
+      <div class="ikon-stat"><i class="fa-solid fa-coins"></i></div>
+      <div class="isi-stat">
+        <div class="nilai"><?= singkat($totalpendapatan) ?></div>
+        <div class="label">Total Pendapatan</div>
+        <div class="tren" style="color:var(--tekssamar);">Pesanan selesai</div>
+      </div>
     </div>
-    <div class="kotak-laporan">
-      <div class="nilai"><?= rp($ratarata) ?></div>
-      <div class="label">Rata-rata Per Pesanan</div>
+    <div class="kartu-stat">
+      <div class="ikon-stat"><i class="fa-solid fa-check-circle"></i></div>
+      <div class="isi-stat">
+        <div class="nilai"><?= $totalpesananselesai ?></div>
+        <div class="label">Pesanan Selesai</div>
+        <div class="tren" style="color:var(--tekssamar);"><?= $totalpesanan ?> total masuk</div>
+      </div>
     </div>
-    <div class="kotak-laporan">
-      <div class="nilai"><?= $totaldibatal ?></div>
-      <div class="label">Pesanan Dibatalkan</div>
+    <div class="kartu-stat">
+      <div class="ikon-stat"><i class="fa-solid fa-calculator"></i></div>
+      <div class="isi-stat">
+        <div class="nilai"><?= singkat($ratarata) ?></div>
+        <div class="label">Rata-rata / Pesanan</div>
+        <div class="tren" style="color:var(--tekssamar);">Per pesanan selesai</div>
+      </div>
     </div>
+    <div class="kartu-stat">
+      <div class="ikon-stat"><i class="fa-solid fa-ban"></i></div>
+      <div class="isi-stat">
+        <div class="nilai"><?= $totaldibatal ?></div>
+        <div class="label">Dibatalkan</div>
+        <div class="tren" style="color:var(--tekssamar);"><?= $labelprd ?></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- diagram batang pendapatan harian -->
+  <div class="kartu">
+    <h3><i class="fa-solid fa-chart-bar"></i> Pendapatan Harian — <?= $labelprd ?></h3>
+    <?php if ($totalpendapatan <= 0): ?>
+    <div class="kosong" style="padding:20px;"><p>Belum ada pendapatan pada periode ini</p></div>
+    <?php else: ?>
+    <div class="area-chart">
+      <svg viewBox="0 0 <?=$svgw?> 210" xmlns="http://www.w3.org/2000/svg" style="min-width:<?=min(700,$svgw)?>px;">
+        <?php for($g=0;$g<=4;$g++):$y=20+($g*40);?>
+        <line x1="60" y1="<?=$y?>" x2="<?=$svgw-10?>" y2="<?=$y?>" stroke="#E7CBCB" stroke-width="1" stroke-dasharray="4,4"/>
+        <text x="55" y="<?=$y+4?>" text-anchor="end" fill="#99627A" font-size="9"><?=singkat(($maxnilai/4)*(4-$g))?></text>
+        <?php endfor;?>
+        <?php foreach($chartdata as $i=>$d):
+          $x=$startx+$i*($barw+$gap);
+          $barh=$d['nilai']>0?($d['nilai']/$maxnilai)*$chartH:2;
+          $by=180-$barh;
+          $isToday=$d['tgl']===date('Y-m-d');
+        ?>
+        <rect x="<?=$x?>" y="<?=$by?>" width="<?=$barw?>" height="<?=$barh?>" rx="3" fill="<?=$isToday?'#643843':'#99627A'?>">
+          <title><?=$d['label']?> — <?=rp($d['nilai'])?></title>
+        </rect>
+        <text x="<?=$x+$barw/2?>" y="200" text-anchor="middle" fill="<?=$isToday?'#643843':'#99627A'?>"
+              font-size="<?=$n>20?'7':'9'?>" font-weight="<?=$isToday?'700':'400'?>"><?=$d['label']?></text>
+        <?php if($d['nilai']>0&&$barw>=20):?>
+        <text x="<?=$x+$barw/2?>" y="<?=max($by-4,14)?>" text-anchor="middle" fill="#643843" font-size="8" font-weight="600">
+          <?=number_format($d['nilai']/1000,0)?>k
+        </text>
+        <?php endif;?>
+        <?php endforeach;?>
+      </svg>
+    </div>
+    <?php endif; ?>
   </div>
 
   <div class="grid-dua">
 
-    <!-- PRODUK TERLARIS -->
+    <!-- produk terlaris -->
     <div class="kartu">
       <h3><i class="fa-solid fa-fire"></i> Produk Terlaris</h3>
       <?php if (empty($terlaris)): ?>
-      <div class="kosong" style="padding:20px;">
-        <p>Belum ada data produk terjual</p>
-      </div>
+      <div class="kosong" style="padding:20px;"><p>Belum ada data produk terjual</p></div>
       <?php else: ?>
       <?php $medalwarna = ['emas','perak','perunggu']; ?>
       <?php foreach ($terlaris as $i => $t): ?>
       <div class="baris-produk">
         <div class="rangking-produk <?= $medalwarna[$i] ?? '' ?>">#<?= $i+1 ?></div>
         <div style="flex:1;min-width:0;">
-          <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= htmlspecialchars($t['nama_menu']) ?></div>
+          <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+            <?= htmlspecialchars($t['nama_menu']) ?>
+          </div>
           <div style="font-size:11px;color:var(--tekssamar);"><?= rp($t['omset']) ?> omset</div>
         </div>
         <div style="font-size:13px;font-weight:700;color:var(--utama);white-space:nowrap;"><?= $t['terjual'] ?> porsi</div>
@@ -177,10 +274,10 @@ function rp(float $n): string { return 'Rp ' . number_format($n, 0, ',', '.'); }
       <?php endif; ?>
     </div>
 
-    <!-- RINGKASAN INFO -->
+    <!-- ringkasan info -->
     <div class="kartu">
       <h3><i class="fa-solid fa-circle-info"></i> Ringkasan</h3>
-      <div style="font-size:13px;line-height:2;">
+      <div style="font-size:13px;line-height:1.8;">
         <?php
         $barisinfo = [
           'Periode'              => $labelprd,
@@ -192,7 +289,7 @@ function rp(float $n): string { return 'Rp ' . number_format($n, 0, ',', '.'); }
         ];
         foreach ($barisinfo as $k => $v):
         ?>
-        <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--latar);padding:4px 0;">
+        <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--latar);padding:5px 0;">
           <span style="color:var(--tekssamar);"><?= $k ?></span>
           <strong style="<?= $k==='Total Pendapatan'?'color:var(--utama);':'' ?>"><?= $v ?></strong>
         </div>
@@ -202,7 +299,7 @@ function rp(float $n): string { return 'Rp ' . number_format($n, 0, ',', '.'); }
 
   </div>
 
-  <!-- DAFTAR TRANSAKSI -->
+  <!-- daftar transaksi -->
   <?php if (!empty($daftarorder)): ?>
   <div class="kartu">
     <h3><i class="fa-solid fa-list"></i> Detail Transaksi Selesai</h3>
@@ -230,10 +327,7 @@ function rp(float $n): string { return 'Rp ' . number_format($n, 0, ',', '.'); }
         </tbody>
         <tfoot>
           <tr>
-            <td style="font-weight:700;background:var(--latar);">TOTAL</td>
-            <td style="background:var(--latar);"></td>
-            <td class="sembunyimobile" style="background:var(--latar);"></td>
-            <td class="sembunyimobile" style="background:var(--latar);"></td>
+            <td colspan="4" style="font-weight:700;background:var(--latar);">TOTAL</td>
             <td style="font-weight:800;text-align:right;background:var(--latar);color:var(--utama);"><?= rp($totalpendapatan) ?></td>
           </tr>
         </tfoot>
@@ -243,50 +337,5 @@ function rp(float $n): string { return 'Rp ' . number_format($n, 0, ',', '.'); }
   <?php endif; ?>
 
 </main>
-
-<style>
-/* ===== Khusus laporan ===== */
-.headercetak { display: none; }
-.formcustomrange {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.formcustomrange input[type="date"] {
-  padding: 7px 10px;
-  border: 1.5px solid var(--garis);
-  border-radius: 8px;
-  font-size: 13px;
-  color: var(--teks);
-  font-family: inherit;
-  background: var(--putih);
-}
-
-@media (max-width: 600px) {
-  .sembunyimobile { display: none; }
-}
-
-@media print {
-  .takprint { display: none !important; }
-  .headercetak { display: block !important; }
-  .sidebar, .mobile-header, .bottomnav-penjual { display: none !important; }
-  .konten { margin-left: 0 !important; padding: 12px !important; }
-  body { background: white !important; }
-  .kartu { box-shadow: none !important; border: 1px solid #ddd !important; break-inside: avoid; }
-  .ringkasan-laporan { grid-template-columns: repeat(4, 1fr) !important; }
-  .grid-dua { grid-template-columns: 1fr 1fr !important; }
-  table { font-size: 11px !important; }
-  thead th { padding: 6px 8px !important; }
-  tbody td { padding: 5px 8px !important; }
-  .sembunyimobile { display: table-cell !important; }
-  /* A4 / F4 ukuran */
-  @page {
-    size: A4 portrait;
-    margin: 15mm;
-  }
-}
-</style>
-
 </body>
 </html>

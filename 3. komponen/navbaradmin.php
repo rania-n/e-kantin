@@ -13,7 +13,7 @@ $namaadmin = htmlspecialchars($_SESSION['username'] ?? 'Admin');
   <div class="sidebar-logo">
     <div class="namaapp"><i class="fa-solid fa-shield-halved"></i> Admin Panel</div>
     <div class="namaadmin"><?= $namaadmin ?></div>
-    <div class="peranadmin">e-Kantin Sekolah</div>
+    <div class="peranadmin">jajankita</div>
   </div>
 
   <nav class="sidebar-nav">

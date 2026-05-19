@@ -19,7 +19,7 @@ if (!$toko) { header("Location: toko.php"); exit; }
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hapus Toko - Admin eKantin</title>
+<title>Hapus Toko - jajankita</title>
 <link rel="stylesheet" href="../../3. komponen/admin.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>

@@ -56,7 +56,7 @@ function rp(float $n): string { return 'Rp ' . number_format($n, 0, ',', '.'); }
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Detail Pengguna - Admin eKantin</title>
+<title>Detail Pengguna - jajankita</title>
 <link rel="stylesheet" href="../../3. komponen/admin.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>

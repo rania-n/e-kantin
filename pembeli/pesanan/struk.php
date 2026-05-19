@@ -76,15 +76,24 @@ function ikonststatus(string $status): string {
 }
 
 $pathbase = '..';
+$cetak = isset($_GET['cetak']);
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Struk <?= $nomerpesanan ?> - eKantin</title>
+<title>Struk <?= $nomerpesanan ?> - jajankita</title>
 <link rel="stylesheet" href="../../3. komponen/pembeli.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<?php if ($cetak): ?>
+<style>
+  .takprint { display: none !important; }
+  .navbarpembeli { display: none !important; }
+  body { padding-left: 0 !important; padding-bottom: 0 !important; background: white !important; }
+  @page { size: 80mm auto; margin: 2mm 4mm; }
+</style>
+<?php endif; ?>
 </head>
 <body>
 
@@ -124,7 +133,7 @@ $pathbase = '..';
 
     <div class="kepalastruk">
       <div class="ikonstruk"><i class="fa-solid fa-receipt"></i></div>
-      <h2>eKantin &mdash; Struk Digital</h2>
+      <h2>jajankita &mdash; Struk Digital</h2>
       <p>Simpan sebagai bukti pembayaran</p>
     </div>
 
@@ -196,7 +205,7 @@ $pathbase = '..';
 
     <div class="kakistruk">
       <i class="fa-solid fa-heart"></i>
-      <p>Terima kasih telah memesan di eKantin!</p>
+      <p>Terima kasih telah memesan di jajankita!</p>
       <p style="margin-top:4px;font-size:11px;">
         <?= $nomerpesanan ?> &nbsp;|&nbsp; <?= date('d/m/Y H:i', strtotime($pesanan['tanggal_order'])) ?>
       </p>
@@ -206,10 +215,10 @@ $pathbase = '..';
 
   <!-- Aksi -->
   <?php if ($pesanan['status_order'] === 'Selesai'): ?>
-  <div style="display:flex;gap:10px;margin-bottom:12px;" class="takprint">
-    <button onclick="window.print()" class="tombolutama" style="flex:1;">
+  <div class="takprint" style="margin-bottom:10px;">
+    <a href="struk.php?id_order=<?= $idpesanan ?>&cetak=1" target="_blank" class="tombolutama blok">
       <i class="fa-solid fa-print"></i> Cetak Struk
-    </button>
+    </a>
   </div>
   <?php endif; ?>
 

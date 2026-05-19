@@ -39,11 +39,8 @@ $q5 = $conn->prepare("SELECT COUNT(*) FROM tb_menu WHERE id_toko=? AND status='a
 $q5->bind_param("i", $idtoko); $q5->execute();
 $totalmenu = (int)$q5->get_result()->fetch_row()[0]; $q5->close();
 
-// ==============================================================
-// CHART PENDAPATAN — periode bisa dipilih
-// ==============================================================
-$periodehari = (int)($_GET['hari'] ?? 7);
-if (!in_array($periodehari, [7, 14, 30, 90])) $periodehari = 7;
+// chart selalu 7 hari terakhir
+$periodehari = 7;
 
 $chartdata = [];
 for ($i = $periodehari - 1; $i >= 0; $i--) {
@@ -101,6 +98,11 @@ $ulasanterbaru = $qr->get_result()->fetch_all(MYSQLI_ASSOC); $qr->close();
 function rp(float $n): string {
     return 'Rp ' . number_format($n, 0, ',', '.');
 }
+function singkat(float $n): string {
+    if ($n >= 1_000_000_000) { $v=$n/1_000_000_000; return 'Rp '.rtrim(rtrim(number_format($v,1,',',''),'0'),',').' M'; }
+    if ($n >= 1_000_000)     { $v=$n/1_000_000;     return 'Rp '.rtrim(rtrim(number_format($v,1,',',''),'0'),',').' Jt'; }
+    return 'Rp ' . number_format($n, 0, ',', '.');
+}
 function kelasstatus(string $s): string {
     return match($s) {
         'Menunggu' => 'menunggu', 'Diproses' => 'diproses',
@@ -123,7 +125,7 @@ function bintang(float $r): string {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard - eKantin</title>
+<title>Dashboard - jajankita</title>
 <link rel="stylesheet" href="../../3. komponen/penjual.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
@@ -139,25 +141,16 @@ function bintang(float $r): string {
       <h1><i class="fa-solid fa-gauge-high"></i> Dashboard</h1>
       <p>Selamat datang, <?= htmlspecialchars($_SESSION['username']) ?> — <?= date('l, d M Y') ?></p>
     </div>
-    <!-- Toggle buka/tutup toko -->
+    <!-- toggle buka/tutup toko — tanpa js, pakai submit button -->
     <form method="POST" action="prosesindex.php">
       <input type="hidden" name="aksi" value="toggle_status">
-      <div class="toggle-toko">
-        <label class="saklar">
-          <input type="checkbox" onchange="this.form.submit()"
-                 <?= $statustoko === 'buka' ? 'checked' : '' ?>>
-          <span class="slider"></span>
-        </label>
-        <div class="teks-toggle">
-          <div class="status-text"
-               style="color:<?= $statustoko === 'buka' ? 'var(--sukses)' : 'var(--gagal)' ?>;">
-            Toko <?= $statustoko === 'buka' ? 'Buka' : 'Tutup' ?>
-          </div>
-          <div class="info-text">
-            <?= $statustoko === 'buka' ? 'Pembeli bisa memesan' : 'Pembeli tidak bisa memesan' ?>
-          </div>
-        </div>
-      </div>
+      <button type="submit" class="tombol-toggle-toko <?= $statustoko === 'buka' ? 'toko-buka' : 'toko-tutup' ?>">
+        <i class="fa-solid fa-circle-dot"></i>
+        Toko <?= $statustoko === 'buka' ? 'Buka' : 'Tutup' ?>
+        <span style="font-size:11px;font-weight:500;opacity:.8;">
+          — klik untuk <?= $statustoko === 'buka' ? 'tutup' : 'buka' ?>
+        </span>
+      </button>
     </form>
   </div>
 
@@ -195,7 +188,7 @@ function bintang(float $r): string {
     <div class="kartu-stat">
       <div class="ikon-stat"><i class="fa-solid fa-coins"></i></div>
       <div class="isi-stat">
-        <div class="nilai"><?= rp($pendapatanhari) ?></div>
+        <div class="nilai"><?= singkat($pendapatanhari) ?></div>
         <div class="label">Pendapatan Hari Ini</div>
         <div class="tren" style="color:var(--tekssamar);">Dari pesanan selesai</div>
       </div>
@@ -219,19 +212,13 @@ function bintang(float $r): string {
     </div>
   </div>
 
-  <!-- CHART PENDAPATAN — bisa pilih periode -->
+  <!-- chart pendapatan 7 hari terakhir -->
   <div class="kartu">
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
-      <h3 style="margin:0;border:none;padding:0;"><i class="fa-solid fa-chart-bar"></i> Pendapatan <?= $periodehari ?> Hari Terakhir</h3>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;">
-        <?php foreach ([7=>'7 Hari', 14=>'14 Hari', 30=>'30 Hari', 90=>'90 Hari'] as $h => $lab): ?>
-        <a href="index.php?hari=<?= $h ?>"
-           class="chip-filter <?= $periodehari===$h?'aktif':'' ?>"
-           style="font-size:12px;padding:5px 12px;">
-          <?= $lab ?>
-        </a>
-        <?php endforeach; ?>
-      </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <h3 style="margin:0;border:none;padding:0;"><i class="fa-solid fa-chart-bar"></i> Pendapatan 7 Hari Terakhir</h3>
+      <a href="../laporan/laporan.php" style="font-size:12px;color:var(--kedua);font-weight:600;white-space:nowrap;">
+        Lihat Semua Laporan →
+      </a>
     </div>
     <div class="area-chart">
       <?php
