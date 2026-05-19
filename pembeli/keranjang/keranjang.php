@@ -97,12 +97,6 @@ $pathbase = '..';
           </form>
         </div>
 
-        <?php if (!empty($isi['catatan'])): ?>
-        <div style="font-size:11px;color:var(--tekssamar);">
-          <i class="fa-solid fa-note-sticky"></i> <?= htmlspecialchars($isi['catatan']) ?>
-        </div>
-        <?php endif; ?>
-
         <div class="tengahkeranjang">
           <!-- Kontrol qty: pakai form button -->
           <div class="kontrolqty">

@@ -180,14 +180,6 @@ function bintang(float $r): string {
     </div>
   </div>
 
-  <div style="display:flex;gap:10px;flex-wrap:wrap;">
-    <a href="profil.php?tab=edit" class="tombolutama" style="flex:1;">
-      <i class="fa-solid fa-pen"></i> Edit Profil &amp; Toko
-    </a>
-    <a href="profil.php?tab=password" class="tombolringan" style="flex:1;">
-      <i class="fa-solid fa-lock"></i> Ganti Password
-    </a>
-  </div>
   <?php endif; ?>
 
   <!-- ===== TAB: EDIT PROFIL & TOKO ===== -->

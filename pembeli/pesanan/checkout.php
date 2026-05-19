@@ -68,11 +68,6 @@ $pathbase = '..';
           <div style="font-size:12px;color:var(--tekssamar);">
             <?= $item['qty'] ?> x Rp <?= number_format($item['harga'],0,',','.') ?>
           </div>
-          <?php if (!empty($item['catatan'])): ?>
-          <div style="font-size:11px;color:var(--kedua);">
-            <i class="fa-solid fa-note-sticky"></i> <?= htmlspecialchars($item['catatan']) ?>
-          </div>
-          <?php endif; ?>
         </div>
         <div style="font-size:15px;font-weight:800;color:var(--utama);margin-left:12px;">
           Rp <?= number_format($item['harga']*$item['qty'],0,',','.') ?>

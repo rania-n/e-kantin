@@ -110,28 +110,6 @@ $pathbase = '..';
       <input type="hidden" name="tag_terpilih" id="inputtag" value="">
     </div>
 
-    <!-- Rating per menu -->
-    <?php if (count($daftaritem) > 0): ?>
-    <div class="kartu">
-      <h3>Rating per Menu</h3>
-      <?php foreach ($daftaritem as $item): ?>
-      <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--latar);">
-        <div style="flex:1;">
-          <div style="font-size:14px;font-weight:700;"><?= htmlspecialchars($item['nama_menu']) ?></div>
-          <div style="font-size:12px;color:var(--tekssamar);"><?= $item['jumlah'] ?> porsi</div>
-          <div class="bintangkecil" id="bkecil-<?= $item['id_menu'] ?>">
-            <?php for ($i = 1; $i <= 5; $i++): ?>
-            <button type="button" class="tombolbintang" onclick="aturNilaiMenu(<?= $item['id_menu'] ?>, <?= $i ?>)">
-              <i class="fa-solid fa-star"></i>
-            </button>
-            <?php endfor; ?>
-          </div>
-          <input type="hidden" name="nilai_menu[<?= $item['id_menu'] ?>]" id="nilaimenu-<?= $item['id_menu'] ?>" value="0">
-        </div>
-      </div>
-      <?php endforeach; ?>
-    </div>
-    <?php endif; ?>
 
     <button type="submit" class="tombolutama blok" style="padding:14px;font-size:15px;"
             onclick="return validasiRating()">
@@ -157,12 +135,6 @@ function aturNilai(nilai) {
   var btns = document.querySelectorAll('#bintangutama .tombolbintang');
   btns.forEach(function(b, i) { b.classList.toggle('aktif', i < nilai); });
   document.getElementById('keterangannilai').textContent = keterangan[nilai] || '';
-}
-
-function aturNilaiMenu(idMenu, nilai) {
-  document.getElementById('nilaimenu-' + idMenu).value = nilai;
-  var btns = document.querySelectorAll('#bkecil-' + idMenu + ' .tombolbintang');
-  btns.forEach(function(b, i) { b.classList.toggle('aktif', i < nilai); });
 }
 
 function toggleTag(el) {
