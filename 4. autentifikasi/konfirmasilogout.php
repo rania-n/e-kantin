@@ -1,11 +1,11 @@
-<?php
+﻿<?php
 /* ============================================================
    KONFIRMASI KELUAR - Murni PHP + HTML tanpa JavaScript
    ============================================================ */
 $peran = $_POST['peran'] ?? $_GET['peran'] ?? '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'keluar') {
-    // Hanya hapus sesi sesuai peran yang logout — tidak ganggu sesi lain
+    // Hanya hapus sesi sesuai peran yang logout â€” tidak ganggu sesi lain
     $namaSesi = match($peran) {
         'penjual' => 'sesi_penjual',
         'admin'   => 'sesi_admin',
@@ -35,7 +35,7 @@ $kembali = match($peran) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Konfirmasi Keluar - jajankita</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="autentifikasi.css">
+<link rel="stylesheet" href="../3. komponen/autentifikasi.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>

@@ -1,4 +1,4 @@
-﻿{
+{
   "permissions": {
     "allow": [
       "Bash(*)",
@@ -6,7 +6,9 @@
       "Write(*)",
       "Read(*)",
       "Glob(*)",
-      "Grep(*)"
+      "Grep(*)",
+      "PowerShell(Rename-Item *)",
+      "PowerShell(Move-Item *)"
     ]
   }
 }

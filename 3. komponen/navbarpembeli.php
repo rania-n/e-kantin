@@ -55,7 +55,6 @@ if (!empty($_SESSION['id_user'])) {
 $berandaaktif   = $halamansaatini === 'index'                                        ? 'aktif' : '';
 $keranjangaktif = $halamansaatini === 'keranjang'                                    ? 'aktif' : '';
 $pesananaktif   = in_array($halamansaatini, ['pesanan','struk'])                     ? 'aktif' : '';
-$ulasanaktif    = $halamansaatini === 'rating'                                       ? 'aktif' : '';
 $profilaktif    = in_array($halamansaatini, ['profil','editprofil','gantipassword']) ? 'aktif' : '';
 ?>
 
@@ -86,9 +85,7 @@ $profilaktif    = in_array($halamansaatini, ['profil','editprofil','gantipasswor
       <?php endif; ?>
     </a>
 
-    <a href="<?= $pathbase ?>/pesanan/rating.php" class="itemnav <?= $ulasanaktif ?>">
-      <i class="fa-solid fa-star"></i><span>Ulasan</span>
-    </a>
+    <div style="height:1px;background:rgba(255,255,255,.15);margin:6px 4px;"></div>
 
     <a href="<?= $pathbase ?>/profil/profil.php" class="itemnav <?= $profilaktif ?>">
       <i class="fa-solid fa-user"></i><span>Profil</span>

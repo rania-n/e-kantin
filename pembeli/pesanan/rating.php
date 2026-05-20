@@ -54,12 +54,9 @@ $pathbase = '..';
 
 <div class="bungkussempit">
 
-  <div class="headerkembali">
-    <a href="pesanan.php?tab=riwayat" class="tombolkembali"><i class="fa-solid fa-arrow-left"></i></a>
-    <div class="teksheader">
-      <h1>Beri Rating</h1>
-      <p><?= $nomerpesanan ?></p>
-    </div>
+  <div class="judulhalaman">
+    <h1><i class="fa-solid fa-star"></i> Beri Rating</h1>
+    <p><?= $nomerpesanan ?></p>
   </div>
 
   <!-- Info kantin -->
@@ -111,9 +108,14 @@ $pathbase = '..';
       </div>
     </div>
 
-    <button type="submit" class="tombolutama blok" style="padding:14px;font-size:15px;">
-      <i class="fa-solid fa-paper-plane"></i> Kirim Rating
-    </button>
+    <div style="display:flex;gap:10px;">
+      <a href="pesanan.php?tab=riwayat" class="tombolringan" style="padding:10px 14px;font-size:13px;">
+        Batal
+      </a>
+      <button type="submit" class="tombolutama" style="flex:2;padding:14px;font-size:15px;">
+        <i class="fa-solid fa-paper-plane"></i> Kirim Rating
+      </button>
+    </div>
 
   </form>
 

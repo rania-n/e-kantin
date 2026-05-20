@@ -1199,11 +1199,25 @@ tbody tr:hover td { background: var(--latar); }
 /* sembunyimobile: tampil di desktop, sembunyi di mobile */
 .sembunyimobile { display: none; }
 @media (min-width: 769px) {
-  .sembunyimobile { display: initial; }
+  .sembunyimobile { display: revert; }
 }
 /* sembunyi-desktop: sembunyi di desktop, tampil di mobile (dengan display asli elemen) */
 @media (min-width: 769px) {
   .sembunyi-desktop { display: none !important; }
+}
+
+/* banner pengumuman admin ke penjual */
+.notif-pengumuman-penjual {
+  margin-left: var(--sidebarlebar);
+  background: var(--utama);
+  color: rgba(255,255,255,.92);
+  padding: 10px 32px;
+  font-size: 13px; font-weight: 600;
+  display: flex; align-items: center; gap: 8px;
+  border-bottom: 2px solid rgba(255,255,255,.15);
+}
+@media (max-width: 768px) {
+  .notif-pengumuman-penjual { margin-left: 0; padding: 10px 16px; }
 }
 
 /* ==================================================================

@@ -79,14 +79,6 @@ $pathbase = '..';
 
 <div class="bungkussempit">
 
-  <div class="headerkembali">
-    <a href="profil.php" class="tombolkembali"><i class="fa-solid fa-arrow-left"></i></a>
-    <div class="teksheader">
-      <h1>Ganti Password</h1>
-      <p>Ubah kata sandi akunmu</p>
-    </div>
-  </div>
-
   <!-- hero profil -->
   <div class="heroprofil">
     <div class="avatar"><?= $inisial ?></div>
@@ -162,11 +154,16 @@ $pathbase = '..';
           </button>
         </div>
       </div>
-    </div>
 
-    <button type="submit" class="tombolutama blok" style="padding:14px;font-size:15px;">
-      <i class="fa-solid fa-shield-halved"></i> Simpan Password Baru
-    </button>
+      <div style="display:flex;gap:10px;margin-top:4px;">
+        <a href="profil.php" class="tombolringan" style="padding:10px 14px;font-size:13px;">
+          Batal
+        </a>
+        <button type="submit" class="tombolutama" style="flex:2;padding:14px;font-size:15px;">
+          <i class="fa-solid fa-shield-halved"></i> Simpan
+        </button>
+      </div>
+    </div>
   </form>
 
   <div style="height:24px;"></div>

@@ -124,6 +124,17 @@ $inisialpenjual = strtoupper(mb_substr($_SESSION['username'] ?? 'P', 0, 2));
   </a>
 </nav>
 
+<?php
+$_filePengumumanPenjual = __DIR__ . '/tekspengumumanpenjual.txt';
+$teks_pengumuman_penjual = file_exists($_filePengumumanPenjual) ? trim(file_get_contents($_filePengumumanPenjual)) : '';
+if (!empty($teks_pengumuman_penjual)):
+?>
+<div class="notif-pengumuman-penjual takprint">
+  <i class="fa-solid fa-bullhorn"></i>
+  <?= htmlspecialchars($teks_pengumuman_penjual) ?>
+</div>
+<?php endif; ?>
+
 <!-- Modal kontak admin — dibuka via CSS :target (#modal-kontak) -->
 <div class="modaloverlay" id="modal-kontak">
   <a href="#" class="penutup-modal"></a>

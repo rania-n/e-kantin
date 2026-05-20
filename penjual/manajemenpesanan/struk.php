@@ -70,11 +70,10 @@ function ikonStatus(string $s): string {
 <main class="konten">
 <div class="konten-sempit">
 
-  <!-- header kembali -->
-  <div class="headerkembali takprint">
-    <a href="manajemenpesanan.php" class="tombolkembali"><i class="fa-solid fa-arrow-left"></i></a>
-    <div class="teksheader">
-      <h1>Struk Pesanan</h1>
+  <!-- header halaman -->
+  <div class="header-halaman takprint" style="margin-bottom:16px;">
+    <div class="kiri">
+      <h1><i class="fa-solid fa-receipt"></i> Struk Pesanan</h1>
       <p><?= $nomerpesanan ?></p>
     </div>
   </div>
@@ -179,6 +178,9 @@ function ikonStatus(string $s): string {
     <button onclick="window.print()" class="tombolutama blok">
       <i class="fa-solid fa-print"></i> Cetak Struk
     </button>
+    <a href="manajemenpesanan.php" class="tombolringan blok" style="margin-top:10px;justify-content:center;">
+      <i class="fa-solid fa-clipboard-list"></i> Kembali ke Pesanan
+    </a>
   </div>
 
 

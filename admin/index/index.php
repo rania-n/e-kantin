@@ -60,8 +60,11 @@ $qtopmahal = $conn->query("SELECT u.username, COUNT(o.id_order) AS jml_order, CO
 $topbelimahal = $qtopmahal->fetch_all(MYSQLI_ASSOC);
 
 // baca teks pengumuman saat ini
-$_filePengumuman = __DIR__ . '/../../3. komponen/teks_pengumuman.txt';
+$_filePengumuman = __DIR__ . '/../../3. komponen/tekspengumuman.txt';
 $teksPengumumanSaatIni = file_exists($_filePengumuman) ? trim(file_get_contents($_filePengumuman)) : '';
+
+$_filePengumumanPenjual = __DIR__ . '/../../3. komponen/tekspengumumanpenjual.txt';
+$teksPengumumanPenjual = file_exists($_filePengumumanPenjual) ? trim(file_get_contents($_filePengumumanPenjual)) : '';
 
 // flash message
 $flash = null;
@@ -377,20 +380,36 @@ $startx = 70; $chartH = 160;
     </div>
   </div>
 
-  <!-- KOLOM PESAN / PENGUMUMAN -->
-  <div class="kartu">
-    <h3><i class="fa-solid fa-bullhorn"></i> Kirim Pengumuman ke Pembeli</h3>
-    <p style="font-size:12px;color:var(--tekssamar);margin-bottom:12px;">
-      Teks ini akan muncul sebagai banner di halaman beranda pembeli. Kosongkan untuk menonaktifkan.
-    </p>
-    <form method="POST" action="proses_pengumuman.php">
-      <textarea name="teks_pengumuman" rows="3" maxlength="500"
-        style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--garis);border-radius:10px;font-size:13px;resize:vertical;font-family:inherit;"
-        placeholder="Contoh: Kantin tutup hari Jumat karena libur nasional."><?= htmlspecialchars($teksPengumumanSaatIni) ?></textarea>
-      <div style="display:flex;justify-content:flex-end;margin-top:10px;">
-        <button type="submit" class="tombolutama"><i class="fa-solid fa-paper-plane"></i> Kirim Pengumuman</button>
-      </div>
-    </form>
+  <!-- PENGUMUMAN — dua kolom: pembeli & penjual -->
+  <div class="grid-dua">
+    <div class="kartu">
+      <h3><i class="fa-solid fa-bullhorn"></i> Pengumuman ke Pembeli</h3>
+      <p style="font-size:12px;color:var(--tekssamar);margin-bottom:12px;">
+        Muncul sebagai banner di beranda pembeli. Kosongkan untuk menonaktifkan.
+      </p>
+      <form method="POST" action="proses_pengumuman.php">
+        <textarea name="teks_pengumuman" rows="3" maxlength="500"
+          style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--garis);border-radius:10px;font-size:13px;resize:vertical;font-family:inherit;"
+          placeholder="Contoh: Kantin tutup hari Jumat karena libur nasional."><?= htmlspecialchars($teksPengumumanSaatIni) ?></textarea>
+        <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+          <button type="submit" class="tombolutama"><i class="fa-solid fa-paper-plane"></i> Kirim</button>
+        </div>
+      </form>
+    </div>
+    <div class="kartu">
+      <h3><i class="fa-solid fa-store"></i> Pengumuman ke Penjual</h3>
+      <p style="font-size:12px;color:var(--tekssamar);margin-bottom:12px;">
+        Muncul sebagai banner di semua halaman penjual. Kosongkan untuk menonaktifkan.
+      </p>
+      <form method="POST" action="proses_pengumuman_penjual.php">
+        <textarea name="teks_pengumuman_penjual" rows="3" maxlength="500"
+          style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--garis);border-radius:10px;font-size:13px;resize:vertical;font-family:inherit;"
+          placeholder="Contoh: Harap perbarui menu sebelum Senin."><?= htmlspecialchars($teksPengumumanPenjual) ?></textarea>
+        <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+          <button type="submit" class="tombolutama"><i class="fa-solid fa-paper-plane"></i> Kirim</button>
+        </div>
+      </form>
+    </div>
   </div>
 
 </main>

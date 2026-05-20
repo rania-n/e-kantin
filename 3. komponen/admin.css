@@ -131,24 +131,8 @@ ul { list-style: none; }
    ================================================================== */
 .grid-stat {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 14px; margin-bottom: 20px;
-}
-/* medium desktop: 2+2 agar tidak mepet dengan sidebar */
-@media (max-width: 1000px) {
-  .grid-stat { grid-template-columns: repeat(2, 1fr); }
-}
-/* cegah orphan: item ganjil terakhir diposisikan tengah di desktop */
-@media (min-width: 1001px) {
-  .grid-stat > .kartu-stat:last-child:nth-child(4n+1):not(:first-child) {
-    grid-column: 2 / 4;
-  }
-}
-/* cegah orphan di medium (2 kolom): item sendirian jadi full width */
-@media (min-width: 769px) and (max-width: 1000px) {
-  .grid-stat > .kartu-stat:last-child:nth-child(2n+1):not(:first-child) {
-    grid-column: 1 / -1;
-  }
 }
 .kartu-stat {
   background: var(--putih); border-radius: 14px; padding: 16px 18px;
@@ -165,8 +149,8 @@ ul { list-style: none; }
   flex: 1; min-width: 0; overflow: hidden;
 }
 .kartu-stat .isi-stat .nilai {
-  font-size: 20px; font-weight: 800; color: var(--utama); line-height: 1.2;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-size: clamp(14px, 1.5vw, 19px); font-weight: 800; color: var(--utama); line-height: 1.3;
+  word-break: break-word; overflow-wrap: anywhere;
 }
 .kartu-stat .isi-stat .label {
   font-size: 11px; color: var(--tekssamar); margin-top: 2px;

@@ -109,12 +109,9 @@ $cetak = isset($_GET['cetak']);
     <p>Penjual sedang menyiapkan pesananmu</p>
   </div>
   <?php else: ?>
-  <div class="headerkembali takprint">
-    <a href="pesanan.php" class="tombolkembali"><i class="fa-solid fa-arrow-left"></i></a>
-    <div class="teksheader">
-      <h1>Struk Pesanan</h1>
-      <p><?= $nomerpesanan ?></p>
-    </div>
+  <div class="judulhalaman takprint">
+    <h1><i class="fa-solid fa-receipt"></i> Struk Pesanan</h1>
+    <p><?= $nomerpesanan ?></p>
   </div>
   <?php endif; ?>
 

@@ -1,7 +1,7 @@
 <?php
 /*
    proses simpan pengumuman — hanya admin yang bisa akses.
-   menyimpan teks ke 3. komponen/teks_pengumuman.txt.
+   menyimpan teks ke 3. komponen/tekspengumuman.txt.
 */
 include '../../1. koneksi/koneksi.php';
 include '../../3. komponen/guardadmin.php';
@@ -18,7 +18,7 @@ if (mb_strlen($teks) > 500) {
     $teks = mb_substr($teks, 0, 500);
 }
 
-$file = __DIR__ . '/../../3. komponen/teks_pengumuman.txt';
+$file = __DIR__ . '/../../3. komponen/tekspengumuman.txt';
 file_put_contents($file, $teks);
 
 $_SESSION['flash_admin'] = [

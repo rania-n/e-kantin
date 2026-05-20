@@ -79,14 +79,6 @@ $pathbase = '..';
 
 <div class="bungkussempit">
 
-  <div class="headerkembali">
-    <a href="profil.php" class="tombolkembali"><i class="fa-solid fa-arrow-left"></i></a>
-    <div class="teksheader">
-      <h1>Edit Profil</h1>
-      <p>Perbarui informasi akunmu</p>
-    </div>
-  </div>
-
   <!-- hero profil -->
   <div class="heroprofil">
     <div class="avatar"><?= $inisial ?></div>
@@ -145,11 +137,16 @@ $pathbase = '..';
         <label>Member Sejak</label>
         <input type="text" value="<?= !empty($user['created']) ? date('d M Y', strtotime($user['created'])) : '-' ?>" disabled>
       </div>
-    </div>
 
-    <button type="submit" class="tombolutama blok" style="padding:14px;font-size:15px;">
-      <i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan
-    </button>
+      <div style="display:flex;gap:10px;margin-top:4px;">
+        <a href="profil.php" class="tombolringan" style="padding:10px 14px;font-size:13px;">
+          Batal
+        </a>
+        <button type="submit" class="tombolutama" style="flex:2;padding:14px;font-size:15px;">
+          <i class="fa-solid fa-floppy-disk"></i> Simpan
+        </button>
+      </div>
+    </div>
   </form>
 
   <div style="height:24px;"></div>

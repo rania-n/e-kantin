@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header("Location: toko.php"); exit;
 $id = (int)($_POST['id_toko'] ?? 0);
 if (!$id) { flash('gagal','Data tidak valid.'); redirect('toko.php'); }
 
-$upd = $conn->prepare("UPDATE tb_toko SET deleted=1 WHERE id_toko=? AND deleted=0");
+$upd = $conn->prepare("UPDATE tb_toko SET deleted=1, status_toko='tutup' WHERE id_toko=? AND deleted=0");
 $upd->bind_param("i", $id); $upd->execute(); $upd->close();
 
 flash('sukses','Toko berhasil dihapus.');

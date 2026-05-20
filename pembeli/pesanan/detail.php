@@ -34,10 +34,14 @@ $pathbase = '..';
 
 <div class="bungkus" style="padding-bottom:0;">
 
-  <a href="../index/index.php" class="tombolkembali" style="display:inline-flex;align-items:center;gap:22px;color:var(--utama);font-weight:600;font-size:14px;padding:10px 0;margin-bottom:10px;">
-    <i class="fa-solid fa-arrow-left" style="margin-left:82px;"></i>Kembali
-  </a>
-  
+  <div style="margin-bottom:16px;">
+    <h1 style="font-size:20px;font-weight:800;color:var(--utama);display:flex;align-items:center;gap:8px;">
+      <i class="fa-solid fa-bowl-food"></i> Detail Menu
+    </h1>
+    <p style="font-size:13px;color:var(--tekssamar);margin-top:2px;">
+      <i class="fa-solid fa-store"></i> <?= htmlspecialchars($menu['nama_toko'] ?? '') ?>
+    </p>
+  </div>
 
   <!-- Gambar -->
   <div class="gambarbesar">
@@ -95,16 +99,23 @@ $pathbase = '..';
       </div>
     </div>
 
-    <button type="submit" class="tombolutama blok" style="margin-top:8px;padding:14px;">
-      <i class="fa-solid fa-cart-plus"></i>
-      Tambah ke Keranjang &mdash; Rp <?= number_format($menu['harga'],0,',','.') ?>
-    </button>
+    <div style="display:flex;gap:10px;margin-top:8px;">
+      <a href="../index/index.php" class="tombolringan" style="padding:10px 14px;font-size:13px;">
+        Batal
+      </a>
+      <button type="submit" class="tombolutama" style="flex:2;padding:14px;">
+        <i class="fa-solid fa-cart-plus"></i> Tambah ke Keranjang
+      </button>
+    </div>
   </form>
 
   <?php else: ?>
   <div class="peringatan peringatangagal">
     <i class="fa-solid fa-circle-xmark"></i> Menu ini sedang tidak tersedia
   </div>
+  <a href="../index/index.php" class="tombolringan blok" style="margin-top:12px;">
+    Kembali ke Menu
+  </a>
   <?php endif; ?>
 
   <div class="ruangbawah"></div>

@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Daftar Akun - jajankita</title>
-<link rel="stylesheet" href="autentifikasi.css">
+<link rel="stylesheet" href="../3. komponen/autentifikasi.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
@@ -40,7 +40,7 @@ $email    = $_GET['email']    ?? '';
            value="<?= htmlspecialchars($username) ?>"
            placeholder="Buat username unikmu"
            minlength="6" maxlength="50" required>
-    <div class="keterangan">6–50 karakter</div>
+    <div class="keterangan">6â€“50 karakter</div>
   </div>
 
   <div class="grup-input">
@@ -61,7 +61,7 @@ $email    = $_GET['email']    ?? '';
         <i class="fa-solid fa-eye" id="ikon-eye-pass"></i>
       </button>
     </div>
-    <div class="keterangan">8–100 karakter</div>
+    <div class="keterangan">8â€“100 karakter</div>
   </div>
 
   <button type="submit"><i class="fa-solid fa-user-plus"></i> Daftar Sekarang</button>

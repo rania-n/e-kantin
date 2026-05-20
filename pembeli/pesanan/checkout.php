@@ -45,14 +45,13 @@ $pathbase = '..';
 
 <div class="bungkus" style="padding-bottom:30px;">
 
-  <div class="headerkembali">
-    <a href="../keranjang/keranjang.php" class="tombolkembali">
-      <i class="fa-solid fa-arrow-left"></i>
-    </a>
-    <div class="teksheader">
-      <h1>Konfirmasi Pesanan</h1>
-      <p><i class="fa-solid fa-store"></i> <?= htmlspecialchars($namatoko) ?></p>
-    </div>
+  <div style="margin-bottom:18px;">
+    <h1 style="font-size:20px;font-weight:800;color:var(--utama);display:flex;align-items:center;gap:8px;">
+      <i class="fa-solid fa-bag-shopping"></i> Konfirmasi Pesanan
+    </h1>
+    <p style="font-size:13px;color:var(--tekssamar);margin-top:2px;">
+      <i class="fa-solid fa-store"></i> <?= htmlspecialchars($namatoko) ?>
+    </p>
   </div>
 
   <form method="POST" action="prosespesanan.php">
@@ -99,28 +98,33 @@ $pathbase = '..';
       </label>
     </div>
 
-    <!-- Ringkasan harga -->
+    <!-- Ringkasan harga + tombol aksi dalam satu kartu -->
     <div class="judulbagian"><i class="fa-solid fa-receipt"></i> Ringkasan Pembayaran</div>
-    <div class="ringkasan" style="margin-bottom:20px;">
-      <div class="barisringkasan">
-        <span>Subtotal (<?= count($daftaritem) ?> item)</span>
-        <b>Rp <?= number_format($subtotal,0,',','.') ?></b>
+    <div class="kartu">
+      <div class="ringkasan" style="margin-bottom:16px;">
+        <div class="barisringkasan">
+          <span>Subtotal (<?= count($daftaritem) ?> item)</span>
+          <b>Rp <?= number_format($subtotal,0,',','.') ?></b>
+        </div>
+        <div class="barisringkasan">
+          <span>Biaya Layanan</span>
+          <b>Rp <?= number_format($biayalayanan,0,',','.') ?></b>
+        </div>
+        <div class="barisringkasan total">
+          <span>Total Bayar</span>
+          <b>Rp <?= number_format($totalbayar,0,',','.') ?></b>
+        </div>
       </div>
-      <div class="barisringkasan">
-        <span>Biaya Layanan</span>
-        <b>Rp <?= number_format($biayalayanan,0,',','.') ?></b>
-      </div>
-      <div class="barisringkasan total">
-        <span>Total Bayar</span>
-        <b>Rp <?= number_format($totalbayar,0,',','.') ?></b>
+      <div style="display:flex;gap:10px;">
+        <a href="../keranjang/keranjang.php" class="tombolringan" style="padding:10px 14px;font-size:13px;">
+          Batal
+        </a>
+        <button type="submit" class="tombolutama" style="flex:2;padding:14px;font-size:15px;">
+          <i class="fa-solid fa-bag-shopping"></i>
+          Pesan &mdash; Rp <?= number_format($totalbayar,0,',','.') ?>
+        </button>
       </div>
     </div>
-
-    <!-- Tombol pesan -->
-    <button type="submit" class="tombolutama blok" style="padding:14px;font-size:15px;">
-      <i class="fa-solid fa-bag-shopping"></i>
-      Pesan &mdash; Rp <?= number_format($totalbayar,0,',','.') ?>
-    </button>
 
   </form>
 
