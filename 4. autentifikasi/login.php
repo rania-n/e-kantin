@@ -55,6 +55,9 @@ $usernameemail = $_GET['usernameemail'] ?? '';
       <input type="password" id="pass" name="password"
              placeholder="Masukkan password"
              maxlength="100" required>
+      <button type="button" class="tombol-lihat-pass" id="btn-eye-pass" title="Lihat password">
+        <i class="fa-solid fa-eye" id="ikon-eye-pass"></i>
+      </button>
     </div>
   </div>
 
@@ -71,5 +74,16 @@ $usernameemail = $_GET['usernameemail'] ?? '';
 </div>
 </form>
 
+<script>
+(function(){
+  var btn=document.getElementById('btn-eye-pass');
+  if(!btn) return;
+  btn.addEventListener('click',function(){
+    var inp=document.getElementById('pass'),ic=document.getElementById('ikon-eye-pass');
+    inp.type=inp.type==='password'?'text':'password';
+    ic.className='fa-solid fa-'+(inp.type==='password'?'eye':'eye-slash');
+  });
+})();
+</script>
 </body>
 </html>

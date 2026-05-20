@@ -935,15 +935,18 @@ ul { list-style: none; }
   padding: 22px 18px; border-radius: 14px;
   text-align: center; margin-bottom: 16px;
 }
+/* foto/inisial profil — kotak seperti penjual dan admin */
 .avatar {
-  width: 72px; height: 72px; border-radius: 50%;
+  width: 80px; height: 80px; border-radius: 14px;
   background: rgba(255,255,255,.2);
   color: var(--putihbg);
   display: flex; align-items: center; justify-content: center;
   font-size: 26px; font-weight: 800;
   margin: 0 auto 10px;
   border: 3px solid rgba(255,255,255,.3);
+  overflow: hidden;
 }
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
 .heroprofil .namapengguna { font-size: 18px; font-weight: 700; margin-bottom: 2px; }
 .heroprofil .emailpengguna { font-size: 12px; opacity: .8; }
 .heroprofil .labelperan {
@@ -953,18 +956,19 @@ ul { list-style: none; }
   border: 1px dashed rgba(255,255,255,.35);
 }
 
-/* Grid statistik profil */
+/* grid statistik profil */
 .gridstat {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
   gap: 10px; margin-bottom: 16px;
 }
+/* kotak stat — warna gelap selaras dengan hero profil di atasnya */
 .kotakstat {
-  background: var(--putih); border-radius: 12px;
+  background: var(--utama); border-radius: 12px;
   padding: 12px 8px; text-align: center;
-  border: 1px solid var(--garis); box-shadow: var(--bayang);
+  border: 1px solid rgba(255,255,255,.1);
 }
-.kotakstat .angkastat { font-size: 18px; font-weight: 800; color: var(--utama); }
-.kotakstat .labelstat { font-size: 10px; color: var(--tekssamar); margin-top: 2px; }
+.kotakstat .angkastat { font-size: 18px; font-weight: 800; color: var(--putihbg); }
+.kotakstat .labelstat { font-size: 10px; color: rgba(255,255,255,.7); margin-top: 2px; }
 
 /* Item pengaturan (menu di profil) */
 .itempengaturan {

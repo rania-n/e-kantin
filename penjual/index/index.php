@@ -39,20 +39,23 @@ $q5 = $conn->prepare("SELECT COUNT(*) FROM tb_menu WHERE id_toko=? AND status='a
 $q5->bind_param("i", $idtoko); $q5->execute();
 $totalmenu = (int)$q5->get_result()->fetch_row()[0]; $q5->close();
 
-// chart selalu 7 hari terakhir
+// chart selalu 7 hari terakhir — satu query group by, nama hari indonesia
 $periodehari = 7;
-
+function namahari(string $tgl): string {
+    $map = ['Sun'=>'Min','Mon'=>'Sen','Tue'=>'Sel','Wed'=>'Rab','Thu'=>'Kam','Fri'=>'Jum','Sat'=>'Sab'];
+    return $map[date('D', strtotime($tgl))] ?? date('D', strtotime($tgl));
+}
+$tglchart7dari   = date('Y-m-d', strtotime('-6 days'));
+$tglchart7sampai = date('Y-m-d');
+$qchart = $conn->prepare("SELECT DATE(tanggal_order) AS tgl, COALESCE(SUM(total_harga),0) AS nilai FROM tb_order WHERE id_toko=? AND DATE(tanggal_order) BETWEEN ? AND ? AND status_order='Selesai' AND deleted=0 GROUP BY DATE(tanggal_order)");
+$qchart->bind_param("iss", $idtoko, $tglchart7dari, $tglchart7sampai); $qchart->execute();
+$rawchart = []; $resc = $qchart->get_result();
+while ($row = $resc->fetch_assoc()) $rawchart[$row['tgl']] = (float)$row['nilai'];
+$qchart->close();
 $chartdata = [];
 for ($i = $periodehari - 1; $i >= 0; $i--) {
     $tgl = date('Y-m-d', strtotime("-$i days"));
-    $qc  = $conn->prepare("SELECT COALESCE(SUM(total_harga),0) FROM tb_order WHERE id_toko=? AND DATE(tanggal_order)=? AND status_order='Selesai' AND deleted=0");
-    $qc->bind_param("is", $idtoko, $tgl);
-    $qc->execute();
-    $nilai = (float)$qc->get_result()->fetch_row()[0];
-    $qc->close();
-    // Label singkat: untuk 7/14 hari pakai nama hari, untuk 30/90 pakai tanggal
-    $label = ($periodehari <= 14) ? date('D', strtotime($tgl)) : date('d/m', strtotime($tgl));
-    $chartdata[] = ['tgl' => $tgl, 'label' => $label, 'nilai' => $nilai];
+    $chartdata[] = ['tgl'=>$tgl,'label'=>namahari($tgl),'nilai'=>$rawchart[$tgl]??0.0];
 }
 $maxnilai = max(array_column($chartdata, 'nilai')) ?: 1;
 
@@ -81,6 +84,13 @@ $qtl = $conn->prepare("SELECT m.nama_menu, SUM(d.jumlah) AS terjual, SUM(d.subto
                         ORDER BY terjual DESC LIMIT 5");
 $qtl->bind_param("i", $idtoko); $qtl->execute();
 $terlaris = $qtl->get_result()->fetch_all(MYSQLI_ASSOC); $qtl->close();
+
+// ==============================================================
+// PELANGGAN SETIA — pengeluaran terbesar di toko ini
+// ==============================================================
+$qsetia = $conn->prepare("SELECT u.username, COUNT(o.id_order) AS jml_order, COALESCE(SUM(o.total_harga),0) AS total_belanja FROM tb_order o JOIN tb_user u ON o.id_user=u.id_user WHERE o.id_toko=? AND o.status_order='Selesai' AND o.deleted=0 GROUP BY o.id_user, u.username ORDER BY total_belanja DESC LIMIT 5");
+$qsetia->bind_param("i", $idtoko); $qsetia->execute();
+$pelanggansetia = $qsetia->get_result()->fetch_all(MYSQLI_ASSOC); $qsetia->close();
 
 // ==============================================================
 // RATING & ULASAN TERBARU (5 terakhir)
@@ -318,6 +328,26 @@ function bintang(float $r): string {
           <div style="font-size:11px;color:var(--tekssamar);"><?= rp($t['omset']) ?> total omset</div>
         </div>
         <div style="font-size:13px;font-weight:700;color:var(--utama);"><?= $t['terjual'] ?> terjual</div>
+      </div>
+      <?php endforeach; ?>
+      <?php endif; ?>
+    </div>
+
+    <!-- PELANGGAN SETIA -->
+    <div class="kartu">
+      <h3><i class="fa-solid fa-heart"></i> Pelanggan Setia</h3>
+      <?php if (empty($pelanggansetia)): ?>
+      <div class="kosong" style="padding:20px;"><p>Belum ada data pelanggan</p></div>
+      <?php else: ?>
+      <?php $medal = ['emas','perak','perunggu']; ?>
+      <?php foreach ($pelanggansetia as $i => $p): ?>
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--latar);">
+        <div class="rangking-produk <?= $medal[$i]??'' ?>">#<?= $i+1 ?></div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= htmlspecialchars($p['username']) ?></div>
+          <div style="font-size:11px;color:var(--tekssamar);"><?= $p['jml_order'] ?> pesanan</div>
+        </div>
+        <div style="font-size:13px;font-weight:700;color:var(--utama);white-space:nowrap;"><?= singkat($p['total_belanja']) ?></div>
       </div>
       <?php endforeach; ?>
       <?php endif; ?>

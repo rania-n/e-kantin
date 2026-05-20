@@ -34,18 +34,38 @@ $orderhari = (int)$qhari->fetch_row()[0];
 $quserbaru = $conn->query("SELECT COUNT(*) FROM tb_user WHERE DATE(created)=CURDATE() AND deleted=0");
 $userbaru = (int)$quserbaru->fetch_row()[0];
 
-// ===== CHART N HARI =====
+// ===== CHART N HARI — satu query group by, nama hari indonesia =====
+function namahari(string $tgl): string {
+    $map = ['Sun'=>'Min','Mon'=>'Sen','Tue'=>'Sel','Wed'=>'Rab','Thu'=>'Kam','Fri'=>'Jum','Sat'=>'Sab'];
+    return $map[date('D', strtotime($tgl))] ?? date('D', strtotime($tgl));
+}
+$tgl7dari   = date('Y-m-d', strtotime('-6 days'));
+$tgl7sampai = date('Y-m-d');
+$qchart = $conn->prepare("SELECT DATE(tanggal_order) AS tgl, COALESCE(SUM(total_harga),0) AS nilai FROM tb_order WHERE DATE(tanggal_order) BETWEEN ? AND ? AND status_order='Selesai' AND deleted=0 GROUP BY DATE(tanggal_order)");
+$qchart->bind_param("ss", $tgl7dari, $tgl7sampai); $qchart->execute();
+$rawchart = []; $resc = $qchart->get_result();
+while ($row = $resc->fetch_assoc()) $rawchart[$row['tgl']] = (float)$row['nilai'];
+$qchart->close();
 $chartdata = [];
 for ($i = $hari - 1; $i >= 0; $i--) {
     $tgl = date('Y-m-d', strtotime("-$i days"));
-    $qc  = $conn->prepare("SELECT COALESCE(SUM(total_harga),0) FROM tb_order WHERE DATE(tanggal_order)=? AND status_order='Selesai' AND deleted=0");
-    $qc->bind_param("s", $tgl); $qc->execute();
-    $nilai = (float)$qc->get_result()->fetch_row()[0]; $qc->close();
-    // Label: 7 hari → nama hari, 14/30 hari → tanggal singkat
-    $label = $hari === 7 ? date('D', strtotime($tgl)) : date('d/m', strtotime($tgl));
-    $chartdata[] = ['tgl' => $tgl, 'label' => $label, 'nilai' => $nilai];
+    $chartdata[] = ['tgl'=>$tgl,'label'=>namahari($tgl),'nilai'=>$rawchart[$tgl]??0.0];
 }
 $maxnilai = max(array_column($chartdata, 'nilai')) ?: 1;
+
+// ===== TOP PELANGGAN =====
+$qtopbeli = $conn->query("SELECT u.username, COUNT(o.id_order) AS jml_order, COALESCE(SUM(o.total_harga),0) AS total_belanja FROM tb_order o JOIN tb_user u ON o.id_user=u.id_user WHERE o.deleted=0 AND o.status_order='Selesai' GROUP BY o.id_user, u.username ORDER BY jml_order DESC LIMIT 5");
+$topbelibanyak = $qtopbeli->fetch_all(MYSQLI_ASSOC);
+$qtopmahal = $conn->query("SELECT u.username, COUNT(o.id_order) AS jml_order, COALESCE(SUM(o.total_harga),0) AS total_belanja FROM tb_order o JOIN tb_user u ON o.id_user=u.id_user WHERE o.deleted=0 AND o.status_order='Selesai' GROUP BY o.id_user, u.username ORDER BY total_belanja DESC LIMIT 5");
+$topbelimahal = $qtopmahal->fetch_all(MYSQLI_ASSOC);
+
+// baca teks pengumuman saat ini
+$_filePengumuman = __DIR__ . '/../../3. komponen/teks_pengumuman.txt';
+$teksPengumumanSaatIni = file_exists($_filePengumuman) ? trim(file_get_contents($_filePengumuman)) : '';
+
+// flash message
+$flash = null;
+if (!empty($_SESSION['flash_admin'])) { $flash = $_SESSION['flash_admin']; unset($_SESSION['flash_admin']); }
 
 // ===== TOP 5 PRODUK =====
 $qtl = $conn->query("SELECT m.nama_menu, t.nama_toko, SUM(d.jumlah) AS terjual, SUM(d.subtotal) AS omset
@@ -61,7 +81,8 @@ $terlaris = $qtl->fetch_all(MYSQLI_ASSOC);
 // ===== PERFORMA TOKO — subquery agar tidak ada row multiplication =====
 $qtoko2 = $conn->query("SELECT t.id_toko, t.nama_toko, t.status_toko,
                                 (SELECT COUNT(*) FROM tb_order o WHERE o.id_toko=t.id_toko AND o.deleted=0) AS total_order,
-                                (SELECT COALESCE(SUM(o2.total_harga),0) FROM tb_order o2 WHERE o2.id_toko=t.id_toko AND o2.status_order='Selesai' AND o2.deleted=0) AS omset,
+                                (SELECT COUNT(*) FROM tb_order o WHERE o.id_toko=t.id_toko AND o.status_order='Dibatalkan' AND o.deleted=0) AS jml_dibatalkan,
+                                (SELECT COALESCE(SUM(o2.total_harga),0) FROM tb_order o2 WHERE o2.id_toko=t.id_toko AND o2.status_order IN ('Selesai','Dibatalkan') AND o2.deleted=0) AS omset,
                                 (SELECT COALESCE(ROUND(AVG(r.rating_toko),1),0) FROM tb_rating r WHERE r.id_toko=t.id_toko AND r.deleted=0) AS rating
                          FROM tb_toko t
                          WHERE t.deleted=0
@@ -107,6 +128,13 @@ $startx = 70; $chartH = 160;
 <?php include '../../3. komponen/navbaradmin.php'; ?>
 
 <main class="konten">
+
+  <?php if ($flash): ?>
+  <div class="peringatan <?= $flash['jenis'] === 'sukses' ? 'peringatansukses' : 'peringatangagal' ?>" style="margin-bottom:16px;">
+    <i class="fa-solid fa-<?= $flash['jenis'] === 'sukses' ? 'circle-check' : 'circle-xmark' ?>"></i>
+    <?= htmlspecialchars($flash['pesan']) ?>
+  </div>
+  <?php endif; ?>
 
   <div class="header-halaman">
     <div class="kiri">
@@ -260,6 +288,45 @@ $startx = 70; $chartH = 160;
 
   </div>
 
+  <!-- TOP PELANGGAN -->
+  <div class="grid-dua">
+    <div class="kartu">
+      <h3><i class="fa-solid fa-cart-shopping"></i> Pelanggan Terbanyak Pesan</h3>
+      <?php if (empty($topbelibanyak)): ?>
+      <div class="kosong" style="padding:20px;"><p>Belum ada data</p></div>
+      <?php else: ?>
+      <?php $medal = ['emas','perak','perunggu']; ?>
+      <?php foreach ($topbelibanyak as $i => $p): ?>
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--latar);">
+        <div class="rangking-produk <?= $medal[$i]??'' ?>">#<?= $i+1 ?></div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= htmlspecialchars($p['username']) ?></div>
+          <div style="font-size:11px;color:var(--tekssamar);"><?= rp($p['total_belanja']) ?></div>
+        </div>
+        <div style="font-size:13px;font-weight:700;color:var(--utama);white-space:nowrap;"><?= $p['jml_order'] ?>× pesan</div>
+      </div>
+      <?php endforeach; ?>
+      <?php endif; ?>
+    </div>
+    <div class="kartu">
+      <h3><i class="fa-solid fa-wallet"></i> Pelanggan Pengeluaran Terbesar</h3>
+      <?php if (empty($topbelimahal)): ?>
+      <div class="kosong" style="padding:20px;"><p>Belum ada data</p></div>
+      <?php else: ?>
+      <?php foreach ($topbelimahal as $i => $p): ?>
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--latar);">
+        <div class="rangking-produk <?= $medal[$i]??'' ?>">#<?= $i+1 ?></div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= htmlspecialchars($p['username']) ?></div>
+          <div style="font-size:11px;color:var(--tekssamar);"><?= $p['jml_order'] ?> pesanan</div>
+        </div>
+        <div style="font-size:13px;font-weight:700;color:var(--utama);white-space:nowrap;"><?= singkat($p['total_belanja']) ?></div>
+      </div>
+      <?php endforeach; ?>
+      <?php endif; ?>
+    </div>
+  </div>
+
   <!-- PERFORMA TOKO -->
   <div class="kartu">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
@@ -273,34 +340,34 @@ $startx = 70; $chartH = 160;
         <thead>
           <tr>
             <th>Nama Toko</th>
-            <th>Status</th>
+            <th class="tengah">Status</th>
             <th class="tengah">Total Pesanan</th>
+            <th class="tengah">Dibatalkan</th>
             <th class="tengah">Rating</th>
-            <th class="kanan">Pendapatan Selesai</th>
+            <th class="kanan">Total Omset</th>
             <th class="tengah">Aksi</th>
           </tr>
         </thead>
         <tbody>
           <?php if (empty($perftoko)): ?>
-          <tr><td colspan="6"><div class="kosong" style="padding:20px;"><p>Belum ada toko</p></div></td></tr>
+          <tr><td colspan="7"><div class="kosong" style="padding:20px;"><p>Belum ada toko</p></div></td></tr>
           <?php else: ?>
           <?php foreach ($perftoko as $t): ?>
           <tr>
             <td><strong><?= htmlspecialchars($t['nama_toko']) ?></strong></td>
-            <td>
+            <td class="tengah">
               <span class="badge <?= $t['status_toko'] === 'buka' ? 'buka' : 'tutup' ?>">
                 <?= $t['status_toko'] === 'buka' ? 'Buka' : 'Tutup' ?>
               </span>
             </td>
             <td class="tengah"><?= $t['total_order'] ?></td>
+            <td class="tengah" style="color:var(--gagal);"><?= (int)$t['jml_dibatalkan'] ?></td>
             <td class="tengah"><?= $t['rating'] > 0 ? $t['rating'] . ' ★' : '—' ?></td>
-            <td class="kanan" style="font-weight:700;color:var(--utama);"><?= rp($t['omset']) ?></td>
+            <td class="kanan" style="font-weight:700;color:var(--sukses);"><?= rp($t['omset']) ?></td>
             <td class="tengah">
-              <div class="aksi-grup" style="justify-content:center;">
-                <a href="../manajementoko/viewtoko.php?id=<?= $t['id_toko'] ?>" class="tombol-aksi" title="Lihat">
-                  <i class="fa-solid fa-eye"></i>
-                </a>
-              </div>
+              <a href="../manajementoko/viewtoko.php?id=<?= $t['id_toko'] ?>" class="tombol-aksi" title="Lihat">
+                <i class="fa-solid fa-eye"></i>
+              </a>
             </td>
           </tr>
           <?php endforeach; ?>
@@ -308,6 +375,22 @@ $startx = 70; $chartH = 160;
         </tbody>
       </table>
     </div>
+  </div>
+
+  <!-- KOLOM PESAN / PENGUMUMAN -->
+  <div class="kartu">
+    <h3><i class="fa-solid fa-bullhorn"></i> Kirim Pengumuman ke Pembeli</h3>
+    <p style="font-size:12px;color:var(--tekssamar);margin-bottom:12px;">
+      Teks ini akan muncul sebagai banner di halaman beranda pembeli. Kosongkan untuk menonaktifkan.
+    </p>
+    <form method="POST" action="proses_pengumuman.php">
+      <textarea name="teks_pengumuman" rows="3" maxlength="500"
+        style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--garis);border-radius:10px;font-size:13px;resize:vertical;font-family:inherit;"
+        placeholder="Contoh: Kantin tutup hari Jumat karena libur nasional."><?= htmlspecialchars($teksPengumumanSaatIni) ?></textarea>
+      <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+        <button type="submit" class="tombolutama"><i class="fa-solid fa-paper-plane"></i> Kirim Pengumuman</button>
+      </div>
+    </form>
   </div>
 
 </main>

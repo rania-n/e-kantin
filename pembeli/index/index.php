@@ -15,7 +15,7 @@ $cari     = isset($_GET['cari'])     ? $conn->real_escape_string($_GET['cari']) 
 $idtoko   = isset($_GET['toko'])     ? (int)$_GET['toko']                           : 0;
 
 // Daftar toko yang sedang BUKA saja
-$hasiltoko  = $conn->query("SELECT t.id_toko, t.nama_toko FROM tb_toko t WHERE t.deleted=0 AND t.status_toko='buka' ORDER BY t.id_toko");
+$hasiltoko  = $conn->query("SELECT t.id_toko, t.nama_toko, t.foto_toko FROM tb_toko t WHERE t.deleted=0 AND t.status_toko='buka' ORDER BY t.id_toko");
 $daftartoko = $hasiltoko->fetch_all(MYSQLI_ASSOC);
 
 // Cek apakah toko yang dipilih sedang tutup
@@ -129,12 +129,21 @@ $pathbase = '..';
     foreach ($daftartoko as $toko):
       $inisialkantin = strtoupper(mb_substr($toko['nama_toko'], 0, 2));
       $warnakini = $warnalogo[$iw % count($warnalogo)];
+      $fototoko  = $toko['foto_toko'] ?? '';
       $iw++;
     ?>
     <a href="index.php?toko=<?= $toko['id_toko'] ?>" class="itemkantin <?= $idtoko===(int)$toko['id_toko']?'aktif':'' ?>">
-      <div class="ikon" style="background:var(--<?= $warnakini ?>); color:var(--putihbg); font-size:14px; font-weight:800;">
+      <?php if ($fototoko && file_exists("../../2. aset/profil/" . $fototoko)): ?>
+      <div class="ikon" style="overflow:hidden;padding:0;">
+        <img src="../../2. aset/profil/<?= htmlspecialchars($fototoko) ?>"
+             alt="<?= htmlspecialchars($toko['nama_toko']) ?>"
+             style="width:100%;height:100%;object-fit:cover;">
+      </div>
+      <?php else: ?>
+      <div class="ikon" style="background:var(--<?= $warnakini ?>);color:var(--putihbg);font-size:14px;font-weight:800;">
         <?= $inisialkantin ?>
       </div>
+      <?php endif; ?>
       <span class="namakan"><?= htmlspecialchars($toko['nama_toko']) ?></span>
     </a>
     <?php endforeach; ?>

@@ -33,15 +33,18 @@ body {
   padding: 20px 16px;
 }
 
-/* kartu utama formulir */
+/* kartu utama formulir — lebih lebar di desktop */
 .container {
   width: 100%;
-  max-width: 420px;
+  max-width: 560px;
   background: var(--putih);
   border-radius: 20px;
-  padding: 36px 32px;
+  padding: 44px 40px;
   box-shadow: 0 8px 32px rgba(100,56,67,.15);
   border: 1px solid var(--garis);
+}
+@media (max-width: 600px) {
+  .container { padding: 28px 20px; max-width: 100%; }
 }
 
 /* logo dan nama aplikasi */
@@ -129,9 +132,18 @@ input:focus { border-color: var(--kedua); }
   margin-top: 4px;
 }
 
-/* pembungkus input password */
+/* pembungkus input password + tombol lihat/sembunyikan */
 .pass-wrap { position: relative; }
-.pass-wrap input { padding-right: 42px; }
+.pass-wrap input { padding-right: 44px; }
+.tombol-lihat-pass {
+  position: absolute; right: 12px; top: 50%;
+  transform: translateY(-50%);
+  background: none; border: none;
+  color: var(--tekssamar); cursor: pointer;
+  font-size: 15px; padding: 4px;
+  line-height: 1;
+}
+.tombol-lihat-pass:hover { color: var(--utama); }
 
 /* tombol submit utama */
 button[type="submit"] {
