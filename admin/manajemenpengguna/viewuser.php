@@ -1,26 +1,38 @@
 <?php
-/* ============================================================
-   DETAIL PENGGUNA — ADMIN
-   ============================================================ */
+/* halaman detail pengguna — admin bisa melihat informasi lengkap akun,
+   statistik (pesanan, omset, rating untuk penjual; pesanan dan belanja untuk pembeli),
+   serta info toko jika pengguna adalah penjual. */
+
+// sambungkan ke database dan pastikan yang mengakses adalah admin
 include '../../1. koneksi/koneksi.php';
 include '../../3. komponen/guardadmin.php';
+
+// tandai menu "user" sebagai aktif di navbar
 $halamansaatini = 'user';
 
+// ambil id pengguna dari url, konversi ke integer untuk keamanan
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+
+// jika id tidak valid, kembalikan ke daftar pengguna
 if (!$id) { header("Location: user.php"); exit; }
 
+// ambil data pengguna berdasarkan id, hanya yang belum dihapus (deleted=0)
 $qu = $conn->prepare("SELECT * FROM tb_user WHERE id_user=? AND deleted=0");
 $qu->bind_param("i", $id); $qu->execute();
 $user = $qu->get_result()->fetch_assoc(); $qu->close();
+
+// jika pengguna tidak ditemukan, kembalikan ke daftar
 if (!$user) { header("Location: user.php"); exit; }
 
+// ambil 2 huruf pertama username sebagai inisial untuk avatar
 $inisial = strtoupper(mb_substr($user['username'],0,2));
 
-// Statistik berdasarkan role
+// inisialisasi variabel statistik dengan nilai default 0 / null
 $toko = null; $totalpesanan = 0; $totalomset = 0; $ratarating = 0; $jmlrating = 0; $totalmenu = 0;
 $totalorder_pembeli = 0; $totalbelanja = 0;
 
 if ($user['role'] === 'penjual') {
+    // ambil data toko milik penjual ini (jika ada)
     $qt = $conn->prepare("SELECT * FROM tb_toko WHERE id_user=? AND deleted=0");
     $qt->bind_param("i", $id); $qt->execute();
     $toko = $qt->get_result()->fetch_assoc(); $qt->close();
@@ -28,27 +40,32 @@ if ($user['role'] === 'penjual') {
     if ($toko) {
         $idtoko = (int)$toko['id_toko'];
 
+        // hitung total pesanan masuk ke toko dan jumlah uangnya
         $qs1 = $conn->prepare("SELECT COUNT(*), COALESCE(SUM(total_harga),0) FROM tb_order WHERE id_toko=? AND deleted=0");
         $qs1->bind_param("i", $idtoko); $qs1->execute();
         $r1 = $qs1->get_result()->fetch_row(); $qs1->close();
         $totalpesanan = (int)$r1[0]; $totalomset = (float)$r1[1];
 
+        // hitung rata-rata rating toko dan jumlah ulasan yang diberikan pembeli
         $qs2 = $conn->prepare("SELECT ROUND(AVG(rating_toko),1), COUNT(*) FROM tb_rating WHERE id_toko=? AND deleted=0");
         $qs2->bind_param("i", $idtoko); $qs2->execute();
         $r2 = $qs2->get_result()->fetch_row(); $qs2->close();
         $ratarating = (float)($r2[0] ?? 0); $jmlrating = (int)($r2[1] ?? 0);
 
+        // hitung jumlah menu yang masih aktif di toko ini
         $qs3 = $conn->prepare("SELECT COUNT(*) FROM tb_menu WHERE id_toko=? AND status='aktif' AND deleted=0");
         $qs3->bind_param("i", $idtoko); $qs3->execute();
         $totalmenu = (int)$qs3->get_result()->fetch_row()[0]; $qs3->close();
     }
 } elseif ($user['role'] === 'pembeli') {
+    // untuk pembeli: hitung total pesanan yang pernah dibuat dan total uang yang dihabiskan
     $qb = $conn->prepare("SELECT COUNT(*), COALESCE(SUM(total_harga),0) FROM tb_order WHERE id_user=? AND deleted=0");
     $qb->bind_param("i", $id); $qb->execute();
     $rb = $qb->get_result()->fetch_row(); $qb->close();
     $totalorder_pembeli = (int)$rb[0]; $totalbelanja = (float)$rb[1];
 }
 
+// fungsi pembantu: format angka menjadi rupiah
 function rp(float $n): string { return 'Rp ' . number_format($n, 0, ',', '.'); }
 ?>
 <!DOCTYPE html>
@@ -84,7 +101,7 @@ function rp(float $n): string { return 'Rp ' . number_format($n, 0, ',', '.'); }
     </div>
   </div>
 
-  <!-- Hero -->
+  <!-- kartu hero: avatar, nama, email, dan badge role -->
   <div class="kartu" style="text-align:center;padding:28px;margin-bottom:18px;">
     <div style="width:64px;height:64px;border-radius:50%;background:var(--latar);color:var(--utama);
                 display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;
@@ -98,8 +115,9 @@ function rp(float $n): string { return 'Rp ' . number_format($n, 0, ',', '.'); }
     <span class="badge <?= $user['role'] ?>"><?= ucfirst($user['role']) ?></span>
   </div>
 
-  <!-- Statistik -->
+  <!-- statistik berbeda tergantung role pengguna -->
   <?php if ($user['role'] === 'penjual' && $toko): ?>
+  <!-- statistik untuk penjual yang sudah punya toko -->
   <div class="grid-stat" style="margin-bottom:18px;">
     <div class="kartu-stat">
       <div class="ikon-stat"><i class="fa-solid fa-receipt"></i></div>
@@ -119,6 +137,7 @@ function rp(float $n): string { return 'Rp ' . number_format($n, 0, ',', '.'); }
     </div>
   </div>
   <?php elseif ($user['role'] === 'pembeli'): ?>
+  <!-- statistik untuk pembeli: jumlah pesanan dan total belanja -->
   <div class="grid-stat" style="margin-bottom:18px;">
     <div class="kartu-stat">
       <div class="ikon-stat"><i class="fa-solid fa-bag-shopping"></i></div>
@@ -133,7 +152,7 @@ function rp(float $n): string { return 'Rp ' . number_format($n, 0, ',', '.'); }
 
   <div class="grid-dua">
 
-    <!-- Info Akun -->
+    <!-- informasi akun dasar -->
     <div class="kartu">
       <h3><i class="fa-solid fa-user"></i> Informasi Akun</h3>
       <div class="baris-info">
@@ -150,11 +169,12 @@ function rp(float $n): string { return 'Rp ' . number_format($n, 0, ',', '.'); }
       </div>
       <div class="baris-info">
         <div class="label-info">Bergabung</div>
+        <!-- format tanggal: 01 Jan 2024, 12:00 -->
         <div class="nilai-info"><?= !empty($user['created']) ? date('d M Y, H:i', strtotime($user['created'])) : '-' ?></div>
       </div>
     </div>
 
-    <!-- Info Toko (jika penjual) -->
+    <!-- informasi toko hanya ditampilkan untuk pengguna dengan role penjual -->
     <?php if ($user['role'] === 'penjual'): ?>
     <div class="kartu">
       <h3><i class="fa-solid fa-store"></i> Informasi Toko</h3>
@@ -177,6 +197,7 @@ function rp(float $n): string { return 'Rp ' . number_format($n, 0, ',', '.'); }
         </a>
       </div>
       <?php else: ?>
+      <!-- penjual yang belum punya toko atau tokonya sudah dihapus -->
       <div class="kosong" style="padding:20px;">
         <p>Toko belum dibuat atau sudah dihapus.</p>
       </div>

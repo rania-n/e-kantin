@@ -1,38 +1,57 @@
 <?php
-/* ============================================================
-   struk pesanan penjual
-   tampilan identik dengan pembeli, cetak via ?cetak=1
-   ============================================================ */
+/* halaman struk pesanan dari sisi penjual.
+   tampilan identik dengan struk pembeli.
+   bisa dicetak via tombol cetak (window.print()) */
 include '../../1. koneksi/koneksi.php';
 include '../../3. komponen/guardpenjual.php';
 
+// ambil id toko dari session dan id pesanan dari parameter URL
 $idtoko    = (int)$_SESSION['id_toko'];
 $idpesanan = (int)($_GET['id'] ?? 0);
+
+// tandai halaman aktif untuk navbar
 $halamansaatini = 'manajemenpesanan';
+
+// cek apakah parameter ?cetak ada di URL (mode cetak)
 $cetak = isset($_GET['cetak']);
 
+// jika tidak ada id pesanan, redirect ke halaman pesanan
 if (!$idpesanan) { header("Location: manajemenpesanan.php"); exit; }
 
+// ambil data pesanan beserta nama pembeli — pastikan pesanan milik toko ini
 $q = $conn->prepare("SELECT o.*,u.username FROM tb_order o JOIN tb_user u ON o.id_user=u.id_user WHERE o.id_order=? AND o.id_toko=? AND o.deleted=0");
 $q->bind_param("ii", $idpesanan, $idtoko); $q->execute();
 $pesanan = $q->get_result()->fetch_assoc(); $q->close();
 
+// jika pesanan tidak ditemukan, redirect ke halaman pesanan
 if (!$pesanan) { header("Location: manajemenpesanan.php"); exit; }
 
+// ambil semua item yang ada dalam pesanan ini
 $qd = $conn->prepare("SELECT d.*,m.nama_menu FROM tb_detail_order d JOIN tb_menu m ON d.id_menu=m.id_menu WHERE d.id_order=? AND d.deleted=0");
 $qd->bind_param("i", $idpesanan); $qd->execute();
 $items = $qd->get_result()->fetch_all(MYSQLI_ASSOC); $qd->close();
 
+/* hitung nomor antrian: berapa pesanan yang masuk ke toko ini pada hari yang sama
+   dengan tanggal pesanan ini, yang id_order-nya <= id pesanan ini.
+   hasilnya adalah posisi urutan pesanan di hari tersebut */
 $qa = $conn->prepare("SELECT COUNT(*) FROM tb_order WHERE id_toko=? AND DATE(tanggal_order)=DATE(?) AND id_order<=? AND deleted=0");
 $tglpesanan = $pesanan['tanggal_order'];
 $qa->bind_param("isi", $idtoko, $tglpesanan, $idpesanan); $qa->execute();
 $antrian = (int)$qa->get_result()->fetch_row()[0]; $qa->close();
 
+// hitung subtotal semua item (sebelum biaya layanan)
 $subtotalitem = array_sum(array_column($items, 'subtotal'));
+
+// biaya layanan = total yang dibayar dikurangi subtotal item
 $biayalayanan = $pesanan['total_harga'] - $subtotalitem;
+
+// format nomor pesanan: EK-000001
 $nomerpesanan = 'EK-' . str_pad($idpesanan, 6, '0', STR_PAD_LEFT);
+
+// nama toko dari session, dengan fallback "jajankita" jika session kosong
 $namatoko     = htmlspecialchars($_SESSION['nama_toko'] ?? 'jajankita');
 
+// kembalikan nama kelas css berdasarkan status (untuk pewarnaan badge)
 function kelasstatus(string $s): string {
     return match($s) {
         'Menunggu' => 'menunggu', 'Diproses' => 'diproses',
@@ -40,6 +59,8 @@ function kelasstatus(string $s): string {
         default => 'dibatalkan',
     };
 }
+
+// kembalikan nama ikon font awesome berdasarkan status pesanan
 function ikonStatus(string $s): string {
     return match($s) {
         'Menunggu'     => 'fa-clock',
@@ -59,6 +80,7 @@ function ikonStatus(string $s): string {
 <link rel="stylesheet" href="../../3. komponen/penjual.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
+  /* pastikan area konten menggunakan lebar penuh saat mencetak struk */
   .konten { padding: 16px; }
   .konten-sempit { max-width: none; }
 </style>
@@ -70,7 +92,7 @@ function ikonStatus(string $s): string {
 <main class="konten">
 <div class="konten-sempit">
 
-  <!-- header halaman -->
+  <!-- header halaman — kelas "takprint" menyembunyikan elemen ini saat dicetak -->
   <div class="header-halaman takprint" style="margin-bottom:16px;">
     <div class="kiri">
       <h1><i class="fa-solid fa-receipt"></i> Struk Pesanan</h1>
@@ -78,7 +100,7 @@ function ikonStatus(string $s): string {
     </div>
   </div>
 
-  <!-- nomor antrian — style tunggubg identik pembeli -->
+  <!-- nomor antrian ditampilkan besar di atas struk — format 3 digit dengan awalan nol -->
   <div class="antirian">
     <div class="angkaantrian"><?= str_pad($antrian, 3, '0', STR_PAD_LEFT) ?></div>
     <div class="labelantrian">
@@ -86,17 +108,20 @@ function ikonStatus(string $s): string {
     </div>
   </div>
 
-  <!-- struk -->
+  <!-- kotak struk utama -->
   <div class="bungkusstruk">
 
+    <!-- kepala struk: ikon, judul, dan deskripsi singkat -->
     <div class="kepalastruk">
       <div class="ikonstruk"><i class="fa-solid fa-receipt"></i></div>
       <h2>jajankita &mdash; Struk Digital</h2>
       <p>Simpan sebagai bukti pembayaran</p>
     </div>
 
+    <!-- isi struk: info pesanan dan detail item -->
     <div class="isistruk" style="padding-bottom:0;">
 
+      <!-- baris informasi pesanan: nomor, nama toko, tanggal, pembeli, metode bayar, status -->
       <div class="barisstruk">
         <span class="labelstruk">No. Pesanan</span>
         <span class="nilaistruk" style="font-family:monospace;color:var(--utama);"><?= $nomerpesanan ?></span>
@@ -124,6 +149,7 @@ function ikonStatus(string $s): string {
           <?= htmlspecialchars($pesanan['status_order']) ?>
         </span>
       </div>
+      <!-- catatan pesanan hanya ditampilkan jika ada -->
       <?php if (!empty($pesanan['catatan'])): ?>
       <div class="barisstruk">
         <span class="labelstruk">Catatan</span>
@@ -131,10 +157,12 @@ function ikonStatus(string $s): string {
       </div>
       <?php endif; ?>
 
+      <!-- pemisah dekoratif antara info pesanan dan detail item -->
       <div class="pemisah"><hr><span><i class="fa-solid fa-star"></i></span><hr></div>
 
       <div class="judulbagian" style="margin:0 0 12px;"><i class="fa-solid fa-list"></i> Detail Pesanan</div>
 
+      <!-- daftar setiap item: nama menu, jumlah, harga satuan, dan subtotal -->
       <?php foreach ($items as $it): ?>
       <div class="itemdetailstruk">
         <div class="namamenu"><?= htmlspecialchars($it['nama_menu']) ?></div>
@@ -145,24 +173,29 @@ function ikonStatus(string $s): string {
       </div>
       <?php endforeach; ?>
 
+      <!-- pemisah sebelum ringkasan harga -->
       <div class="pemisah"><hr><span><i class="fa-solid fa-star"></i></span><hr></div>
 
+      <!-- ringkasan harga: subtotal item dan biaya layanan -->
       <div class="barisstruk">
         <span class="labelstruk">Subtotal</span>
         <span class="nilaistruk">Rp <?= number_format($subtotalitem,0,',','.') ?></span>
       </div>
       <div class="barisstruk">
         <span class="labelstruk">Biaya Layanan</span>
+        <!-- max(0,...) memastikan biaya layanan tidak negatif akibat pembulatan -->
         <span class="nilaistruk">Rp <?= number_format(max(0,$biayalayanan),0,',','.') ?></span>
       </div>
 
     </div><!-- tutup isistruk -->
 
+    <!-- baris total bayar yang lebih besar dan menonjol -->
     <div class="totalstruk">
       <span class="label"><i class="fa-solid fa-coins"></i> Total Bayar</span>
       <span class="nilai">Rp <?= number_format($pesanan['total_harga'],0,',','.') ?></span>
     </div>
 
+    <!-- kaki struk: pesan terima kasih dan info singkat pesanan -->
     <div class="kakistruk">
       <i class="fa-solid fa-heart"></i>
       <p>Terima kasih telah memesan di jajankita!</p>
@@ -173,7 +206,7 @@ function ikonStatus(string $s): string {
 
   </div>
 
-  <!-- tombol aksi -->
+  <!-- tombol cetak dan kembali — disembunyikan saat mencetak -->
   <div class="takprint" style="margin-top:4px;">
     <button onclick="window.print()" class="tombolutama blok">
       <i class="fa-solid fa-print"></i> Cetak Struk

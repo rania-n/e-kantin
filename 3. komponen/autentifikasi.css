@@ -1,70 +1,76 @@
-/* ==============================================================
-   gaya halaman autentifikasi jajankita
-   login, register, konfirmasi logout
-   font: Poppins (selaras dengan seluruh aplikasi)
-   ============================================================== */
+/* autentifikasi.css — e-kantin
+   dipakai oleh halaman login, register, dan konfirmasi logout
+   font: poppins selaras dengan seluruh aplikasi */
 
+/* impor font poppins dari google fonts */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
 
+/* reset bawaan browser agar tampilan konsisten */
 *, *::before, *::after {
   margin: 0; padding: 0; box-sizing: border-box;
 }
 
+/* variabel warna — subset dari variabel utama aplikasi */
 :root {
-  --utama:   #643843;
-  --kedua:   #99627A;
-  --latar:   #EFD9D4;
-  --putihbg: #F8EBF1;
-  --putih:   #FFFFFF;
-  --garis:   #E7CBCB;
-  --teks:    #643843;
-  --tekssamar: #99627A;
-  --gagal:   #DC2626;
-  --sukses:  #16A34A;
+  --utama:   #643843; /* warna coklat kemerahan — warna merek utama */
+  --kedua:   #99627A; /* warna pink — aksen sekunder */
+  --latar:   #EFD9D4; /* warna latar halaman, pink sangat muda */
+  --putihbg: #F8EBF1; /* putih kemerahan — background kartu terang */
+  --putih:   #FFFFFF; /* putih murni */
+  --garis:   #E7CBCB; /* warna garis pemisah dan border */
+  --teks:    #643843; /* warna teks utama */
+  --tekssamar: #99627A; /* warna teks sekunder yang lebih redup */
+  --gagal:   #DC2626; /* merah untuk pesan error */
+  --sukses:  #16A34A; /* hijau untuk pesan sukses */
 }
 
+/* body dipusatkan karena hanya ada satu kartu form di tengah layar */
 body {
   font-family: 'Poppins', 'Segoe UI', sans-serif;
   min-height: 100vh;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  justify-content: center; /* tengah secara horizontal */
+  align-items: center; /* tengah secara vertikal */
   background: var(--latar);
-  padding: 20px 16px;
+  padding: 20px 16px; /* beri ruang agar form tidak menempel tepi di mobile */
 }
 
 /* kartu utama formulir — lebih lebar di desktop */
 .container {
   width: 100%;
-  max-width: 560px;
+  max-width: 560px; /* tidak terlalu lebar di desktop */
   background: var(--putih);
   border-radius: 20px;
-  padding: 44px 40px;
-  box-shadow: 0 8px 32px rgba(100,56,67,.15);
+  padding: 44px 40px; /* padding besar agar terlihat lapang */
+  box-shadow: 0 8px 32px rgba(100,56,67,.15); /* bayangan lembut merah kecoklatan */
   border: 1px solid var(--garis);
 }
+/* di layar kecil, padding dikurangi dan lebar mengisi penuh */
 @media (max-width: 600px) {
   .container { padding: 28px 20px; max-width: 100%; }
 }
 
-/* logo dan nama aplikasi */
+/* logo dan nama aplikasi di atas formulir */
 .logo-auth {
   text-align: center;
   margin-bottom: 24px;
 }
+/* kotak ikon logo berbentuk persegi melengkung */
 .logo-auth .ikon-logo {
   width: 56px; height: 56px;
   border-radius: 14px;
-  background: var(--utama);
+  background: var(--utama); /* background gelap merek */
   color: var(--putihbg);
   display: flex; align-items: center; justify-content: center;
   font-size: 22px;
-  margin: 0 auto 10px;
+  margin: 0 auto 10px; /* tengah secara horizontal */
 }
+/* nama aplikasi di bawah ikon logo */
 .logo-auth .nama-logo {
   font-size: 22px; font-weight: 800; color: var(--utama);
-  letter-spacing: -.5px;
+  letter-spacing: -.5px; /* jarak huruf sedikit rapat untuk judul besar */
 }
+/* tagline kecil di bawah nama aplikasi */
 .logo-auth .tagline-logo {
   font-size: 12px; color: var(--tekssamar);
   margin-top: 2px;
@@ -75,12 +81,13 @@ h2 {
   font-size: 18px; font-weight: 700; color: var(--teks);
   margin-bottom: 4px;
 }
+/* teks deskripsi di bawah judul formulir */
 .sub {
   font-size: 13px; color: var(--tekssamar);
   margin-bottom: 20px;
 }
 
-/* pesan error dan sukses */
+/* pesan error jika login/register gagal */
 .pesan-error {
   background: #FEE2E2; color: var(--gagal);
   border: 1px solid #FCA5A5;
@@ -89,6 +96,7 @@ h2 {
   margin-bottom: 16px;
   display: flex; align-items: center; gap: 8px;
 }
+/* pesan sukses jika operasi berhasil */
 .pesan-sukses {
   background: #DCFCE7; color: var(--sukses);
   border: 1px solid #BBF7D0;
@@ -98,10 +106,11 @@ h2 {
   display: flex; align-items: center; gap: 8px;
 }
 
-/* label grup */
+/* satu kelompok input (label + field) */
 .grup-input {
   margin-bottom: 14px;
 }
+/* label input format uppercase kecil */
 .grup-input label {
   display: block;
   font-size: 11px; font-weight: 700;
@@ -110,7 +119,7 @@ h2 {
   margin-bottom: 6px;
 }
 
-/* input umum */
+/* gaya dasar semua jenis input teks di halaman autentifikasi */
 input[type="text"],
 input[type="email"],
 input[type="password"] {
@@ -123,21 +132,25 @@ input[type="password"] {
   border-radius: 10px;
   background: var(--putih);
   outline: none;
-  transition: border-color .15s;
+  transition: border-color .15s; /* animasi border saat difokus */
 }
+/* border berubah saat input difokus */
 input:focus { border-color: var(--kedua); }
 
+/* teks keterangan tambahan di bawah input (contoh: syarat password) */
 .keterangan {
   font-size: 11px; color: var(--tekssamar);
   margin-top: 4px;
 }
 
 /* pembungkus input password + tombol lihat/sembunyikan */
-.pass-wrap { position: relative; }
+.pass-wrap { position: relative; } /* agar tombol absolute bisa diposisikan di dalamnya */
+/* beri ruang di kanan untuk tombol lihat password */
 .pass-wrap input { padding-right: 44px; }
+/* tombol ikon mata untuk tampilkan/sembunyikan password */
 .tombol-lihat-pass {
   position: absolute; right: 12px; top: 50%;
-  transform: translateY(-50%);
+  transform: translateY(-50%); /* tengahkan secara vertikal */
   background: none; border: none;
   color: var(--tekssamar); cursor: pointer;
   font-size: 15px; padding: 4px;
@@ -145,20 +158,21 @@ input:focus { border-color: var(--kedua); }
 }
 .tombol-lihat-pass:hover { color: var(--utama); }
 
-/* tombol submit utama */
+/* tombol submit utama di form */
 button[type="submit"] {
   width: 100%; padding: 12px 20px;
   background: var(--utama); color: var(--putihbg);
   border: none; border-radius: 10px;
   font-size: 15px; font-weight: 700;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Poppins', sans-serif; /* eksplisit karena button tidak mewarisi font */
   cursor: pointer;
   transition: background .15s;
-  margin-top: 6px;
+  margin-top: 6px; /* sedikit jarak dari input terakhir */
 }
+/* hover tombol submit — warna lebih gelap */
 button[type="submit"]:hover { background: #4d2b35; }
 
-/* link bawah (sudah punya akun / belum punya akun) */
+/* link di bawah form (sudah punya akun / belum punya akun) */
 .link {
   text-align: center;
   margin-top: 18px;
@@ -167,7 +181,7 @@ button[type="submit"]:hover { background: #4d2b35; }
 .link a { color: var(--utama); font-weight: 700; }
 .link a:hover { text-decoration: underline; }
 
-/* link kembali ke landing */
+/* link kembali ke halaman landing di bawah link utama */
 .kembali-landing {
   text-align: center;
   margin-top: 12px;

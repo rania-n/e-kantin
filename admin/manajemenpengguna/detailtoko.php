@@ -1,33 +1,36 @@
 <?php
+// file ini adalah versi lama halaman detail toko per pengguna (belum diperbarui ke sistem baru)
+// gunakan admin/manajementoko/viewtoko.php untuk versi yang lebih baru
 include '../../1. koneksi/koneksi.php';
 
-// 1. Ambil ID User dari URL
+// ambil id pengguna dari url, sanitasi untuk mencegah sql injection pada query langsung
 $id_user = isset($_GET['id_user']) ? mysqli_real_escape_string($conn, $_GET['id_user']) : '';
 
+// jika id kosong, kembalikan ke daftar pengguna
 if (empty($id_user)) {
     header("Location: user.php");
     exit();
 }
 
-// 2. Ambil data Toko & User
-$query_toko = mysqli_query($conn, "SELECT t.*, u.username, u.email 
-                                   FROM tb_toko t 
-                                   JOIN tb_user u ON t.id_user = u.id_user 
+// ambil data toko beserta nama dan email pemiliknya (join ke tb_user)
+$query_toko = mysqli_query($conn, "SELECT t.*, u.username, u.email
+                                   FROM tb_toko t
+                                   JOIN tb_user u ON t.id_user = u.id_user
                                    WHERE t.id_user = '$id_user'");
 $data = mysqli_fetch_assoc($query_toko);
 
-// 3. Logika Grafik Penjualan (Anti-Error)
+// inisialisasi data grafik dengan nilai default (jika tabel atau data tidak ada)
 $grafik_label = ['Data Kosong'];
 $grafik_data = [0];
 
-// Cek apakah tabel tb_transaksi sudah dibuat di database
+// cek apakah tabel tb_transaksi ada di database (tabel lama, mungkin belum dibuat)
 $check_table = mysqli_query($conn, "SHOW TABLES LIKE 'tb_transaksi'");
 if (mysqli_num_rows($check_table) > 0) {
-    // Jika tabel ada, ambil data 7 hari terakhir
-    $query_grafik = mysqli_query($conn, "SELECT DATE(tanggal) as tgl, SUM(total_harga) as total 
-                                         FROM tb_transaksi 
-                                         WHERE id_user = '$id_user' 
-                                         GROUP BY DATE(tanggal) 
+    // jika tabel ada, ambil data penjualan 7 hari terakhir untuk grafik
+    $query_grafik = mysqli_query($conn, "SELECT DATE(tanggal) as tgl, SUM(total_harga) as total
+                                         FROM tb_transaksi
+                                         WHERE id_user = '$id_user'
+                                         GROUP BY DATE(tanggal)
                                          ORDER BY tgl DESC LIMIT 7");
 
     if (mysqli_num_rows($query_grafik) > 0) {
@@ -37,7 +40,7 @@ if (mysqli_num_rows($check_table) > 0) {
             $grafik_label[] = date('d M', strtotime($row['tgl']));
             $grafik_data[] = $row['total'];
         }
-        // Balik urutan agar hari terlama di kiri
+        // balik urutan agar hari terlama di kiri grafik, terbaru di kanan
         $grafik_label = array_reverse($grafik_label);
         $grafik_data = array_reverse($grafik_data);
     }
@@ -50,6 +53,7 @@ if (mysqli_num_rows($check_table) > 0) {
     <meta charset="UTF-8">
     <title>Detail Toko - <?php echo isset($data['nama_toko']) ? htmlspecialchars($data['nama_toko']) : 'Tidak Ditemukan'; ?></title>
     <link rel="stylesheet" href="../../3. komponen/admin.css">
+    <!-- chart.js untuk menggambar grafik garis pendapatan -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .stats-container { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; margin-top: 20px; }
@@ -76,7 +80,7 @@ if (mysqli_num_rows($check_table) > 0) {
             </div>
 
             <div class="stats-container">
-                <!-- Bagian Kiri: Info -->
+                <!-- bagian kiri: informasi statis toko -->
                 <div class="info-card">
                     <h3>Informasi Toko</h3>
                     <hr style="border: 0.5px solid #f0f0f0; margin: 20px 0;">
@@ -94,7 +98,7 @@ if (mysqli_num_rows($check_table) > 0) {
                     </div>
                 </div>
 
-                <!-- Bagian Kanan: Grafik -->
+                <!-- bagian kanan: grafik garis pendapatan 7 hari terakhir (chart.js) -->
                 <div class="chart-card">
                     <h3>Pendapatan 7 Hari Terakhir</h3>
                     <div style="margin-top: 20px;">
@@ -103,6 +107,7 @@ if (mysqli_num_rows($check_table) > 0) {
                 </div>
             </div>
         <?php else : ?>
+            <!-- tampilkan pesan jika data toko tidak ditemukan -->
             <div style="text-align: center; padding: 50px;">
                 <h2>Data Toko Tidak Ditemukan</h2>
                 <p>User ini mungkin tidak memiliki role penjual atau data toko terhapus.</p>
@@ -112,14 +117,15 @@ if (mysqli_num_rows($check_table) > 0) {
     </div>
 
     <script>
+        // inisialisasi grafik garis menggunakan data yang dikirim dari php via json_encode
         const ctx = document.getElementById('salesChart').getContext('2d');
         new Chart(ctx, {
             type: 'line',
             data: {
-                labels: <?php echo json_encode($grafik_label); ?>,
+                labels: <?php echo json_encode($grafik_label); ?>, // label sumbu x (tanggal)
                 datasets: [{
                     label: 'Total Pendapatan',
-                    data: <?php echo json_encode($grafik_data); ?>,
+                    data: <?php echo json_encode($grafik_data); ?>, // nilai sumbu y (jumlah uang)
                     borderColor: '#845b5b',
                     backgroundColor: 'rgba(132, 91, 91, 0.1)',
                     borderWidth: 3,
@@ -131,8 +137,9 @@ if (mysqli_num_rows($check_table) > 0) {
             options: {
                 responsive: true,
                 scales: {
-                    y: { 
+                    y: {
                         beginAtZero: true,
+                        // format nilai sumbu y menjadi rupiah
                         ticks: {
                             callback: function(value) { return 'Rp ' + value.toLocaleString(); }
                         }

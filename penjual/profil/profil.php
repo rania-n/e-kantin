@@ -1,67 +1,82 @@
 <?php
-/* ============================================================
-   profil dan toko penjual
-   tab: profil saya (view) | edit profil dan toko | ganti password
-   ============================================================ */
+/* halaman profil penjual.
+   terdiri dari 3 tab: profil (tampilan), edit profil dan toko, dan ganti password.
+   tab dipilih melalui parameter ?tab= di URL */
 include '../../1. koneksi/koneksi.php';
 include '../../3. komponen/guardpenjual.php';
 
+// ambil id pengguna dan id toko dari session
 $idpengguna = (int)$_SESSION['id_user'];
 $idtoko     = (int)$_SESSION['id_toko'];
+
+// tandai halaman aktif untuk navbar
 $halamansaatini = 'profil';
 
+// ambil data akun pengguna dari database
 $qu = $conn->prepare("SELECT * FROM tb_user WHERE id_user=? AND deleted=0");
 $qu->bind_param("i", $idpengguna); $qu->execute();
 $user = $qu->get_result()->fetch_assoc(); $qu->close();
 
+// ambil data toko dari database
 $qt = $conn->prepare("SELECT * FROM tb_toko WHERE id_toko=? AND deleted=0");
 $qt->bind_param("i", $idtoko); $qt->execute();
 $toko = $qt->get_result()->fetch_assoc(); $qt->close();
 
-// statistik toko
+// hitung total semua pesanan yang pernah masuk ke toko ini
 $qs1 = $conn->prepare("SELECT COUNT(*) FROM tb_order WHERE id_toko=? AND deleted=0");
 $qs1->bind_param("i", $idtoko); $qs1->execute();
 $totalpesanan = (int)$qs1->get_result()->fetch_row()[0]; $qs1->close();
 
+// hitung total pendapatan dari pesanan yang sudah selesai
 $qs2 = $conn->prepare("SELECT COALESCE(SUM(total_harga),0) FROM tb_order WHERE id_toko=? AND status_order='Selesai' AND deleted=0");
 $qs2->bind_param("i", $idtoko); $qs2->execute();
 $totalpendapatan = (float)$qs2->get_result()->fetch_row()[0]; $qs2->close();
 
+// ambil rata-rata rating toko dan jumlah ulasan (ROUND membulatkan 1 angka desimal)
 $qs3 = $conn->prepare("SELECT ROUND(AVG(rating_toko),1), COUNT(*) FROM tb_rating WHERE id_toko=? AND deleted=0");
 $qs3->bind_param("i", $idtoko); $qs3->execute();
 $rrow = $qs3->get_result()->fetch_row(); $qs3->close();
 $ratarating = (float)($rrow[0] ?? 0);
 $jmlrating  = (int)($rrow[1] ?? 0);
 
+// hitung menu yang aktif (bisa dipesan pembeli)
 $qs4 = $conn->prepare("SELECT COUNT(*) FROM tb_menu WHERE id_toko=? AND status='aktif' AND deleted=0");
 $qs4->bind_param("i", $idtoko); $qs4->execute();
 $totalmenu = (int)$qs4->get_result()->fetch_row()[0]; $qs4->close();
 
-// inisial dari nama toko (bukan username)
+// buat inisial 2 huruf dari nama toko untuk avatar jika foto tidak ada
 $namatoko  = $toko['nama_toko'] ?? $user['username'] ?? 'T';
-$inisial   = strtoupper(mb_substr($namatoko, 0, 2));
+$inisial   = strtoupper(mb_substr($namatoko, 0, 2)); // mb_substr aman untuk karakter multibyte
 $fotoprofil = $toko['foto_toko'] ?? '';
 
+// ambil flash message dari session jika ada
 $flashpesan = ''; $flashjenis = '';
 if (!empty($_SESSION['flash'])) {
     $flashpesan = $_SESSION['flash']['pesan'];
     $flashjenis = $_SESSION['flash']['jenis'];
-    unset($_SESSION['flash']);
+    unset($_SESSION['flash']); // hapus setelah dibaca
 }
 
+// tentukan tab yang aktif dari parameter URL, default ke 'profil'
 $tabaktif = $_GET['tab'] ?? 'profil';
+// validasi: hanya izinkan nilai tab yang dikenal
 if (!in_array($tabaktif, ['profil', 'edit', 'password'])) $tabaktif = 'profil';
 
+// format angka ke rupiah
 function rp(float $n): string { return 'Rp ' . number_format($n, 0, ',', '.'); }
+
+// format angka besar ke singkatan
 function singkat(float $n): string {
     if ($n >= 1_000_000_000) { $v=$n/1_000_000_000; return 'Rp '.rtrim(rtrim(number_format($v,1,',',''),'0'),',').' M'; }
     if ($n >= 1_000_000)     { $v=$n/1_000_000;     return 'Rp '.rtrim(rtrim(number_format($v,1,',',''),'0'),',').' Jt'; }
     return 'Rp ' . number_format($n, 0, ',', '.');
 }
+
+// buat tampilan bintang berdasarkan nilai rating
 function bintang(float $r): string {
     $out = '';
     for ($i = 1; $i <= 5; $i++) {
-        $warna = $i <= $r ? '#F59E0B' : '#D1D5DB';
+        $warna = $i <= $r ? '#F59E0B' : '#D1D5DB'; // kuning = penuh, abu = kosong
         $out .= "<i class='fa-solid fa-star' style='color:{$warna};font-size:12px;'></i>";
     }
     return $out;
@@ -82,6 +97,7 @@ function bintang(float $r): string {
 
 <main class="konten">
 
+  <!-- header halaman -->
   <div class="header-halaman">
     <div class="kiri">
       <h1><i class="fa-solid fa-user-tie"></i> Profil &amp; Toko</h1>
@@ -89,6 +105,7 @@ function bintang(float $r): string {
     </div>
   </div>
 
+  <!-- tampilkan flash message jika ada -->
   <?php if ($flashpesan): ?>
   <div class="flashpesan flash<?= $flashjenis ?>">
     <i class="fa-solid fa-<?= $flashjenis === 'sukses' ? 'circle-check' : 'circle-xmark' ?>"></i>
@@ -96,12 +113,14 @@ function bintang(float $r): string {
   </div>
   <?php endif; ?>
 
-  <!-- hero profil — avatar kotak dari foto toko atau inisial nama toko -->
+  <!-- hero profil: tampilkan foto toko jika ada, atau inisial nama toko -->
   <div class="hero-profil">
     <div class="avatar">
       <?php if ($fotoprofil && file_exists("../../2. aset/profil/" . $fotoprofil)): ?>
+        <!-- tampilkan foto toko jika file benar-benar ada di server -->
         <img src="../../2. aset/profil/<?= htmlspecialchars($fotoprofil) ?>" alt="foto toko">
       <?php else: ?>
+        <!-- fallback: tampilkan 2 huruf inisial nama toko -->
         <?= $inisial ?>
       <?php endif; ?>
     </div>
@@ -112,10 +131,10 @@ function bintang(float $r): string {
     </span>
   </div>
 
-  <!-- tab view profil -->
+  <!-- tab tampilan profil utama -->
   <?php if ($tabaktif === 'profil'): ?>
 
-  <!-- kotak statistik gelap -->
+  <!-- kotak statistik singkat toko: jumlah pesanan, menu aktif, dan total pendapatan -->
   <div class="gridstat" style="margin-bottom:20px;">
     <div class="kotakstat gelap">
       <div class="angkastat"><?= $totalpesanan ?></div>
@@ -133,6 +152,7 @@ function bintang(float $r): string {
 
   <div class="judulbagian"><i class="fa-solid fa-user-gear"></i> Akun Saya</div>
 
+  <!-- item menu: menuju tab edit profil dan toko -->
   <a href="profil.php?tab=edit" class="itempengaturan">
     <div class="ikonpengaturan"><i class="fa-solid fa-pen"></i></div>
     <div class="tekspengaturan">
@@ -142,6 +162,7 @@ function bintang(float $r): string {
     <div class="panahpengaturan"><i class="fa-solid fa-chevron-right"></i></div>
   </a>
 
+  <!-- item menu: menuju tab ganti password -->
   <a href="profil.php?tab=password" class="itempengaturan">
     <div class="ikonpengaturan biru"><i class="fa-solid fa-lock"></i></div>
     <div class="tekspengaturan">
@@ -153,6 +174,7 @@ function bintang(float $r): string {
 
   <div class="judulbagian" style="margin-top:20px;"><i class="fa-solid fa-ellipsis"></i> Lainnya</div>
 
+  <!-- info versi aplikasi (tidak bisa diklik) -->
   <div class="itempengaturan">
     <div class="ikonpengaturan"><i class="fa-solid fa-circle-info"></i></div>
     <div class="tekspengaturan">
@@ -161,6 +183,7 @@ function bintang(float $r): string {
     </div>
   </div>
 
+  <!-- tombol logout hanya tampil di mobile (di desktop sudah ada di navbar) -->
   <a href="../../4. autentifikasi/konfirmasilogout.php?peran=penjual" class="itempengaturan sembunyi-desktop">
     <div class="ikonpengaturan merah"><i class="fa-solid fa-right-from-bracket"></i></div>
     <div class="tekspengaturan">
@@ -174,14 +197,16 @@ function bintang(float $r): string {
 
   <?php endif; ?>
 
-  <!-- tab edit profil dan toko -->
+  <!-- tab edit profil dan toko: form ubah username, email, nama toko, dan foto toko -->
   <?php if ($tabaktif === 'edit'): ?>
   <div class="kartu">
     <h3><i class="fa-solid fa-pen"></i> Edit Profil &amp; Toko</h3>
+    <!-- enctype multipart/form-data wajib untuk upload file foto -->
     <form method="POST" action="proseseditprofil.php" enctype="multipart/form-data">
       <div class="barisform">
         <div class="kelompokform">
           <label>Username <span style="color:var(--gagal);">*</span></label>
+          <!-- nilai awal diisi dari data pengguna yang sudah ada di database -->
           <input type="text" name="username"
                  value="<?= htmlspecialchars($user['username'] ?? '') ?>"
                  required minlength="6" maxlength="50"
@@ -204,12 +229,14 @@ function bintang(float $r): string {
       <div class="kelompokform">
         <label>Foto Toko</label>
         <?php if ($fotoprofil && file_exists("../../2. aset/profil/" . $fotoprofil)): ?>
+        <!-- tampilkan foto toko saat ini sebagai preview -->
         <div style="margin-bottom:8px;">
           <img src="../../2. aset/profil/<?= htmlspecialchars($fotoprofil) ?>"
                alt="foto toko saat ini"
                style="width:80px;height:80px;object-fit:cover;border-radius:14px;border:2px solid var(--garis);">
         </div>
         <?php endif; ?>
+        <!-- input foto opsional: jika dikosongkan, foto lama tetap digunakan -->
         <input type="file" name="foto_toko" accept="image/jpeg,image/png,image/webp"
                style="padding:8px;border:1.5px solid var(--garis);border-radius:8px;width:100%;font-size:13px;">
         <small>jpg, png, atau webp — maks 2mb. Kosongkan jika tidak ingin mengubah.</small>
@@ -224,7 +251,7 @@ function bintang(float $r): string {
   </div>
   <?php endif; ?>
 
-  <!-- tab ganti password -->
+  <!-- tab ganti password: form input password lama, baru, dan konfirmasi -->
   <?php if ($tabaktif === 'password'): ?>
   <div class="kartu">
     <h3><i class="fa-solid fa-lock"></i> Ganti Password</h3>
@@ -234,6 +261,7 @@ function bintang(float $r): string {
         <div style="position:relative;">
           <input type="password" name="password_lama" id="pass_lama" required placeholder="Password saat ini..."
                  style="padding-right:44px;">
+          <!-- tombol ikon mata untuk toggle tampil/sembunyikan password — menggunakan inline JS sederhana -->
           <button type="button" onclick="(function(b){var i=document.getElementById('pass_lama');i.type=i.type==='password'?'text':'password';b.querySelector('i').className=i.type==='password'?'fa-solid fa-eye':'fa-solid fa-eye-slash';})(this)"
                   style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--tekssamar);cursor:pointer;font-size:15px;padding:4px;">
             <i class="fa-solid fa-eye"></i>

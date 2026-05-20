@@ -1,57 +1,64 @@
 <?php
-/* ============================================================
-   KELOLA MENU PENJUAL
-   Modal menggunakan CSS :target — tanpa JavaScript.
-   ============================================================ */
+/* halaman kelola menu penjual.
+   menampilkan daftar menu milik toko dalam format grid kartu.
+   modal tambah, edit, dan konfirmasi hapus menggunakan CSS :target (tanpa javascript) */
 include '../../1. koneksi/koneksi.php';
 include '../../3. komponen/guardpenjual.php';
 
+// ambil id toko dari session
 $idtoko = (int)$_SESSION['id_toko'];
+
+// tandai halaman aktif untuk navbar
 $halamansaatini = 'manajemenmenu';
 
-// Filter, pencarian, dan ID aksi dari GET
+// ambil parameter filter, pencarian, dan id untuk aksi edit/hapus dari URL
 $filter   = $_GET['filter'] ?? 'Semua';
 $cari     = trim($_GET['cari'] ?? '');
-$editid   = (int)($_GET['edit']  ?? 0);
-$hapusid  = (int)($_GET['hapus'] ?? 0);
+$editid   = (int)($_GET['edit']  ?? 0); // id menu yang akan diedit (0 = tidak ada)
+$hapusid  = (int)($_GET['hapus'] ?? 0); // id menu yang akan dihapus (0 = tidak ada)
 
-// Flash message
+// ambil flash message dari session jika ada (pesan sukses/gagal dari proses sebelumnya)
 $flashpesan = ''; $flashjenis = '';
 if (!empty($_SESSION['flash'])) {
     $flashpesan = $_SESSION['flash']['pesan'];
     $flashjenis = $_SESSION['flash']['jenis'];
-    unset($_SESSION['flash']);
+    unset($_SESSION['flash']); // hapus flash setelah dibaca agar tidak muncul dua kali
 }
 
-// Kategori yang valid
+// daftar kategori menu yang tersedia
 $kategorilist = ['Makanan Berat','Makanan Ringan','Makanan Sehat','Minuman Ringan','Minuman Sehat'];
 
-// Validasi filter
+// validasi: jika filter bukan nilai yang dikenal, reset ke "Semua"
 if (!in_array($filter, array_merge(['Semua'], $kategorilist))) $filter = 'Semua';
 
-// Query menu milik toko ini
+// bangun kondisi query menu — hanya tampilkan menu milik toko ini yang belum dihapus
 $kondisi = "id_toko=$idtoko AND deleted=0";
 if ($filter !== 'Semua') {
+    // escape nilai filter untuk mencegah sql injection
     $filteraman = $conn->real_escape_string($filter);
     $kondisi .= " AND kategori='$filteraman'";
 }
 if ($cari !== '') {
+    // cari berdasarkan nama menu (pakai LIKE untuk pencarian parsial)
     $cariaman = $conn->real_escape_string($cari);
     $kondisi .= " AND nama_menu LIKE '%$cariaman%'";
 }
+
+// jalankan query dengan kondisi yang sudah dibangun, urutkan terbaru di atas
 $hasilmenu = $conn->query("SELECT * FROM tb_menu WHERE $kondisi ORDER BY created DESC");
 
-// Data edit (jika ada ?edit=)
+// ambil data menu yang akan diedit (hanya jika ada parameter ?edit= di URL)
 $dataedit = null;
 if ($editid > 0) {
     $qe = $conn->prepare("SELECT * FROM tb_menu WHERE id_menu=? AND id_toko=? AND deleted=0");
     $qe->bind_param("ii", $editid, $idtoko);
     $qe->execute();
-    $dataedit = $qe->get_result()->fetch_assoc();
+    $dataedit = $qe->get_result()->fetch_assoc(); // null jika tidak ditemukan
     $qe->close();
 }
 
-// URL dasar (tanpa hash dan tanpa edit/hapus params) untuk tutup modal
+// url dasar halaman ini tanpa fragment (#) dan tanpa parameter edit/hapus
+// dipakai untuk link "tutup modal"
 $urldasar = 'manajemenmenu.php?filter=' . urlencode($filter) . ($cari ? '&cari=' . urlencode($cari) : '');
 ?>
 <!DOCTYPE html>
@@ -69,12 +76,14 @@ $urldasar = 'manajemenmenu.php?filter=' . urlencode($filter) . ($cari ? '&cari='
 
 <main class="konten">
 
+  <!-- header halaman dengan kotak pencarian dan tombol tambah menu -->
   <div class="header-halaman">
     <div class="kiri">
       <h1><i class="fa-solid fa-bowl-food"></i> Kelola Menu</h1>
       <p>Daftar menu yang dijual di <?= htmlspecialchars($_SESSION['nama_toko']??'') ?></p>
     </div>
     <div class="grup-aksi">
+      <!-- form pencarian menu berdasarkan nama -->
       <form method="GET" action="manajemenmenu.php">
         <input type="hidden" name="filter" value="<?= htmlspecialchars($filter) ?>">
         <div class="kotakcari">
@@ -84,12 +93,14 @@ $urldasar = 'manajemenmenu.php?filter=' . urlencode($filter) . ($cari ? '&cari='
           <button type="submit" class="tombolcari"><i class="fa-solid fa-arrow-right"></i></button>
         </div>
       </form>
+      <!-- link ke #modal-tambah akan membuka modal melalui css :target -->
       <a href="#modal-tambah" class="tombolutama">
         <i class="fa-solid fa-plus"></i> Tambah Menu
       </a>
     </div>
   </div>
 
+  <!-- tampilkan flash message sukses atau gagal jika ada -->
   <?php if ($flashpesan): ?>
   <div class="flashpesan flash<?= $flashjenis ?>">
     <i class="fa-solid fa-<?= $flashjenis === 'sukses' ? 'circle-check' : 'circle-xmark' ?>"></i>
@@ -97,9 +108,10 @@ $urldasar = 'manajemenmenu.php?filter=' . urlencode($filter) . ($cari ? '&cari='
   </div>
   <?php endif; ?>
 
-  <!-- Filter kategori -->
+  <!-- filter tab kategori menu -->
   <div class="filter-bar">
     <?php $paramcari = $cari ? '&cari=' . urlencode($cari) : ''; ?>
+    <!-- tab "semua" — aktif jika filter saat ini adalah "Semua" -->
     <a href="manajemenmenu.php<?= $cari ? '?cari='.urlencode($cari) : '' ?>"
        class="chip-filter <?= $filter === 'Semua' ? 'aktif' : '' ?>">
       Semua
@@ -112,11 +124,12 @@ $urldasar = 'manajemenmenu.php?filter=' . urlencode($filter) . ($cari ? '&cari='
     <?php endforeach; ?>
   </div>
 
-  <!-- Grid menu -->
+  <!-- grid kartu menu — tampil jika ada data -->
   <?php if ($hasilmenu && $hasilmenu->num_rows > 0): ?>
   <div class="grid-menu">
     <?php while ($menu = $hasilmenu->fetch_assoc()): ?>
     <div class="kartu-menu">
+      <!-- gambar menu; jika gambar tidak ada, tampilkan area abu-abu -->
       <img class="gambar-menu"
            src="../../2. aset/katalog/<?= htmlspecialchars($menu['foto']) ?>"
            alt="<?= htmlspecialchars($menu['nama_menu']) ?>"
@@ -129,30 +142,32 @@ $urldasar = 'manajemenmenu.php?filter=' . urlencode($filter) . ($cari ? '&cari='
           <i class="fa-solid fa-box" style="font-size:10px;"></i>
           Stok: <strong><?= $menu['stok'] ?></strong>
           <?php if ($menu['stok'] <= 5 && $menu['stok'] > 0): ?>
+          <!-- peringatan stok hampir habis jika stok 1-5 -->
           <span style="color:var(--tunggu);font-size:10px;"> (hampir habis)</span>
           <?php elseif ($menu['stok'] == 0): ?>
           <span style="color:var(--gagal);font-size:10px;"> (habis)</span>
           <?php endif; ?>
         </div>
         <div style="margin-top:6px;">
+          <!-- badge status menu: aktif (hijau) atau nonaktif (abu) -->
           <span class="badge <?= $menu['status'] === 'aktif' ? 'siap' : 'selesai' ?>">
             <?= $menu['status'] === 'aktif' ? 'Aktif' : 'Nonaktif' ?>
           </span>
         </div>
       </div>
       <div class="aksi-menu">
-        <!-- Edit: reload halaman dengan ?edit=ID#modal-edit agar data edit dimuat -->
+        <!-- tombol edit: reload halaman dengan ?edit=ID lalu buka modal edit via css :target -->
         <a href="manajemenmenu.php?edit=<?= $menu['id_menu'] ?>&filter=<?= urlencode($filter) ?><?= $cari ? '&cari='.urlencode($cari) : '' ?>#modal-edit"
            class="tombolkecil">
           <i class="fa-solid fa-pen"></i> Edit
         </a>
-        <!-- Toggle status: langsung tanpa konfirmasi (bisa dibalik) -->
+        <!-- toggle aktif/nonaktif: langsung ke file proses tanpa konfirmasi (reversible) -->
         <a href="prosesmanajemenmenu.php?aksi=toggle&id=<?= $menu['id_menu'] ?>&filter=<?= urlencode($filter) ?>"
            class="tombolkecil <?= $menu['status'] === 'aktif' ? 'kuning' : 'hijau' ?>">
           <i class="fa-solid fa-<?= $menu['status'] === 'aktif' ? 'ban' : 'check' ?>"></i>
           <?= $menu['status'] === 'aktif' ? 'Nonaktifkan' : 'Aktifkan' ?>
         </a>
-        <!-- Hapus: buka modal konfirmasi via CSS :target -->
+        <!-- tombol hapus: buka modal konfirmasi dulu via css :target sebelum benar-benar menghapus -->
         <a href="manajemenmenu.php?hapus=<?= $menu['id_menu'] ?>&filter=<?= urlencode($filter) ?><?= $cari ? '&cari='.urlencode($cari) : '' ?>#konfirm-hapus"
            class="tombolkecil merah">
           <i class="fa-solid fa-trash"></i>
@@ -162,6 +177,7 @@ $urldasar = 'manajemenmenu.php?filter=' . urlencode($filter) . ($cari ? '&cari='
     <?php endwhile; ?>
   </div>
   <?php else: ?>
+  <!-- tampilan kosong jika tidak ada menu atau pencarian tidak menemukan hasil -->
   <div class="kosong">
     <div class="ikon-kosong"><i class="fa-solid fa-bowl-food"></i></div>
     <h3><?= $cari ? 'Menu tidak ditemukan' : 'Belum ada menu' ?></h3>
@@ -178,8 +194,9 @@ $urldasar = 'manajemenmenu.php?filter=' . urlencode($filter) . ($cari ? '&cari='
 
 </main>
 
-<!-- ===== MODAL TAMBAH MENU (CSS :target) ===== -->
+<!-- modal tambah menu baru — muncul saat URL berisi fragment #modal-tambah -->
 <div class="modaloverlay" id="modal-tambah">
+  <!-- klik area di luar modal → kembali ke urldasar (tutup modal) -->
   <a href="<?= $urldasar ?>" class="penutup-modal"></a>
   <div class="isimodal" style="max-width:520px;position:relative;z-index:1;">
     <div class="modal-judul">
@@ -188,6 +205,7 @@ $urldasar = 'manajemenmenu.php?filter=' . urlencode($filter) . ($cari ? '&cari='
         <i class="fa-solid fa-xmark"></i>
       </a>
     </div>
+    <!-- form tambah menu dikirim ke prosesmanajemenmenu.php, enctype multipart untuk upload foto -->
     <form method="POST" action="prosesmanajemenmenu.php" enctype="multipart/form-data">
       <input type="hidden" name="aksi" value="tambah">
       <input type="hidden" name="filter" value="<?= htmlspecialchars($filter) ?>">
@@ -223,6 +241,7 @@ $urldasar = 'manajemenmenu.php?filter=' . urlencode($filter) . ($cari ? '&cari='
       </div>
       <div class="kelompokform">
         <label>Foto Menu <span style="color:var(--gagal);">*</span></label>
+        <!-- accept membatasi tipe file yang bisa dipilih di dialog file browser -->
         <input type="file" name="foto" accept="image/jpeg,image/png,image/webp" required>
         <small>Format: JPG, PNG, WEBP. Maks. 2MB</small>
       </div>
@@ -236,7 +255,7 @@ $urldasar = 'manajemenmenu.php?filter=' . urlencode($filter) . ($cari ? '&cari='
   </div>
 </div>
 
-<!-- ===== MODAL EDIT MENU (CSS :target) ===== -->
+<!-- modal edit menu — muncul saat URL berisi fragment #modal-edit -->
 <div class="modaloverlay" id="modal-edit">
   <a href="<?= $urldasar ?>" class="penutup-modal"></a>
   <div class="isimodal" style="max-width:520px;position:relative;z-index:1;">
@@ -247,8 +266,10 @@ $urldasar = 'manajemenmenu.php?filter=' . urlencode($filter) . ($cari ? '&cari='
       </a>
     </div>
     <?php if ($dataedit): ?>
+    <!-- form edit menu — data diisi awal dari $dataedit yang diambil dari database -->
     <form method="POST" action="prosesmanajemenmenu.php" enctype="multipart/form-data">
       <input type="hidden" name="aksi" value="edit">
+      <!-- kirim id_menu dan nama file foto lama agar bisa dipakai jika foto tidak diganti -->
       <input type="hidden" name="id_menu" value="<?= $dataedit['id_menu'] ?>">
       <input type="hidden" name="filter" value="<?= htmlspecialchars($filter) ?>">
       <input type="hidden" name="foto_lama" value="<?= htmlspecialchars($dataedit['foto']) ?>">
@@ -262,6 +283,7 @@ $urldasar = 'manajemenmenu.php?filter=' . urlencode($filter) . ($cari ? '&cari='
           <label>Kategori <span style="color:var(--gagal);">*</span></label>
           <select name="kategori" required>
             <?php foreach ($kategorilist as $k): ?>
+            <!-- tandai "selected" pada kategori yang sesuai data saat ini -->
             <option value="<?= $k ?>" <?= $dataedit['kategori'] === $k ? 'selected' : '' ?>><?= $k ?></option>
             <?php endforeach; ?>
           </select>
@@ -284,6 +306,7 @@ $urldasar = 'manajemenmenu.php?filter=' . urlencode($filter) . ($cari ? '&cari='
         <textarea name="deskripsi" rows="2"><?= htmlspecialchars($dataedit['deskripsi']) ?></textarea>
       </div>
       <div class="kelompokform">
+        <!-- input foto opsional saat edit — jika dikosongkan, foto lama tetap dipakai -->
         <label>Ganti Foto (kosongkan jika tidak ingin ganti)</label>
         <input type="file" name="foto" accept="image/jpeg,image/png,image/webp">
         <small>Foto saat ini: <?= htmlspecialchars($dataedit['foto']) ?></small>
@@ -296,12 +319,13 @@ $urldasar = 'manajemenmenu.php?filter=' . urlencode($filter) . ($cari ? '&cari='
       </div>
     </form>
     <?php else: ?>
+    <!-- pesan ini muncul jika seseorang membuka #modal-edit tanpa parameter ?edit= -->
     <p style="text-align:center;color:var(--tekssamar);padding:20px;">Pilih menu yang ingin diedit.</p>
     <?php endif; ?>
   </div>
 </div>
 
-<!-- ===== MODAL KONFIRMASI HAPUS (CSS :target) ===== -->
+<!-- modal konfirmasi hapus — hanya dirender jika ada parameter ?hapus= di URL -->
 <?php if ($hapusid > 0): ?>
 <div class="modaloverlay" id="konfirm-hapus">
   <a href="<?= $urldasar ?>" class="penutup-modal"></a>
@@ -313,6 +337,7 @@ $urldasar = 'manajemenmenu.php?filter=' . urlencode($filter) . ($cari ? '&cari='
     <div style="font-size:13px;color:var(--tekssamar);margin-bottom:20px;">
       Tindakan ini tidak bisa dibatalkan. Menu akan dihapus secara permanen.
     </div>
+    <!-- konfirmasi hapus: klik tombol ini akan mengirim ke prosesmanajemenmenu.php dengan aksi=hapus -->
     <a href="prosesmanajemenmenu.php?aksi=hapus&id=<?= $hapusid ?>&filter=<?= urlencode($filter) ?>"
        class="tombolutama blok" style="margin-bottom:10px;background:var(--gagal);">
       <i class="fa-solid fa-trash"></i> Ya, Hapus

@@ -1,19 +1,30 @@
 <?php
-/* ============================================================
-   EDIT PENGGUNA — FORM — ADMIN
-   ============================================================ */
+/* halaman form edit pengguna — admin bisa mengubah username, email,
+   nama toko (jika penjual), dan password pengguna.
+   peran (role) tidak bisa diubah melalui form ini. */
+
+// sambungkan ke database dan pastikan yang mengakses adalah admin
 include '../../1. koneksi/koneksi.php';
 include '../../3. komponen/guardadmin.php';
+
+// tandai menu "user" sebagai aktif di navbar
 $halamansaatini = 'user';
 
+// ambil id pengguna dari url, konversi ke integer untuk keamanan
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+
+// jika id tidak valid, kembalikan ke daftar pengguna
 if (!$id) { header("Location: user.php"); exit; }
 
+// ambil data pengguna yang akan diedit, hanya yang belum dihapus
 $qu = $conn->prepare("SELECT * FROM tb_user WHERE id_user=? AND deleted=0");
 $qu->bind_param("i", $id); $qu->execute();
 $user = $qu->get_result()->fetch_assoc(); $qu->close();
+
+// jika pengguna tidak ditemukan, kembalikan ke daftar
 if (!$user) { header("Location: user.php"); exit; }
 
+// ambil data toko jika pengguna ini adalah penjual (untuk menampilkan field nama toko)
 $toko = null;
 if ($user['role'] === 'penjual') {
     $qt = $conn->prepare("SELECT * FROM tb_toko WHERE id_user=? AND deleted=0");
@@ -21,11 +32,12 @@ if ($user['role'] === 'penjual') {
     $toko = $qt->get_result()->fetch_assoc(); $qt->close();
 }
 
+// ambil flash message dari session (misal: error validasi dari prosesedituser.php)
 $flashpesan = ''; $flashjenis = '';
 if (!empty($_SESSION['flash'])) {
     $flashpesan = $_SESSION['flash']['pesan'];
     $flashjenis = $_SESSION['flash']['jenis'];
-    unset($_SESSION['flash']);
+    unset($_SESSION['flash']); // hapus agar tidak muncul lagi di refresh berikutnya
 }
 ?>
 <!DOCTYPE html>
@@ -62,11 +74,14 @@ if (!empty($_SESSION['flash'])) {
 
   <div class="kartu">
     <h3><i class="fa-solid fa-pen"></i> Ubah Informasi Akun</h3>
+    <!-- form dikirim ke prosesedituser.php dengan metode POST -->
     <form method="POST" action="prosesedituser.php">
+      <!-- id_user dikirim sebagai field tersembunyi agar proses tahu pengguna mana yang diedit -->
       <input type="hidden" name="id_user" value="<?= $id ?>">
       <div class="barisform">
         <div class="kelompokform">
           <label>Username <span style="color:var(--gagal);">*</span></label>
+          <!-- nilai diisi dari data pengguna saat ini, htmlspecialchars mencegah xss -->
           <input type="text" name="username" required minlength="6" maxlength="50"
                  value="<?= htmlspecialchars($user['username']) ?>">
           <small>6–50 karakter</small>
@@ -77,6 +92,7 @@ if (!empty($_SESSION['flash'])) {
         </div>
       </div>
       <?php if ($user['role'] === 'penjual' && $toko): ?>
+      <!-- field nama toko hanya muncul jika pengguna adalah penjual dan sudah punya toko -->
       <div class="kelompokform">
         <label>Nama Toko</label>
         <input type="text" name="nama_toko" maxlength="100"
@@ -85,14 +101,17 @@ if (!empty($_SESSION['flash'])) {
       <?php endif; ?>
       <div class="kelompokform">
         <label>Peran</label>
+        <!-- role ditampilkan tapi tidak bisa diubah (disabled = tidak dikirim ke server) -->
         <input type="text" value="<?= ucfirst($user['role']) ?>" disabled>
         <small>Peran tidak dapat diubah melalui form ini.</small>
       </div>
       <div class="kelompokform">
         <label>Password Baru</label>
         <div style="position:relative;">
+          <!-- jika field ini dikosongkan, password lama tidak berubah -->
           <input type="password" name="password" id="pass_edit" minlength="8" maxlength="100"
                  placeholder="Kosongkan jika tidak ingin mengubah..." style="padding-right:44px;">
+          <!-- tombol show/hide password: menggunakan javascript inline untuk toggle type input -->
           <button type="button" onclick="(function(b){var i=document.getElementById('pass_edit');i.type=i.type==='password'?'text':'password';b.querySelector('i').className=i.type==='password'?'fa-solid fa-eye':'fa-solid fa-eye-slash';})(this)"
                   style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#99627A;cursor:pointer;font-size:15px;padding:4px;">
             <i class="fa-solid fa-eye"></i>

@@ -1,22 +1,31 @@
 <?php
-/* ============================================================
-   MANAJEMEN PENGGUNA — ADMIN
-   ============================================================ */
+/* halaman daftar semua pengguna platform — hanya admin yang bisa akses.
+   menampilkan tabel pengguna dengan fitur filter role (penjual/pembeli/admin)
+   dan pencarian berdasarkan username, email, atau nama toko.
+   penjual memiliki kolom tambahan: info toko dan tombol toggle status toko. */
+
+// sambungkan ke database dan pastikan yang mengakses adalah admin
 include '../../1. koneksi/koneksi.php';
 include '../../3. komponen/guardadmin.php';
+
+// tandai menu "user" sebagai aktif di navbar
 $halamansaatini = 'user';
 
+// baca filter role dari url, default semua; validasi agar hanya nilai yang diizinkan diterima
 $rolefilter = $_GET['role'] ?? 'semua';
 $cari       = trim($_GET['cari'] ?? '');
 if (!in_array($rolefilter, ['semua','admin','penjual','pembeli'])) $rolefilter = 'semua';
 
-// Hitung per role
+// hitung jumlah pengguna per role untuk ditampilkan di badge tab filter
 $qhitung = $conn->query("SELECT role, COUNT(*) AS jml FROM tb_user WHERE deleted=0 GROUP BY role");
 $jmlrole = ['admin'=>0,'penjual'=>0,'pembeli'=>0];
 while ($r = $qhitung->fetch_assoc()) $jmlrole[$r['role']] = (int)$r['jml'];
-$jmlsemua = array_sum($jmlrole);
+$jmlsemua = array_sum($jmlrole); // total semua pengguna dari semua role
 
-// Query lengkap: role priority + info toko + pesanan
+/* bangun query utama secara dinamis berdasarkan filter yang aktif.
+   menggunakan subquery untuk menghitung pesanan toko dan pesanan user
+   agar tidak terjadi penggandaan baris akibat join berganda.
+   urut_role: penjual di atas, pembeli di tengah, admin di bawah. */
 $sql = "SELECT u.id_user, u.username, u.email, u.role, u.created,
                t.id_toko, t.nama_toko, t.status_toko,
                CASE u.role WHEN 'penjual' THEN 0 WHEN 'pembeli' THEN 1 ELSE 2 END AS urut_role,
@@ -25,21 +34,29 @@ $sql = "SELECT u.id_user, u.username, u.email, u.role, u.created,
         FROM tb_user u
         LEFT JOIN tb_toko t ON u.id_user=t.id_user AND t.deleted=0
         WHERE u.deleted=0";
+
+// array untuk menampung parameter dan tipe data yang akan di-bind ke prepared statement
 $params = []; $types = '';
+
+// tambahkan kondisi filter role jika bukan "semua"
 if ($rolefilter !== 'semua') { $sql .= " AND u.role=?"; $params[] = $rolefilter; $types .= 's'; }
+
+// tambahkan kondisi pencarian jika ada kata kunci
 if ($cari !== '') {
     $sql .= " AND (u.username LIKE ? OR u.email LIKE ? OR t.nama_toko LIKE ?)";
-    $likcari = "%$cari%";
+    $likcari = "%$cari%"; // karakter % artinya cocok dengan apa saja di posisi itu
     $params[] = $likcari; $params[] = $likcari; $params[] = $likcari; $types .= 'sss';
 }
 $sql .= " ORDER BY urut_role ASC, u.username ASC";
 
+// jalankan query dengan prepared statement agar aman dari sql injection
 $st = $conn->prepare($sql);
-if ($params) { $st->bind_param($types, ...$params); }
+if ($params) { $st->bind_param($types, ...$params); } // spread operator: unpack array jadi argumen
 $st->execute();
 $daftaruser = $st->get_result()->fetch_all(MYSQLI_ASSOC);
 $st->close();
 
+// ambil flash message dari session (pesan hasil operasi sebelumnya), lalu hapus agar tidak muncul lagi
 $flashpesan = ''; $flashjenis = '';
 if (!empty($_SESSION['flash'])) {
     $flashpesan = $_SESSION['flash']['pesan'];
@@ -68,6 +85,7 @@ if (!empty($_SESSION['flash'])) {
       <p>Kelola semua akun pengguna platform jajankita</p>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <!-- tombol ekspor csv: meneruskan filter yang sedang aktif ke halaman ekspor -->
       <a href="eksporuser.php?role=<?= htmlspecialchars($rolefilter) ?>&cari=<?= urlencode($cari) ?>" class="tombolringan">
         <i class="fa-solid fa-file-csv"></i> Ekspor CSV
       </a>
@@ -84,7 +102,7 @@ if (!empty($_SESSION['flash'])) {
   </div>
   <?php endif; ?>
 
-  <!-- Ringkasan Cepat -->
+  <!-- ringkasan jumlah pengguna per role dalam bentuk kartu statistik -->
   <div class="grid-stat" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px;">
     <div class="kartu-stat">
       <div class="ikon-stat"><i class="fa-solid fa-users"></i></div>
@@ -123,7 +141,7 @@ if (!empty($_SESSION['flash'])) {
     </div>
   </div>
 
-  <!-- Filter Peran -->
+  <!-- tab filter berdasarkan role, menampilkan jumlah di setiap tab -->
   <div class="filter-bar">
     <a href="user.php" class="chip-filter <?= $rolefilter === 'semua' ? 'aktif' : '' ?>">
       Semua (<?= $jmlsemua ?>)
@@ -139,9 +157,10 @@ if (!empty($_SESSION['flash'])) {
     </a>
   </div>
 
-  <!-- Pencarian -->
+  <!-- form pencarian: input teks dikiri, tombol kirim di kanan -->
   <form method="GET" action="user.php" style="margin-bottom:16px;">
     <?php if ($rolefilter !== 'semua'): ?>
+    <!-- simpan filter role yang sedang aktif agar tidak hilang saat submit pencarian -->
     <input type="hidden" name="role" value="<?= htmlspecialchars($rolefilter) ?>">
     <?php endif; ?>
     <div class="kotakcari">
@@ -152,7 +171,7 @@ if (!empty($_SESSION['flash'])) {
     </div>
   </form>
 
-  <!-- Tips untuk penjual -->
+  <!-- tips toggle status toko hanya ditampilkan jika filter menampilkan penjual -->
   <?php if (in_array($rolefilter, ['semua','penjual'])): ?>
   <div class="peringatan peringataninfo" style="margin-bottom:16px;">
     <i class="fa-solid fa-lightbulb"></i>
@@ -160,7 +179,7 @@ if (!empty($_SESSION['flash'])) {
   </div>
   <?php endif; ?>
 
-  <!-- Tabel Pengguna -->
+  <!-- tabel daftar pengguna -->
   <div class="kartu" style="padding:0;overflow:hidden;">
     <div class="tabel-wrapper">
       <table>
@@ -188,13 +207,15 @@ if (!empty($_SESSION['flash'])) {
           </tr>
           <?php else: ?>
           <?php
+          // label pemisah seksi per role (hanya ditampilkan di mode "semua")
           $labelseksi = [
               'penjual' => '<i class="fa-solid fa-store"></i>&nbsp; Penjual — Pemilik Toko',
               'pembeli'  => '<i class="fa-solid fa-bag-shopping"></i>&nbsp; Pembeli',
               'admin'    => '<i class="fa-solid fa-user-shield"></i>&nbsp; Admin Platform',
           ];
-          $seksiaktif = '';
+          $seksiaktif = ''; // melacak role terakhir untuk tahu kapan harus menampilkan baris pemisah
           foreach ($daftaruser as $u):
+              // tampilkan baris pemisah seksi setiap kali role berubah (di mode semua)
               if ($rolefilter === 'semua' && $u['role'] !== $seksiaktif):
                   $seksiaktif = $u['role'];
           ?>
@@ -209,6 +230,7 @@ if (!empty($_SESSION['flash'])) {
           <tr>
             <td>
               <div class="user-baris">
+                <!-- avatar berupa 2 huruf pertama username, huruf kapital -->
                 <div class="avatar-tabel"><?= strtoupper(mb_substr($u['username'],0,2)) ?></div>
                 <div>
                   <div class="nama"><?= htmlspecialchars($u['username']) ?></div>
@@ -220,6 +242,7 @@ if (!empty($_SESSION['flash'])) {
               <span class="badge <?= $u['role'] ?>"><?= ucfirst($u['role']) ?></span>
             </td>
             <td>
+              <!-- info toko hanya ditampilkan untuk penjual yang sudah punya toko -->
               <?php if ($u['role'] === 'penjual' && $u['id_toko']): ?>
               <div style="font-size:13px;font-weight:700;color:var(--teks);margin-bottom:3px;">
                 <?= htmlspecialchars($u['nama_toko']) ?>
@@ -234,6 +257,7 @@ if (!empty($_SESSION['flash'])) {
             </td>
             <td class="tengah">
               <?php if ($u['role'] === 'penjual' && $u['id_toko']): ?>
+              <!-- tombol toggle status toko: klik langsung ubah buka/tutup tanpa halaman baru -->
               <form method="POST" action="../manajementoko/prosestoggletoko.php" style="display:inline;">
                 <input type="hidden" name="id_toko" value="<?= $u['id_toko'] ?>">
                 <button type="submit"
@@ -249,6 +273,7 @@ if (!empty($_SESSION['flash'])) {
               <?php endif; ?>
             </td>
             <td class="tengah" style="font-weight:700;">
+              <!-- tampilkan jumlah pesanan sesuai role: penjual pakai pesanan_toko, pembeli pakai pesanan_user -->
               <?php if ($u['role'] === 'penjual'): ?>
                 <?= (int)$u['pesanan_toko'] ?>
               <?php elseif ($u['role'] === 'pembeli'): ?>

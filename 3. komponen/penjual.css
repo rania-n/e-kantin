@@ -1,37 +1,36 @@
-/* ==================================================================
-   PENJUAL.CSS - E-KANTIN
-   Design language identik dengan pembeli.css agar tampilan konsisten.
-   Layout: Sidebar tetap di kiri (desktop-first / backend admin panel)
-   Mobile: header + hamburger menu
-   ================================================================== */
+/* penjual.css — e-kantin
+   dipakai oleh semua halaman panel penjual
+   desain selaras dengan pembeli.css agar tampilan konsisten
+   layout: sidebar tetap di kiri (desktop), bottom nav di mobile */
 
+/* impor font poppins dari google fonts */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
 
-/* ===== VARIABEL WARNA (sama persis dengan pembeli.css) ===== */
+/* variabel warna dan ukuran — sama persis dengan pembeli.css */
 :root {
-  --utama:      #643843;
-  --kedua:      #99627A;
-  --latar:      #EFD9D4;
-  --putihbg:    #F8EBF1;
-  --putih:      #FFFFFF;
-  --teks:       #643843;
-  --tekssamar:  #99627A;
-  --tekskecil:  #6B7280;
-  --garis:      #E7CBCB;
-  --sukses:     #16A34A;
-  --suksesbg:   #DCFCE7;
-  --tunggu:     #F59E0B;
-  --tunggubg:   #FEF3C7;
-  --gagal:      #DC2626;
-  --gagalbg:    #FEE2E2;
-  --info:       #2563EB;
-  --infobg:     #DBEAFE;
-  --bayang:     0 2px 8px rgba(100,56,67,.08);
-  --bayangatas: 0 4px 16px rgba(100,56,67,.14);
-  --sidebarlebar: 240px;
+  --utama:      #643843; /* warna coklat kemerahan — warna merek utama */
+  --kedua:      #99627A; /* warna pink — aksen sekunder */
+  --latar:      #EFD9D4; /* warna latar halaman, pink sangat muda */
+  --putihbg:    #F8EBF1; /* putih kemerahan — background kartu terang */
+  --putih:      #FFFFFF; /* putih murni */
+  --teks:       #643843; /* warna teks utama */
+  --tekssamar:  #99627A; /* warna teks sekunder yang lebih redup */
+  --tekskecil:  #6B7280; /* warna teks kecil abu-abu netral */
+  --garis:      #E7CBCB; /* warna garis pemisah dan border */
+  --sukses:     #16A34A; /* hijau untuk status berhasil */
+  --suksesbg:   #DCFCE7; /* latar badge/flash sukses */
+  --tunggu:     #F59E0B; /* kuning untuk status menunggu */
+  --tunggubg:   #FEF3C7; /* latar badge/flash menunggu */
+  --gagal:      #DC2626; /* merah untuk status gagal atau error */
+  --gagalbg:    #FEE2E2; /* latar badge/flash gagal */
+  --info:       #2563EB; /* biru untuk status informasi */
+  --infobg:     #DBEAFE; /* latar badge/flash info */
+  --bayang:     0 2px 8px rgba(100,56,67,.08); /* bayangan halus untuk kartu */
+  --bayangatas: 0 4px 16px rgba(100,56,67,.14); /* bayangan lebih kuat untuk modal */
+  --sidebarlebar: 240px; /* lebar sidebar navigasi kiri */
 }
 
-/* ===== RESET ===== */
+/* reset bawaan browser agar tampilan konsisten */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body {
@@ -46,29 +45,31 @@ img { max-width: 100%; display: block; }
 button, input, select, textarea { font-family: inherit; font-size: inherit; }
 ul { list-style: none; }
 
-/* ==================================================================
-   SIDEBAR (fixed kiri, selalu tampil di desktop)
-   ================================================================== */
+/* sidebar (fixed kiri, selalu tampil di desktop) */
+
+/* sidebar navigasi yang selalu terlihat di sisi kiri layar desktop */
 .sidebar {
-  position: fixed;
+  position: fixed; /* tidak ikut scroll halaman */
   top: 0; left: 0;
   width: var(--sidebarlebar);
-  height: 100vh;
-  background: var(--utama);
+  height: 100vh; /* setinggi penuh layar */
+  background: var(--utama); /* background gelap merek */
   color: var(--putihbg);
   display: flex;
-  flex-direction: column;
+  flex-direction: column; /* susun konten dari atas ke bawah */
   padding: 0;
-  z-index: 1000;
-  overflow-y: auto;
+  z-index: 1000; /* pastikan sidebar di atas konten lain */
+  overflow-y: auto; /* bisa digulir jika menu banyak */
   overflow-x: hidden;
 }
 
+/* area logo dan nama toko di bagian atas sidebar */
 .sidebar-logo {
   padding: 20px 18px 16px;
-  border-bottom: 1px solid rgba(255,255,255,.12);
+  border-bottom: 1px solid rgba(255,255,255,.12); /* garis tipis pemisah */
   margin-bottom: 8px;
 }
+/* nama aplikasi di sidebar */
 .sidebar-logo .namaapp {
   font-size: 18px;
   font-weight: 800;
@@ -79,20 +80,23 @@ ul { list-style: none; }
   margin-bottom: 2px;
 }
 .sidebar-logo .namaapp i { font-size: 18px; }
+/* nama toko penjual yang ditampilkan di bawah nama aplikasi */
 .sidebar-logo .namatoko {
   font-size: 12px;
-  color: rgba(255,255,255,.7);
+  color: rgba(255,255,255,.7); /* sedikit redup agar tidak bersaing dengan nama aplikasi */
   font-weight: 500;
 }
 
+/* area daftar menu navigasi */
 .sidebar-nav {
-  flex: 1;
+  flex: 1; /* mengisi ruang yang tersisa antara logo dan footer */
   padding: 8px 12px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 2px; /* jarak antar item menu */
 }
 
+/* satu item menu di sidebar */
 .sidebar-item {
   display: flex;
   align-items: center;
@@ -105,45 +109,53 @@ ul { list-style: none; }
   transition: background .15s, color .15s;
   cursor: pointer;
 }
+/* ikon item menu — lebar tetap agar teks sejajar */
 .sidebar-item i { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
 .sidebar-item:hover { background: rgba(255,255,255,.12); color: var(--putihbg); }
+/* item aktif — lebih tebal dan sedikit lebih terang */
 .sidebar-item.aktif { background: rgba(255,255,255,.2); color: var(--putihbg); font-weight: 700; }
 
+/* garis pemisah horizontal di sidebar */
 .sidebar-divider {
   height: 1px;
   background: rgba(255,255,255,.12);
   margin: 8px 12px;
 }
 
+/* area paling bawah sidebar — biasanya berisi tombol logout */
 .sidebar-footer {
   padding: 12px;
   border-top: 1px solid rgba(255,255,255,.12);
 }
+/* hover tombol logout berwarna merah sebagai peringatan */
 .sidebar-footer .sidebar-item:hover { background: rgba(220,38,38,.3); }
 
-/* Status toko badge (buka/tutup) */
+/* badge status toko buka/tutup yang ditampilkan di bawah nama toko */
 .statustoko {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   padding: 3px 10px;
-  border-radius: 9999px;
+  border-radius: 9999px; /* bentuk pil */
   font-size: 11px;
   font-weight: 700;
   border: 1px solid rgba(255,255,255,.3);
-  background: rgba(255,255,255,.12);
+  background: rgba(255,255,255,.12); /* latar semi-transparan di atas sidebar gelap */
   color: rgba(255,255,255,.9);
   margin-top: 6px;
 }
+/* badge buka — hijau semi-transparan */
 .statustoko.buka { background: rgba(22,163,74,.3); border-color: rgba(22,163,74,.5); }
+/* badge tutup — merah semi-transparan */
 .statustoko.tutup { background: rgba(220,38,38,.3); border-color: rgba(220,38,38,.5); }
+/* titik kecil status — ukuran 8px agar sesuai sebagai indikator */
 .statustoko i { font-size: 8px; }
 
-/* ==================================================================
-   MOBILE HEADER (hamburger)
-   ================================================================== */
+/* mobile header (hamburger) */
+
+/* header sticky di atas layar mobile dengan tombol hamburger */
 .mobile-header {
-  display: none;
+  display: none; /* tersembunyi di desktop, tampil di mobile via media query */
   position: fixed;
   top: 0; left: 0; right: 0;
   height: 56px;
@@ -152,10 +164,11 @@ ul { list-style: none; }
   padding: 0 16px;
   align-items: center;
   gap: 12px;
-  z-index: 1100;
+  z-index: 1100; /* di atas sidebar agar terlihat */
   box-shadow: 0 2px 8px rgba(0,0,0,.15);
 }
 .mobile-header .judul { font-size: 16px; font-weight: 700; }
+/* tombol hamburger untuk membuka sidebar di mobile */
 .tombolhambur {
   background: none;
   border: none;
@@ -164,45 +177,46 @@ ul { list-style: none; }
   cursor: pointer;
   padding: 4px 6px;
 }
+/* overlay gelap di belakang sidebar saat dibuka di mobile */
 .overlay-sidebar {
   display: none;
   position: fixed;
-  inset: 0;
+  inset: 0; /* tutup seluruh layar */
   background: rgba(0,0,0,.5);
-  z-index: 999;
+  z-index: 999; /* di bawah sidebar tapi di atas konten */
   cursor: pointer;
 }
 
-/* Checkbox tersembunyi untuk sidebar toggle */
+/* checkbox tersembunyi yang dipakai untuk toggle sidebar tanpa javascript */
 .togel-input { display: none; }
 
-/* ==================================================================
-   AREA KONTEN UTAMA
-   ================================================================== */
+/* area konten utama */
+
+/* area konten yang digeser ke kanan sejauh lebar sidebar */
 .konten {
-  margin-left: var(--sidebarlebar);
+  margin-left: var(--sidebarlebar); /* beri ruang untuk sidebar */
   min-height: 100vh;
   padding: 28px 32px;
   background: var(--latar);
   width: calc(100% - var(--sidebarlebar));
 }
 
-/* pembatas lebar untuk halaman struk */
+/* pembatas lebar untuk halaman struk agar tidak terlalu lebar */
 .konten-sempit {
   max-width: 480px;
   width: 100%;
-  margin: 0 auto;
+  margin: 0 auto; /* tengah secara horizontal */
 }
 
-/* ==================================================================
-   HEADER HALAMAN
-   ================================================================== */
+/* header halaman */
+
+/* baris judul halaman di atas konten */
 .header-halaman {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 16px;
-  flex-wrap: wrap;
+  flex-wrap: wrap; /* tombol pindah ke bawah jika layar sempit */
   margin-bottom: 24px;
 }
 .header-halaman .kiri h1 {
@@ -213,15 +227,16 @@ ul { list-style: none; }
   align-items: center;
   gap: 8px;
 }
+/* teks deskripsi di bawah judul */
 .header-halaman .kiri p {
   font-size: 13px;
   color: var(--tekssamar);
   margin-top: 2px;
 }
 
-/* ==================================================================
-   FLASH MESSAGE
-   ================================================================== */
+/* flash message */
+
+/* kotak pesan setelah redirect (tambah/edit/hapus berhasil atau gagal) */
 .flashpesan {
   padding: 12px 16px;
   border-radius: 10px;
@@ -237,12 +252,12 @@ ul { list-style: none; }
 .flashinfo   { background: var(--infobg);   color: var(--info);   border: 1px solid #BFDBFE; }
 .flashtunggu { background: var(--tunggubg); color: var(--tunggu); border: 1px solid #FDE68A; }
 
-/* ==================================================================
-   KARTU STATISTIK (grid 4 kolom)
-   ================================================================== */
+/* kartu statistik (grid 4 kolom) */
+
+/* grid kartu statistik dashboard — 4 kolom di layar lebar */
 .grid-stat {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, 1fr); /* 4 kolom tetap di desktop */
   gap: 14px;
   margin-bottom: 20px;
 }
@@ -250,6 +265,7 @@ ul { list-style: none; }
 @media (max-width: 1000px) {
   .grid-stat { grid-template-columns: repeat(2, 1fr); }
 }
+/* satu kartu statistik */
 .kartu-stat {
   background: var(--putih);
   border-radius: 14px;
@@ -260,6 +276,7 @@ ul { list-style: none; }
   align-items: flex-start;
   gap: 14px;
 }
+/* ikon kotak di sisi kiri kartu statistik */
 .kartu-stat .ikon-stat {
   width: 44px;
   height: 44px;
@@ -270,8 +287,9 @@ ul { list-style: none; }
   align-items: center;
   justify-content: center;
   font-size: 18px;
-  flex-shrink: 0;
+  flex-shrink: 0; /* tidak mengecil meski ruang terbatas */
 }
+/* angka besar di kartu statistik */
 .kartu-stat .isi-stat .nilai {
   font-size: 20px;
   font-weight: 800;
@@ -279,24 +297,26 @@ ul { list-style: none; }
   line-height: 1.1;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
+  text-overflow: ellipsis; /* potong jika angka terlalu panjang */
 }
+/* label di bawah angka */
 .kartu-stat .isi-stat .label {
   font-size: 12px;
   color: var(--tekssamar);
   margin-top: 2px;
 }
+/* teks tren (naik/turun dari periode lalu) */
 .kartu-stat .isi-stat .tren {
   font-size: 11px;
   font-weight: 600;
   margin-top: 4px;
 }
-.kartu-stat .isi-stat .tren.naik  { color: var(--sukses); }
-.kartu-stat .isi-stat .tren.turun { color: var(--gagal); }
+.kartu-stat .isi-stat .tren.naik  { color: var(--sukses); } /* tren positif — hijau */
+.kartu-stat .isi-stat .tren.turun { color: var(--gagal); }  /* tren negatif — merah */
 
-/* ==================================================================
-   KARTU UMUM
-   ================================================================== */
+/* kartu umum */
+
+/* kotak putih bershadow untuk berbagai konten halaman */
 .kartu {
   background: var(--putih);
   border-radius: 14px;
@@ -305,11 +325,12 @@ ul { list-style: none; }
   box-shadow: var(--bayang);
   margin-bottom: 18px;
 }
+/* judul sub-bagian di dalam kartu — aksen garis kiri vertikal */
 .kartu h3 {
   font-size: 14px;
   font-weight: 700;
   color: var(--utama);
-  border-left: 3px solid var(--kedua);
+  border-left: 3px solid var(--kedua); /* garis aksen kiri */
   padding-left: 10px;
   margin-bottom: 14px;
   display: flex;
@@ -317,7 +338,7 @@ ul { list-style: none; }
   gap: 8px;
 }
 
-/* Grid dua kolom untuk dashboard */
+/* grid dua kolom untuk dashboard (grafik + list) */
 .grid-dua {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
@@ -325,7 +346,7 @@ ul { list-style: none; }
   margin-bottom: 18px;
 }
 
-/* Wrapper search+aksi di header halaman */
+/* wrapper tombol aksi dan kotak cari di header halaman */
 .grup-aksi {
   display: flex;
   gap: 8px;
@@ -333,24 +354,26 @@ ul { list-style: none; }
   align-items: center;
 }
 
-/* ==================================================================
-   CHART PENDAPATAN (SVG)
-   ================================================================== */
+/* chart pendapatan (svg) */
+
+/* pembungkus grafik batang/area pendapatan */
 .area-chart {
   width: 100%;
-  overflow-x: auto;
+  overflow-x: auto; /* bisa digulir jika grafik lebih lebar dari kontainer */
 }
 .area-chart svg { display: block; width: 100%; }
+/* efek redup saat grup batang di-hover */
 .bar-chart-group:hover .bar-fill { opacity: 0.7; }
 .bar-fill { transition: opacity .15s; }
+/* teks tooltip di dalam grafik svg */
 .bar-tooltip {
   font-size: 11px;
   font-family: 'Poppins', sans-serif;
 }
 
-/* ==================================================================
-   STATUS BADGE
-   ================================================================== */
+/* status badge */
+
+/* label status kecil berbentuk pil */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -360,15 +383,16 @@ ul { list-style: none; }
   font-size: 12px;
   font-weight: 700;
 }
+/* varian warna badge sesuai status pesanan */
 .badge.menunggu    { background: var(--tunggubg); color: var(--tunggu); }
 .badge.diproses    { background: var(--infobg);   color: var(--info); }
 .badge.siap        { background: var(--suksesbg); color: var(--sukses); }
 .badge.selesai     { background: var(--latar);    color: var(--tekssamar); }
 .badge.dibatalkan  { background: var(--gagalbg);  color: var(--gagal); }
 
-/* ==================================================================
-   TOMBOL-TOMBOL (identik dengan pembeli.css)
-   ================================================================== */
+/* tombol-tombol (identik dengan pembeli.css) */
+
+/* tombol utama berwarna gelap merek */
 .tombolutama {
   display: inline-flex;
   align-items: center;
@@ -388,6 +412,7 @@ ul { list-style: none; }
 .tombolutama:hover { background: #4d2b35; }
 .tombolutama.blok { width: 100%; }
 
+/* tombol kedua berwarna pink sekunder */
 .tombolkedua {
   display: inline-flex;
   align-items: center;
@@ -406,6 +431,7 @@ ul { list-style: none; }
 }
 .tombolkedua:hover { background: #7c4a5f; }
 
+/* tombol ringan — putih dengan border, untuk aksi sekunder */
 .tombolringan {
   display: inline-flex;
   align-items: center;
@@ -425,6 +451,7 @@ ul { list-style: none; }
 .tombolringan:hover { border-color: var(--utama); }
 .tombolringan.blok  { width: 100%; }
 
+/* tombol berbahaya — merah untuk aksi destruktif */
 .tombolbahaya {
   display: inline-flex;
   align-items: center;
@@ -443,6 +470,7 @@ ul { list-style: none; }
 }
 .tombolbahaya:hover { background: var(--gagal); color: white; }
 
+/* tombol kecil untuk aksi dalam tabel atau kartu */
 .tombolkecil {
   display: inline-flex;
   align-items: center;
@@ -458,16 +486,19 @@ ul { list-style: none; }
   transition: all .15s;
 }
 .tombolkecil:hover       { border-color: var(--utama); }
+/* modifier aktif — background gelap merek */
 .tombolkecil.aktif-kecil { background: var(--utama); color: var(--putihbg); border-color: var(--utama); }
+/* modifier warna sesuai jenis aksi */
 .tombolkecil.hijau       { background: var(--suksesbg); color: var(--sukses); border-color: #BBF7D0; }
 .tombolkecil.merah       { background: var(--gagalbg); color: var(--gagal); border-color: #FCA5A5; }
 .tombolkecil.biru        { background: var(--infobg); color: var(--info); border-color: #BFDBFE; }
 .tombolkecil.kuning      { background: var(--tunggubg); color: var(--tunggu); border-color: #FDE68A; }
 
-/* ==================================================================
-   FORM ELEMEN
-   ================================================================== */
+/* form elemen */
+
+/* satu kelompok form terdiri dari label + input/select/textarea */
 .kelompokform { margin-bottom: 14px; }
+/* label input berformat uppercase kecil */
 .kelompokform label {
   display: block;
   font-size: 11px;
@@ -477,6 +508,7 @@ ul { list-style: none; }
   letter-spacing: .4px;
   margin-bottom: 6px;
 }
+/* gaya dasar semua jenis input */
 .kelompokform input,
 .kelompokform select,
 .kelompokform textarea {
@@ -490,24 +522,30 @@ ul { list-style: none; }
   outline: none;
   transition: border-color .15s;
 }
+/* border berubah saat difokus */
 .kelompokform input:focus,
 .kelompokform select:focus,
 .kelompokform textarea:focus { border-color: var(--kedua); }
+/* textarea bisa diubah tingginya, tidak lebar */
 .kelompokform textarea { resize: vertical; min-height: 80px; }
+/* input nonaktif terlihat redup */
 .kelompokform input:disabled,
 .kelompokform textarea:disabled { background: var(--latar); color: var(--tekssamar); }
+/* teks bantuan kecil di bawah input */
 .kelompokform small { font-size: 11px; color: var(--tekssamar); margin-top: 4px; display: block; }
 
+/* dua input sejajar dalam satu baris form */
 .barisform {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 14px;
 }
+/* di layar sempit barisform menjadi satu kolom */
 @media (max-width: 600px) { .barisform { grid-template-columns: 1fr; } }
 
-/* ==================================================================
-   PERINGATAN / ALERT INLINE
-   ================================================================== */
+/* peringatan / alert inline */
+
+/* kotak peringatan yang muncul di dalam halaman */
 .peringatan {
   padding: 12px 14px;
   border-radius: 10px;
@@ -523,20 +561,22 @@ ul { list-style: none; }
 .peringataninfo   { background: var(--infobg);   color: var(--info); }
 .peringatantunggu { background: var(--tunggubg); color: var(--tunggu); }
 
-/* ==================================================================
-   TABEL DATA
-   ================================================================== */
+/* tabel data */
+
+/* pembungkus tabel agar bisa digulir horizontal di layar sempit */
 .tabel-wrapper {
   overflow-x: auto;
   border-radius: 12px;
   border: 1px solid var(--garis);
 }
+/* tabel mengisi seluruh lebar kontainernya */
 table {
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
   background: var(--putih);
 }
+/* header kolom tabel */
 thead th {
   background: var(--latar);
   color: var(--utama);
@@ -548,24 +588,27 @@ thead th {
   text-transform: uppercase;
   letter-spacing: .4px;
 }
+/* sel data tabel */
 tbody td {
   padding: 12px 16px;
   border-bottom: 1px solid var(--latar);
   color: var(--teks);
-  vertical-align: middle;
+  vertical-align: middle; /* tengahkan konten sel secara vertikal */
 }
 tbody tr:last-child td { border-bottom: none; }
+/* highlight baris saat di-hover */
 tbody tr:hover td { background: var(--latar); }
 
-/* ==================================================================
-   FILTER TAB / KATEGORI
-   ================================================================== */
+/* filter tab / kategori */
+
+/* baris deretan chip filter */
 .filter-bar {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
   margin-bottom: 18px;
 }
+/* satu chip filter berbentuk pil */
 .chip-filter {
   padding: 7px 16px;
   border-radius: 9999px;
@@ -576,15 +619,17 @@ tbody tr:hover td { background: var(--latar); }
   color: var(--kedua);
   cursor: pointer;
   transition: all .15s;
-  white-space: nowrap;
+  white-space: nowrap; /* teks tidak pecah baris */
 }
 .chip-filter:hover  { border-color: var(--kedua); }
+/* chip yang dipilih berubah menjadi solid */
 .chip-filter.aktif  { background: var(--kedua); color: var(--putihbg); border-color: var(--kedua); }
+/* chip utama — menggunakan warna gelap merek */
 .chip-filter.utama  { background: var(--utama); color: var(--putihbg); border-color: var(--utama); }
 
-/* ==================================================================
-   KOTAK CARI
-   ================================================================== */
+/* kotak cari */
+
+/* kotak pencarian berbentuk pil */
 .kotakcari {
   display: flex;
   align-items: center;
@@ -596,70 +641,78 @@ tbody tr:hover td { background: var(--latar); }
 }
 .kotakcari:focus-within { border-color: var(--kedua); }
 .kotakcari i { color: var(--tekssamar); font-size: 14px; }
+/* input teks di dalam kotak cari */
 .kotakcari input {
   flex: 1; border: none; outline: none;
   background: transparent; font-size: 14px; color: var(--teks);
 }
 .kotakcari input::placeholder { color: var(--tekssamar); }
+/* tombol submit pencarian tanpa gaya */
 .tombolcari {
   background: none; border: none; cursor: pointer;
   color: var(--utama); font-size: 14px; padding: 0;
 }
 
-/* ==================================================================
-   GRID MENU (untuk manajemen menu)
-   ================================================================== */
+/* grid menu (untuk manajemen menu) */
+
+/* grid kartu menu penjual — responsif otomatis */
 .grid-menu {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); /* isi kolom otomatis */
   gap: 16px;
 }
+/* satu kartu produk/menu penjual */
 .kartu-menu {
   background: var(--putih);
   border-radius: 14px;
-  overflow: hidden;
+  overflow: hidden; /* gambar tidak keluar dari border-radius */
   border: 1px solid var(--garis);
   box-shadow: var(--bayang);
   display: flex;
-  flex-direction: column;
+  flex-direction: column; /* susun gambar, isi, aksi dari atas ke bawah */
 }
+/* gambar menu di bagian atas kartu */
 .kartu-menu .gambar-menu {
   width: 100%;
   height: 140px;
-  object-fit: cover;
-  background: var(--latar);
+  object-fit: cover; /* gambar dipotong agar proporsional */
+  background: var(--latar); /* warna latar jika gambar belum ada */
 }
+/* area teks di bawah gambar menu */
 .kartu-menu .isi-kartu {
   padding: 12px 14px;
-  flex: 1;
+  flex: 1; /* mengisi ruang yang tersisa */
   display: flex;
   flex-direction: column;
   gap: 3px;
 }
 .kartu-menu .nama-menu { font-size: 14px; font-weight: 700; }
 .kartu-menu .kategori-menu { font-size: 11px; color: var(--tekssamar); }
+/* harga menu yang paling mencolok di kartu */
 .kartu-menu .harga-menu { font-size: 16px; font-weight: 800; color: var(--utama); margin-top: 4px; }
 .kartu-menu .stok-menu { font-size: 11px; color: var(--tekskecil); }
+/* area tombol aksi di bagian bawah kartu menu */
 .kartu-menu .aksi-menu {
   padding: 10px 14px;
-  border-top: 1px solid var(--garis);
+  border-top: 1px solid var(--garis); /* pemisah dari area isi */
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
 }
 
-/* Badge status menu */
+/* badge status menu (aktif/nonaktif) */
 .badge-menu-aktif    { background: var(--suksesbg); color: var(--sukses); }
 .badge-menu-nonaktif { background: var(--latar);    color: var(--tekssamar); }
 
-/* ==================================================================
-   KARTU PESANAN (manajemen pesanan)
-   ================================================================== */
+/* kartu pesanan (manajemen pesanan) */
+
+/* grid kartu pesanan — kolom otomatis minimal 300px */
 .grid-pesanan {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 16px;
 }
+/* satu kartu pesanan */
 .kartu-pesanan {
   background: var(--putih);
   border-radius: 14px;
@@ -667,10 +720,12 @@ tbody tr:hover td { background: var(--latar); }
   border: 1px solid var(--garis);
   box-shadow: var(--bayang);
 }
+/* garis kiri berwarna sesuai status pesanan untuk identifikasi cepat */
 .kartu-pesanan.menunggu { border-left: 3px solid var(--tunggu); }
 .kartu-pesanan.diproses { border-left: 3px solid var(--info); }
 .kartu-pesanan.siap     { border-left: 3px solid var(--sukses); }
-.kartu-pesanan.selesai  { border-left: 3px solid var(--garis); opacity: .85; }
+.kartu-pesanan.selesai  { border-left: 3px solid var(--garis); opacity: .85; } /* redup untuk pesanan selesai */
+/* baris atas kartu pesanan: nomor dan badge status */
 .atas-pesanan {
   display: flex;
   justify-content: space-between;
@@ -680,39 +735,45 @@ tbody tr:hover td { background: var(--latar); }
 .nomer-pesanan  { font-size: 14px; font-weight: 800; color: var(--utama); }
 .tanggal-pesanan{ font-size: 11px; color: var(--tekssamar); }
 .pembeli-pesanan{ font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+/* kotak catatan pesanan dengan latar berbeda agar mudah diperhatikan */
 .catatan-pesanan{ font-size: 12px; color: var(--tekskecil); background: var(--latar); padding: 8px 10px; border-radius: 8px; margin-bottom: 10px; }
+/* area daftar item dalam pesanan */
 .item-pesanan {
   font-size: 12px;
   color: var(--tekskecil);
   margin-bottom: 10px;
   padding-bottom: 8px;
-  border-bottom: 1px dashed var(--garis);
+  border-bottom: 1px dashed var(--garis); /* garis putus-putus sebagai pemisah */
 }
+/* satu baris item di dalam pesanan */
 .baris-item-pesanan {
   display: flex;
-  justify-content: space-between;
+  justify-content: space-between; /* nama di kiri, harga di kanan */
   padding: 4px 0;
 }
+/* total harga pesanan */
 .total-pesanan {
   font-size: 16px;
   font-weight: 800;
   color: var(--utama);
   margin-bottom: 10px;
 }
+/* metode pembayaran (tunai/qris) */
 .metode-pesanan {
   font-size: 11px;
   color: var(--tekssamar);
   margin-bottom: 10px;
 }
+/* baris tombol aksi pesanan (proses, siap, dll) */
 .aksi-pesanan {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
 }
 
-/* ==================================================================
-   TOGGLE BUKA/TUTUP TOKO
-   ================================================================== */
+/* toggle buka/tutup toko */
+
+/* baris toggle status toko di halaman index penjual */
 .toggle-toko {
   display: flex;
   align-items: center;
@@ -723,33 +784,40 @@ tbody tr:hover td { background: var(--latar); }
   border: 1px solid var(--garis);
   box-shadow: var(--bayang);
 }
+/* komponen saklar on/off berbentuk pil */
 .saklar {
   position: relative;
   width: 52px;
   height: 28px;
   flex-shrink: 0;
 }
+/* sembunyikan checkbox asli — digantikan oleh .slider */
 .saklar input { opacity: 0; width: 0; height: 0; position: absolute; }
+/* latar saklar yang dapat diklik */
 .slider {
   position: absolute;
-  inset: 0;
-  background: var(--garis);
+  inset: 0; /* menutupi seluruh .saklar */
+  background: var(--garis); /* abu default saat toko tutup */
   border-radius: 9999px;
   cursor: pointer;
   transition: background .2s;
 }
+/* lingkaran putih yang bergeser saat saklar diaktifkan */
 .slider::before {
   content: '';
   position: absolute;
   width: 22px; height: 22px;
-  left: 3px; top: 3px;
+  left: 3px; top: 3px; /* posisi awal (kiri = off) */
   background: white;
   border-radius: 50%;
-  transition: transform .2s;
+  transition: transform .2s; /* animasi geser */
   box-shadow: 0 1px 4px rgba(0,0,0,.2);
 }
+/* saat saklar aktif (toko buka) latar berubah hijau */
 .saklar input:checked + .slider { background: var(--sukses); }
+/* lingkaran geser ke kanan saat aktif */
 .saklar input:checked + .slider::before { transform: translateX(24px); }
+/* teks status toko di sebelah saklar */
 .teks-toggle .status-text { font-size: 14px; font-weight: 700; }
 .teks-toggle .info-text   { font-size: 12px; color: var(--tekssamar); }
 
@@ -762,30 +830,33 @@ tbody tr:hover td { background: var(--latar); }
   transition: opacity .15s;
 }
 .tombol-toggle-toko:hover { opacity: .85; }
+/* tampilan tombol saat toko dalam kondisi buka */
 .tombol-toggle-toko.toko-buka {
   background: var(--suksesbg); color: var(--sukses);
   border: 1.5px solid var(--sukses);
 }
+/* tampilan tombol saat toko dalam kondisi tutup */
 .tombol-toggle-toko.toko-tutup {
   background: var(--gagalbg); color: var(--gagal);
   border: 1.5px solid var(--gagal);
 }
 
-/* ==================================================================
-   PROFIL PENJUAL
-   ================================================================== */
+/* profil penjual */
+
+/* banner hero di halaman profil penjual */
 .hero-profil {
-  background: var(--utama);
+  background: var(--utama); /* background gelap merek */
   color: var(--putihbg);
   padding: 22px 20px;
   border-radius: 14px;
   text-align: center;
   margin-bottom: 18px;
 }
+/* kotak avatar foto/inisial pengguna */
 .avatar {
   width: 80px; height: 80px;
-  border-radius: 14px;
-  background: rgba(255,255,255,.2);
+  border-radius: 14px; /* kotak dengan sudut melengkung */
+  background: rgba(255,255,255,.2); /* latar semi-transparan di atas hero gelap */
   color: var(--putihbg);
   display: flex;
   align-items: center;
@@ -794,14 +865,15 @@ tbody tr:hover td { background: var(--latar); }
   font-weight: 800;
   margin: 0 auto 10px;
   border: 3px solid rgba(255,255,255,.3);
-  overflow: hidden;
+  overflow: hidden; /* potong foto jika ada */
 }
 .avatar img {
   width: 100%; height: 100%;
-  object-fit: cover;
+  object-fit: cover; /* foto memenuhi kotak tanpa distorsi */
 }
 .hero-profil .nama     { font-size: 18px; font-weight: 700; margin-bottom: 2px; }
-.hero-profil .sub      { font-size: 12px; opacity: .8; }
+.hero-profil .sub      { font-size: 12px; opacity: .8; } /* teks sekunder redup */
+/* badge peran pengguna berbentuk pil di bawah nama */
 .hero-profil .labelperan {
   display: inline-block;
   background: rgba(255,255,255,.18);
@@ -809,7 +881,7 @@ tbody tr:hover td { background: var(--latar); }
   border-radius: 9999px;
   font-size: 11px;
   margin-top: 8px;
-  border: 1px dashed rgba(255,255,255,.35);
+  border: 1px dashed rgba(255,255,255,.35); /* border putus-putus */
 }
 
 /* judulbagian — header bagian di profil */
@@ -826,6 +898,7 @@ tbody tr:hover td { background: var(--latar); }
   display: grid; grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
   gap: 10px; margin-bottom: 16px;
 }
+/* satu kotak statistik profil */
 .kotakstat {
   background: var(--putih); border-radius: 12px;
   padding: 12px 8px; text-align: center;
@@ -833,7 +906,7 @@ tbody tr:hover td { background: var(--latar); }
 }
 .kotakstat .angkastat { font-size: 17px; font-weight: 800; color: var(--utama); }
 .kotakstat .labelstat { font-size: 10px; color: var(--tekssamar); margin-top: 2px; }
-/* variasi gelap selaras hero profil */
+/* variasi gelap selaras hero profil — dipakai di banner hero */
 .kotakstat.gelap {
   background: var(--utama);
   border-color: rgba(255,255,255,.1);
@@ -851,27 +924,32 @@ tbody tr:hover td { background: var(--latar); }
   cursor: pointer; transition: background .15s;
 }
 .itempengaturan:hover { background: var(--latar); }
+/* ikon kotak di kiri item pengaturan */
 .ikonpengaturan {
   width: 40px; height: 40px; border-radius: 10px;
   background: var(--latar); color: var(--utama);
   display: flex; align-items: center; justify-content: center;
   font-size: 15px; flex-shrink: 0;
 }
+/* modifier warna ikon sesuai kategori pengaturan */
 .ikonpengaturan.hijau   { background: var(--suksesbg); color: var(--sukses); }
 .ikonpengaturan.merah   { background: var(--gagalbg);  color: var(--gagal); }
 .ikonpengaturan.biru    { background: var(--infobg);   color: var(--info); }
+/* area teks item pengaturan */
 .tekspengaturan { flex: 1; }
 .tekspengaturan .judul     { font-size: 14px; font-weight: 700; }
 .tekspengaturan .deskripsi { font-size: 12px; color: var(--tekssamar); }
+/* ikon panah di kanan item pengaturan */
 .panahpengaturan { color: var(--tekssamar); font-size: 13px; }
 
-/* Password input dengan tombol lihat */
-.inputpassword { position: relative; }
-.inputpassword input { padding-right: 44px !important; }
+/* password input dengan tombol lihat */
+.inputpassword { position: relative; } /* agar tombol absolute bisa diposisikan */
+.inputpassword input { padding-right: 44px !important; } /* beri ruang untuk tombol */
+/* tombol ikon mata untuk tampilkan/sembunyikan password */
 .tombollihatpass {
   position: absolute;
   right: 12px; top: 50%;
-  transform: translateY(-50%);
+  transform: translateY(-50%); /* tengahkan secara vertikal */
   background: none;
   border: none;
   color: var(--tekssamar);
@@ -879,15 +957,16 @@ tbody tr:hover td { background: var(--latar); }
   font-size: 15px;
 }
 
-/* ==================================================================
-   LAPORAN PENJUALAN
-   ================================================================== */
+/* laporan penjualan */
+
+/* grid ringkasan laporan — otomatis sesuaikan kolom */
 .ringkasan-laporan {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 14px;
   margin-bottom: 20px;
 }
+/* satu kotak ringkasan laporan */
 .kotak-laporan {
   background: var(--putih);
   border-radius: 12px;
@@ -899,7 +978,7 @@ tbody tr:hover td { background: var(--latar); }
 .kotak-laporan .nilai   { font-size: 20px; font-weight: 800; color: var(--utama); }
 .kotak-laporan .label   { font-size: 12px; color: var(--tekssamar); margin-top: 4px; }
 
-/* Produk terlaris */
+/* produk terlaris */
 .baris-produk {
   display: flex;
   align-items: center;
@@ -908,6 +987,7 @@ tbody tr:hover td { background: var(--latar); }
   border-bottom: 1px solid var(--latar);
 }
 .baris-produk:last-child { border-bottom: none; }
+/* nomor ranking di sisi kiri baris produk */
 .rangking-produk {
   width: 28px; height: 28px;
   border-radius: 50%;
@@ -920,47 +1000,50 @@ tbody tr:hover td { background: var(--latar); }
   font-weight: 800;
   flex-shrink: 0;
 }
+/* warna khusus tiga ranking teratas */
 .rangking-produk.emas   { background: #FEF3C7; color: #B45309; }
 .rangking-produk.perak  { background: #F1F5F9; color: #475569; }
 .rangking-produk.perunggu{ background: #FEF3C7; color: #92400E; }
 
-/* ==================================================================
-   MODAL
-   ================================================================== */
+/* modal */
+
+/* overlay gelap yang menutupi seluruh halaman saat modal terbuka */
 .modaloverlay {
   position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.5);
-  z-index: 2000;
-  display: none;
+  inset: 0; /* menutupi seluruh viewport */
+  background: rgba(0,0,0,.5); /* latar semi-transparan */
+  z-index: 2000; /* paling atas */
+  display: none; /* tersembunyi secara default */
   align-items: center;
   justify-content: center;
 }
-/* Dibuka via JS (.tampil) ATAU via CSS :target */
+/* dibuka via kelas .tampil (php) atau via css :target (anchor link) */
 .modaloverlay.tampil,
 .modaloverlay:target {
   display: flex;
-  animation: fadeModal .18s ease;
+  animation: fadeModal .18s ease; /* animasi fade in */
 }
 @keyframes fadeModal {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
+/* kotak isi modal */
 .isimodal {
   background: var(--putih);
   border-radius: 16px;
   padding: 24px;
   width: 90%;
   max-width: 500px;
-  max-height: 90vh;
-  overflow-y: auto;
+  max-height: 90vh; /* jangan sampai modal lebih tinggi dari layar */
+  overflow-y: auto; /* bisa digulir jika konten panjang */
 }
-/* Tombol/link penutup yang menutup seluruh backdrop modal */
+/* tombol/link penutup yang menutup seluruh backdrop modal */
 .penutup-modal {
   position: absolute;
-  inset: 0;
-  z-index: 0;
+  inset: 0; /* menutupi seluruh overlay */
+  z-index: 0; /* di belakang .isimodal */
 }
+/* header modal berisi judul dan tombol tutup */
 .modal-judul {
   display: flex;
   justify-content: space-between;
@@ -968,6 +1051,7 @@ tbody tr:hover td { background: var(--latar); }
   margin-bottom: 18px;
 }
 .modal-judul h2 { font-size: 17px; font-weight: 800; color: var(--utama); }
+/* tombol x untuk menutup modal */
 .tombol-tutup-modal {
   background: var(--latar);
   border: none;
@@ -981,16 +1065,17 @@ tbody tr:hover td { background: var(--latar); }
   justify-content: center;
 }
 
-/* ==================================================================
-   TAB PROFIL PENJUAL
-   ================================================================== */
+/* tab profil penjual */
+
+/* baris tab di halaman profil (info, edit, keamanan) */
 .tab-profil {
   display: flex;
   gap: 4px;
   margin-bottom: 20px;
-  border-bottom: 2px solid var(--garis);
+  border-bottom: 2px solid var(--garis); /* garis bawah sebagai rel tab */
   flex-wrap: wrap;
 }
+/* satu item tab */
 .tab-item {
   display: flex;
   align-items: center;
@@ -999,16 +1084,17 @@ tbody tr:hover td { background: var(--latar); }
   font-size: 13px;
   font-weight: 600;
   color: var(--tekssamar);
-  border-bottom: 2px solid transparent;
-  margin-bottom: -2px;
+  border-bottom: 2px solid transparent; /* border bawah aktif akan menimpa rel */
+  margin-bottom: -2px; /* offset agar border bawah aktif menempel ke rel */
   cursor: pointer;
   transition: color .15s, border-color .15s;
   white-space: nowrap;
 }
 .tab-item:hover { color: var(--utama); }
+/* tab aktif ditandai dengan border bawah berwarna */
 .tab-item.aktif { color: var(--utama); border-bottom-color: var(--utama); }
 
-/* Baris info (view profil) */
+/* baris info (view profil) */
 .baris-info {
   display: flex;
   align-items: flex-start;
@@ -1018,6 +1104,7 @@ tbody tr:hover td { background: var(--latar); }
   font-size: 13px;
 }
 .baris-info:last-child { border-bottom: none; }
+/* label kolom kiri — lebar tetap agar nilai sejajar */
 .label-info {
   width: 130px;
   flex-shrink: 0;
@@ -1027,12 +1114,13 @@ tbody tr:hover td { background: var(--latar); }
 }
 .nilai-info { font-weight: 600; color: var(--teks); flex: 1; }
 
-/* ==================================================================
-   STRUK PESANAN PENJUAL (class identik dengan pembeli)
-   ================================================================== */
+/* struk pesanan penjual (class identik dengan pembeli) */
+
+/* baris header kembali — tombol panah kiri + judul halaman */
 .headerkembali {
   display: flex; align-items: center; gap: 14px; margin-bottom: 20px;
 }
+/* tombol lingkaran untuk navigasi kembali */
 .tombolkembali {
   width: 40px; height: 40px; border-radius: 50%;
   background: var(--putih); border: 1.5px solid var(--garis);
@@ -1044,20 +1132,24 @@ tbody tr:hover td { background: var(--latar); }
 .teksheader h1 { font-size: 18px; font-weight: 800; color: var(--utama); }
 .teksheader p  { font-size: 12px; color: var(--tekssamar); }
 
+/* kotak nomor antrian di struk */
 .antirian {
   text-align: center;
   padding: 16px; margin: 14px 0;
-  background: var(--tunggubg);
+  background: var(--tunggubg); /* latar kuning mencolok */
   border-radius: 10px;
-  border: 1.5px dashed var(--tunggu);
+  border: 1.5px dashed var(--tunggu); /* border kuning putus-putus */
 }
+/* angka antrian besar agar mudah dibaca dari jarak jauh */
 .angkaantrian { font-size: 48px; font-weight: 800; color: var(--utama); line-height: 1; margin-bottom: 4px; }
 .labelantrian { font-size: 12px; color: var(--tekssamar); font-weight: 600; }
 
+/* kartu pembungkus seluruh struk */
 .bungkusstruk {
   background: var(--putih); border-radius: 16px; overflow: hidden;
   border: 1px solid var(--garis); box-shadow: var(--bayang); margin-bottom: 14px;
 }
+/* kepala struk berwarna gelap dengan nama kantin */
 .kepalastruk {
   background: var(--utama); color: var(--putihbg);
   padding: 18px 20px 14px; text-align: center;
@@ -1066,29 +1158,37 @@ tbody tr:hover td { background: var(--latar); }
 .kepalastruk h2 { font-size: 14px; font-weight: 800; }
 .kepalastruk p  { font-size: 11px; opacity: .8; margin-top: 2px; }
 
+/* area isi struk berisi detail pesanan */
 .isistruk { padding: 14px 18px; }
+/* satu baris informasi di struk (label + nilai) */
 .barisstruk {
   display: flex; justify-content: space-between; align-items: flex-start;
   gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--latar); font-size: 13px;
 }
 .barisstruk:last-child { border-bottom: none; }
+/* teks label kiri di baris struk — lebar minimal agar sejajar */
 .labelstruk { color: var(--tekssamar); min-width: 100px; flex-shrink: 0; }
+/* nilai kanan di baris struk */
 .nilaistruk  { font-weight: 600; text-align: right; word-break: break-all; }
 
+/* garis pemisah dengan ikon di tengah struk */
 .pemisah {
   display: flex; align-items: center; gap: 8px;
   margin: 8px 0; color: var(--garis); font-size: 11px;
 }
 .pemisah hr { flex: 1; border: none; border-top: 1px dashed var(--garis); }
 
+/* satu item menu di struk */
 .itemdetailstruk { padding: 7px 0; border-bottom: 1px solid var(--latar); }
 .itemdetailstruk:last-child { border-bottom: none; }
 .itemdetailstruk .namamenu { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+/* baris jumlah dan harga per item */
 .itemdetailstruk .barisnilai {
   display: flex; justify-content: space-between; font-size: 12px; color: var(--tekssamar);
 }
 .itemdetailstruk .barisnilai b { color: var(--teks); }
 
+/* baris total harga di bagian bawah struk */
 .totalstruk {
   display: flex; justify-content: space-between; align-items: center;
   background: var(--latar); padding: 12px 18px;
@@ -1097,73 +1197,79 @@ tbody tr:hover td { background: var(--latar); }
 .totalstruk .label { font-size: 13px; color: var(--tekssamar); }
 .totalstruk .nilai { font-size: 18px; color: var(--utama); }
 
+/* kaki struk berisi pesan terima kasih */
 .kakistruk {
   text-align: center; padding: 12px 18px;
   border-top: 1px solid var(--latar); font-size: 11px; color: var(--tekssamar);
 }
 
-/* ==================================================================
-   KOSONG / EMPTY STATE
-   ================================================================== */
+/* kosong / empty state */
+
+/* tampilan ketika tidak ada data */
 .kosong { text-align: center; padding: 60px 20px; }
 .kosong .ikon-kosong { font-size: 48px; color: var(--garis); margin-bottom: 12px; }
 .kosong h3 { font-size: 16px; font-weight: 700; color: var(--utama); margin-bottom: 6px; }
 .kosong p  { font-size: 13px; color: var(--tekssamar); margin-bottom: 16px; }
 
-/* ==================================================================
-   UTILITIES
-   ================================================================== */
-.takprint { }
+/* utilities */
+
+.takprint { } /* placeholder — konten ini tidak akan dicetak */
 .mb8  { margin-bottom: 8px; }
 .mb14 { margin-bottom: 14px; }
 .mb20 { margin-bottom: 20px; }
 .mt14 { margin-top: 14px; }
 .tengah { text-align: center; }
 
-/* ==================================================================
-   BOTTOM NAV PENJUAL (mobile only, gaya identik pembeli tapi gelap)
-   ================================================================== */
+/* bottom nav penjual (mobile only, gaya identik pembeli tapi gelap) */
+
+/* bottom navigation bar untuk mobile — tersembunyi di desktop */
 .bottomnav-penjual {
   display: none; /* disembunyikan di desktop */
   position: fixed;
   bottom: 0; left: 0; right: 0;
   height: 62px;
-  background: var(--utama);
+  background: var(--utama); /* background gelap merek */
   border-top: 2px solid rgba(255,255,255,.12);
   z-index: 1100;
   align-items: stretch;
   justify-content: space-around;
 }
+/* satu tab di bottom nav */
 .tab-penjual {
-  flex: 1;
+  flex: 1; /* bagi rata seluruh lebar */
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   gap: 3px; padding: 5px 2px;
-  color: rgba(255,255,255,.55);
+  color: rgba(255,255,255,.55); /* warna redup untuk tab tidak aktif */
   font-size: 9px; font-weight: 600;
   position: relative; transition: color .15s;
   text-decoration: none; overflow: hidden;
 }
+/* label teks tab — potong jika terlalu panjang */
 .tab-penjual span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .tab-penjual i { font-size: 17px; }
+/* tab aktif ditampilkan lebih terang */
 .tab-penjual.aktif { color: var(--putihbg); }
+/* garis indikator kecil di atas tab aktif */
 .tab-penjual.aktif::before {
   content: '';
   position: absolute; top: 0; left: 20%; right: 20%;
-  height: 3px; border-radius: 0 0 4px 4px;
+  height: 3px; border-radius: 0 0 4px 4px; /* sudut bawah melengkung */
   background: var(--putihbg);
 }
 
-/* ==================================================================
-   RESPONSIVE
-   ================================================================== */
+/* responsive */
+
 @media (max-width: 768px) {
-  /* Sembunyikan sidebar & hamburger, pakai bottom nav */
+  /* sembunyikan sidebar dan hamburger di mobile, ganti dengan bottom nav */
   .mobile-header, .overlay-sidebar { display: none !important; }
   .sidebar { display: none; }
+  /* tampilkan bottom nav di mobile */
   .bottomnav-penjual { display: flex; }
 
+  /* beri padding bawah agar konten tidak tertutup bottom nav */
   body { padding-bottom: 62px; }
+  /* konten mengambil seluruh lebar tanpa offset sidebar */
   .konten { margin-left: 0; padding: 16px 16px 24px; width: 100%; }
   .header-halaman {
     flex-direction: column; align-items: stretch;
@@ -1171,21 +1277,26 @@ tbody tr:hover td { background: var(--latar); }
   }
   .header-halaman > *:last-child { width: 100%; }
   .kotakcari { width: 100%; max-width: none; }
+  /* filter bar bisa digulir horizontal */
   .filter-bar { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
   .filter-bar::-webkit-scrollbar { display: none; }
+  /* grid menjadi 2 kolom di tablet */
   .grid-stat  { grid-template-columns: repeat(2, 1fr); }
   .grid-dua   { grid-template-columns: 1fr; }
   .grid-pesanan { grid-template-columns: 1fr; }
+  /* grid menu menjadi 2 kolom di mobile */
   .grid-menu  { grid-template-columns: repeat(2, 1fr); }
   .barisform  { grid-template-columns: 1fr; }
   .tabel-wrapper { font-size: 12px; }
   .aksi-pesanan { flex-wrap: wrap; }
+  /* grup aksi di header menjadi kolom penuh */
   .grup-aksi { flex-direction: column; align-items: stretch; }
   .grup-aksi > form { width: 100%; }
   .grup-aksi > a, .grup-aksi > button { width: 100%; text-align: center; justify-content: center; }
   .tombolkecil { font-size: 11px; padding: 5px 10px; }
 }
 
+/* di layar sangat kecil grid menu menjadi 1 kolom */
 @media (max-width: 480px) {
   .grid-menu { grid-template-columns: 1fr; }
   .konten { padding: 12px 12px 20px; }
@@ -1206,9 +1317,9 @@ tbody tr:hover td { background: var(--latar); }
   .sembunyi-desktop { display: none !important; }
 }
 
-/* banner pengumuman admin ke penjual */
+/* banner pengumuman dari admin ke penjual — menempel di bawah sidebar */
 .notif-pengumuman-penjual {
-  margin-left: var(--sidebarlebar);
+  margin-left: var(--sidebarlebar); /* sejajar dengan konten utama */
   background: var(--utama);
   color: rgba(255,255,255,.92);
   padding: 10px 32px;
@@ -1217,47 +1328,53 @@ tbody tr:hover td { background: var(--latar); }
   border-bottom: 2px solid rgba(255,255,255,.15);
 }
 @media (max-width: 768px) {
+  /* di mobile tidak ada offset sidebar */
   .notif-pengumuman-penjual { margin-left: 0; padding: 10px 16px; }
 }
 
-/* ==================================================================
-   PRINT — HARUS PALING AKHIR agar override responsive CSS
-   ================================================================== */
+/* print — harus paling akhir agar override responsive css */
+
+/* aturan cetak untuk struk — kertas thermal lebar 80mm */
 @media print {
   @page {
-    size: 80mm auto;
+    size: 80mm auto; /* lebar kertas thermal standar */
     margin: 2mm 4mm;
   }
 
+  /* sembunyikan semua elemen navigasi dan non-esensial saat cetak */
   .sidebar, .mobile-header, .togel-input, .overlay-sidebar,
   .bottomnav-penjual, .takprint { display: none !important; }
   body {
     background: white !important;
     padding: 0 !important;
     margin: 0 !important;
-    font-size: 11px !important;
+    font-size: 11px !important; /* font kecil sesuai kertas thermal */
   }
   .konten {
     margin: 0 !important;
     padding: 0 !important;
     width: 100% !important;
   }
+  /* batasi lebar struk sesuai kertas */
   .konten-sempit {
     max-width: 80mm !important;
     margin: 0 auto !important;
   }
+  /* antrian menjadi hitam putih saat cetak */
   .antirian {
     background: white !important; color: black !important;
     border: 2px dashed black !important; border-radius: 4px !important;
     padding: 8px !important; margin-bottom: 6px !important;
   }
   .angkaantrian { font-size: 40px !important; color: black !important; }
+  /* kepala struk menjadi hitam putih */
   .kepalastruk {
     background: white !important; color: black !important;
     border-bottom: 1px solid #ddd !important; padding: 8px 10px !important;
   }
   .kepalastruk .ikonstruk { font-size: 16px !important; }
   .kepalastruk h2 { font-size: 12px !important; }
+  /* perkecil padding dan font untuk menghemat kertas */
   .isistruk { padding: 6px 10px !important; }
   .barisstruk { padding: 3px 0 !important; font-size: 11px !important; }
   .itemdetailstruk { padding: 3px 0 !important; }
