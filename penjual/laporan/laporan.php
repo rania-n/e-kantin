@@ -78,17 +78,21 @@ $qo = $conn->prepare("SELECT o.id_order, o.tanggal_order, o.total_harga, o.metod
 $qo->bind_param("iss", $idtoko, $tglawal, $tglakhir); $qo->execute();
 $daftarorder = $qo->get_result()->fetch_all(MYSQLI_ASSOC); $qo->close();
 
-// chart harian pendapatan (maks 30 titik)
+// chart harian — satu query group by, per hari tanpa kompresi, nama hari indonesia
+function namahari(string $tgl): string {
+    $map = ['Sun'=>'Min','Mon'=>'Sen','Tue'=>'Sel','Wed'=>'Rab','Thu'=>'Kam','Fri'=>'Jum','Sat'=>'Sab'];
+    return $map[date('D', strtotime($tgl))] ?? date('D', strtotime($tgl));
+}
+$qchart = $conn->prepare("SELECT DATE(tanggal_order) AS tgl, COALESCE(SUM(total_harga),0) AS nilai FROM tb_order WHERE id_toko=? AND DATE(tanggal_order) BETWEEN ? AND ? AND status_order='Selesai' AND deleted=0 GROUP BY DATE(tanggal_order)");
+$qchart->bind_param("iss", $idtoko, $tglawal, $tglakhir); $qchart->execute();
+$rawchart = []; $resc = $qchart->get_result();
+while ($row = $resc->fetch_assoc()) $rawchart[$row['tgl']] = (float)$row['nilai'];
+$qchart->close();
 $selisih = (int)ceil((strtotime($tglakhir) - strtotime($tglawal)) / 86400) + 1;
-$langkah = max(1, (int)ceil($selisih / 30));
 $chartdata = [];
-for ($i = 0; $i < $selisih; $i += $langkah) {
-    $tgl1  = date('Y-m-d', strtotime($tglawal) + $i * 86400);
-    $tgl2  = date('Y-m-d', strtotime($tglawal) + min($i + $langkah - 1, $selisih - 1) * 86400);
-    $qc    = $conn->prepare("SELECT COALESCE(SUM(total_harga),0) FROM tb_order WHERE id_toko=? AND DATE(tanggal_order) BETWEEN ? AND ? AND status_order='Selesai' AND deleted=0");
-    $qc->bind_param("iss", $idtoko, $tgl1, $tgl2); $qc->execute();
-    $nilai = (float)$qc->get_result()->fetch_row()[0]; $qc->close();
-    $chartdata[] = ['tgl'=>$tgl1,'label'=>date('d/m', strtotime($tgl1)),'nilai'=>$nilai];
+for ($i = 0; $i < $selisih; $i++) {
+    $tgl = date('Y-m-d', strtotime($tglawal) + $i * 86400);
+    $chartdata[] = ['tgl'=>$tgl,'label'=>namahari($tgl).' '.date('d',strtotime($tgl)),'nilai'=>$rawchart[$tgl]??0.0];
 }
 $maxnilai = max(array_column($chartdata,'nilai')) ?: 1;
 
@@ -113,16 +117,12 @@ $startx = 70; $chartH = 160;
 <title>Laporan Penjualan - jajankita</title>
 <link rel="stylesheet" href="../../3. komponen/penjual.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<?php if ($cetak): ?>
 <style>
-  .takprint { display: none !important; }
-  .navbarpenjual { display: none !important; }
-  .konten { margin-left: 0 !important; padding: 12px !important; }
-  body { background: white !important; }
-  .kartu { box-shadow: none !important; border: 1px solid #ddd !important; break-inside: avoid; }
-  @page { size: A4 portrait; margin: 15mm; }
+  @media print {
+    @page { size: A4 portrait; margin: 15mm; }
+    .kartu { box-shadow: none !important; border: 1px solid #ddd !important; break-inside: avoid; }
+  }
 </style>
-<?php endif; ?>
 </head>
 <body>
 
@@ -135,10 +135,9 @@ $startx = 70; $chartH = 160;
       <h1><i class="fa-solid fa-chart-bar"></i> Laporan Penjualan</h1>
       <p><?= $labelprd ?></p>
     </div>
-    <a href="laporan.php?periode=<?= $periode ?>&dari=<?= $tglawal ?>&sampai=<?= $tglakhir ?>&cetak=1"
-       target="_blank" class="tombolutama">
+    <button onclick="window.print()" class="tombolutama">
       <i class="fa-solid fa-print"></i> Cetak Laporan
-    </a>
+    </button>
   </div>
 
   <!-- header cetak (tersembunyi saat normal) -->
@@ -327,8 +326,8 @@ $startx = 70; $chartH = 160;
         </tbody>
         <tfoot>
           <tr>
-            <td colspan="4" style="font-weight:700;background:var(--latar);">TOTAL</td>
-            <td style="font-weight:800;text-align:right;background:var(--latar);color:var(--utama);"><?= rp($totalpendapatan) ?></td>
+            <td colspan="4" style="font-weight:700;background:var(--latar);padding:10px 16px;">TOTAL</td>
+            <td style="font-weight:800;text-align:right;background:var(--latar);padding:10px 16px;color:var(--utama);"><?= rp($totalpendapatan) ?></td>
           </tr>
         </tfoot>
       </table>

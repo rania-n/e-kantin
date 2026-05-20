@@ -54,7 +54,8 @@ if (!empty($_SESSION['id_user'])) {
 
 $berandaaktif   = $halamansaatini === 'index'                                        ? 'aktif' : '';
 $keranjangaktif = $halamansaatini === 'keranjang'                                    ? 'aktif' : '';
-$pesananaktif   = in_array($halamansaatini, ['pesanan','struk','rating'])            ? 'aktif' : '';
+$pesananaktif   = in_array($halamansaatini, ['pesanan','struk'])                     ? 'aktif' : '';
+$ulasanaktif    = $halamansaatini === 'rating'                                       ? 'aktif' : '';
 $profilaktif    = in_array($halamansaatini, ['profil','editprofil','gantipassword']) ? 'aktif' : '';
 ?>
 
@@ -83,6 +84,10 @@ $profilaktif    = in_array($halamansaatini, ['profil','editprofil','gantipasswor
       <?php if ($jumlahsiap > 0): ?>
         <span class="lencanakeranjang" style="background:var(--sukses);"><?= $jumlahsiap ?></span>
       <?php endif; ?>
+    </a>
+
+    <a href="<?= $pathbase ?>/pesanan/rating.php" class="itemnav <?= $ulasanaktif ?>">
+      <i class="fa-solid fa-star"></i><span>Ulasan</span>
     </a>
 
     <a href="<?= $pathbase ?>/profil/profil.php" class="itemnav <?= $profilaktif ?>">

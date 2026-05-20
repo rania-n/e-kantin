@@ -31,9 +31,9 @@ $qr1 = $conn->prepare("SELECT COUNT(*) FROM tb_order WHERE DATE(tanggal_order) B
 $qr1->bind_param("ss", $tglmulai, $tgljin); $qr1->execute();
 $totalorder = (int)$qr1->get_result()->fetch_row()[0]; $qr1->close();
 
-$qr2 = $conn->prepare("SELECT COALESCE(SUM(total_harga),0) FROM tb_order WHERE DATE(tanggal_order) BETWEEN ? AND ? AND status_order='Selesai' AND deleted=0");
+$qr2 = $conn->prepare("SELECT COALESCE(SUM(total_harga),0) FROM tb_order WHERE DATE(tanggal_order) BETWEEN ? AND ? AND status_order IN ('Selesai','Dibatalkan') AND deleted=0");
 $qr2->bind_param("ss", $tglmulai, $tgljin); $qr2->execute();
-$revenueselesai = (float)$qr2->get_result()->fetch_row()[0]; $qr2->close();
+$totalomset = (float)$qr2->get_result()->fetch_row()[0]; $qr2->close();
 
 $qr3 = $conn->prepare("SELECT COUNT(*) FROM tb_user WHERE DATE(created) BETWEEN ? AND ? AND deleted=0");
 $qr3->bind_param("ss", $tglmulai, $tgljin); $qr3->execute();
@@ -46,10 +46,12 @@ $statpesanan = []; $res = $qstat->get_result();
 while ($rs = $res->fetch_assoc()) $statpesanan[$rs['status_order']] = (int)$rs['jml'];
 $qstat->close();
 
-// performa toko di periode ini — hanya kolom pendapatan selesai
+// performa toko — total omset, dibatalkan, dan rating
 $qtoko = $conn->prepare("SELECT t.id_toko, t.nama_toko, t.status_toko,
                                  COUNT(DISTINCT o.id_order) AS total_order,
-                                 COALESCE(SUM(CASE WHEN o.status_order='Selesai' THEN o.total_harga ELSE 0 END),0) AS pendapatan
+                                 COALESCE(SUM(CASE WHEN o.status_order='Dibatalkan' THEN 1 ELSE 0 END),0) AS jml_dibatalkan,
+                                 COALESCE(SUM(CASE WHEN o.status_order IN ('Selesai','Dibatalkan') THEN o.total_harga ELSE 0 END),0) AS pendapatan,
+                                 (SELECT COALESCE(ROUND(AVG(r.rating_toko),1),0) FROM tb_rating r WHERE r.id_toko=t.id_toko AND r.deleted=0) AS rating
                           FROM tb_toko t
                           LEFT JOIN tb_order o ON t.id_toko=o.id_toko
                             AND DATE(o.tanggal_order) BETWEEN ? AND ? AND o.deleted=0
@@ -72,18 +74,23 @@ $qtl = $conn->prepare("SELECT m.nama_menu, t.nama_toko, SUM(d.jumlah) AS terjual
 $qtl->bind_param("ss", $tglmulai, $tgljin); $qtl->execute();
 $terlaris = $qtl->get_result()->fetch_all(MYSQLI_ASSOC); $qtl->close();
 
-// chart harian selama rentang (maks 30 titik)
+// chart harian — satu query group by, per hari tanpa kompresi, nama hari indonesia
+function namahari(string $tgl): string {
+    $map = ['Sun'=>'Min','Mon'=>'Sen','Tue'=>'Sel','Wed'=>'Rab','Thu'=>'Kam','Fri'=>'Jum','Sat'=>'Sab'];
+    return $map[date('D', strtotime($tgl))] ?? date('D', strtotime($tgl));
+}
+$qchart = $conn->prepare("SELECT DATE(tanggal_order) AS tgl, COALESCE(SUM(total_harga),0) AS nilai FROM tb_order WHERE DATE(tanggal_order) BETWEEN ? AND ? AND status_order IN ('Selesai','Dibatalkan') AND deleted=0 GROUP BY DATE(tanggal_order)");
+$qchart->bind_param("ss", $tglmulai, $tgljin); $qchart->execute();
+$rawchart = [];
+$resc = $qchart->get_result();
+while ($row = $resc->fetch_assoc()) $rawchart[$row['tgl']] = (float)$row['nilai'];
+$qchart->close();
+
 $selisih = (int)ceil((strtotime($tgljin) - strtotime($tglmulai)) / 86400) + 1;
-$langkah = max(1, (int)ceil($selisih / 30));
 $chartdata = [];
-for ($i = 0; $i < $selisih; $i += $langkah) {
-    $tgl1  = date('Y-m-d', strtotime($tglmulai) + $i * 86400);
-    $tgl2  = date('Y-m-d', strtotime($tglmulai) + min($i + $langkah - 1, $selisih - 1) * 86400);
-    $qc    = $conn->prepare("SELECT COALESCE(SUM(total_harga),0) FROM tb_order WHERE DATE(tanggal_order) BETWEEN ? AND ? AND status_order='Selesai' AND deleted=0");
-    $qc->bind_param("ss", $tgl1, $tgl2); $qc->execute();
-    $nilai = (float)$qc->get_result()->fetch_row()[0]; $qc->close();
-    $label = $langkah === 1 ? date('d/m', strtotime($tgl1)) : date('d/m', strtotime($tgl1));
-    $chartdata[] = ['tgl'=>$tgl1,'label'=>$label,'nilai'=>$nilai];
+for ($i = 0; $i < $selisih; $i++) {
+    $tgl = date('Y-m-d', strtotime($tglmulai) + $i * 86400);
+    $chartdata[] = ['tgl'=>$tgl,'label'=>namahari($tgl).' '.date('d',strtotime($tgl)),'nilai'=>$rawchart[$tgl]??0.0];
 }
 $maxnilai = max(array_column($chartdata,'nilai')) ?: 1;
 
@@ -113,15 +120,9 @@ $startx = 70; $chartH = 160;
 <title>Laporan Platform - Admin jajankita</title>
 <link rel="stylesheet" href="../../3. komponen/admin.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<?php if ($cetak): ?>
 <style>
-  .takprint { display: none !important; }
-  .navbaradmin { display: none !important; }
-  .konten { margin-left: 0 !important; padding: 12px !important; }
-  body { background: white !important; }
-  @page { size: A4; margin: 12mm; }
+  @media print { @page { size: A4; margin: 12mm; } }
 </style>
-<?php endif; ?>
 </head>
 <body>
 
@@ -135,10 +136,9 @@ $startx = 70; $chartH = 160;
       <p>Ringkasan performa jajankita — <?= $labelterpilih ?></p>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <a href="laporan.php?periode=<?= $periode ?><?= $periode==='custom'?'&dari='.$dari.'&sampai='.$sampai:'' ?>&cetak=1"
-         class="tombolringan" target="_blank">
+      <button onclick="window.print()" class="tombolringan takprint">
         <i class="fa-solid fa-print"></i> Cetak
-      </a>
+      </button>
     </div>
   </div>
 
@@ -184,9 +184,9 @@ $startx = 70; $chartH = 160;
     <div class="kartu-stat">
       <div class="ikon-stat"><i class="fa-solid fa-coins"></i></div>
       <div class="isi-stat">
-        <div class="nilai" style="font-size:15px;"><?= singkat($revenueselesai) ?></div>
-        <div class="label">Pendapatan Selesai</div>
-        <div class="sub">Pesanan status Selesai</div>
+        <div class="nilai" style="font-size:15px;"><?= singkat($totalomset) ?></div>
+        <div class="label">Total Omset</div>
+        <div class="sub">Selesai + Dibatalkan</div>
       </div>
     </div>
     <div class="kartu-stat">
@@ -283,25 +283,27 @@ $startx = 70; $chartH = 160;
 
   </div>
 
-  <!-- performa toko — hanya kolom pendapatan selesai -->
+  <!-- performa toko — total omset selesai dan dibatalkan -->
   <div class="kartu">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
       <h3 style="margin:0;border:none;padding:0;"><i class="fa-solid fa-store"></i> Performa Toko</h3>
     </div>
     <div class="tabel-wrapper">
-      <table>
+      <table style="min-width:600px;">
         <thead>
           <tr>
             <th>Nama Toko</th>
             <th class="tengah">Status</th>
             <th class="tengah">Total Pesanan</th>
-            <th class="kanan">Pendapatan Selesai</th>
+            <th class="tengah">Dibatalkan</th>
+            <th class="tengah">Rating</th>
+            <th class="kanan">Total Omset</th>
             <th class="tengah takprint">Aksi</th>
           </tr>
         </thead>
         <tbody>
           <?php if (empty($perftoko)): ?>
-          <tr><td colspan="5"><div class="kosong" style="padding:20px;"><p>Belum ada toko</p></div></td></tr>
+          <tr><td colspan="7"><div class="kosong" style="padding:20px;"><p>Belum ada toko</p></div></td></tr>
           <?php else: ?>
           <?php foreach ($perftoko as $t): ?>
           <tr>
@@ -312,6 +314,8 @@ $startx = 70; $chartH = 160;
               </span>
             </td>
             <td class="tengah"><?= $t['total_order'] ?></td>
+            <td class="tengah" style="color:var(--gagal);"><?= (int)$t['jml_dibatalkan'] ?></td>
+            <td class="tengah"><?= $t['rating'] > 0 ? $t['rating'].' ★' : '—' ?></td>
             <td class="kanan" style="font-weight:700;color:var(--sukses);"><?= rp($t['pendapatan']) ?></td>
             <td class="tengah takprint">
               <a href="../manajementoko/viewtoko.php?id=<?= $t['id_toko'] ?>" class="tombol-aksi" title="Detail">
@@ -325,7 +329,7 @@ $startx = 70; $chartH = 160;
         <?php if (!empty($perftoko)): ?>
         <tfoot>
           <tr>
-            <td colspan="3"><strong>TOTAL PLATFORM</strong></td>
+            <td colspan="5"><strong>TOTAL PLATFORM</strong></td>
             <td class="kanan" style="color:var(--sukses);"><strong><?= rp(array_sum(array_column($perftoko,'pendapatan'))) ?></strong></td>
             <td class="takprint"></td>
           </tr>

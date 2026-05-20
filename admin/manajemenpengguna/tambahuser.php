@@ -67,8 +67,14 @@ if (!in_array($roledefault, ['penjual','pembeli','admin'])) $roledefault = 'penj
       <div class="barisform">
         <div class="kelompokform">
           <label>Password <span style="color:var(--gagal);">*</span></label>
-          <input type="password" name="password" required minlength="8" maxlength="100"
-                 placeholder="Minimal 8 karakter...">
+          <div style="position:relative;">
+            <input type="password" name="password" id="pass_tambah" required minlength="8" maxlength="100"
+                   placeholder="Minimal 8 karakter..." style="padding-right:44px;">
+            <button type="button" onclick="(function(b){var i=document.getElementById('pass_tambah');i.type=i.type==='password'?'text':'password';b.querySelector('i').className=i.type==='password'?'fa-solid fa-eye':'fa-solid fa-eye-slash';})(this)"
+                    style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#99627A;cursor:pointer;font-size:15px;padding:4px;">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
           <small>8–100 karakter</small>
         </div>
         <div class="kelompokform">

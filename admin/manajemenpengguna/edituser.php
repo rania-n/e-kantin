@@ -90,8 +90,14 @@ if (!empty($_SESSION['flash'])) {
       </div>
       <div class="kelompokform">
         <label>Password Baru</label>
-        <input type="password" name="password" minlength="8" maxlength="100"
-               placeholder="Kosongkan jika tidak ingin mengubah...">
+        <div style="position:relative;">
+          <input type="password" name="password" id="pass_edit" minlength="8" maxlength="100"
+                 placeholder="Kosongkan jika tidak ingin mengubah..." style="padding-right:44px;">
+          <button type="button" onclick="(function(b){var i=document.getElementById('pass_edit');i.type=i.type==='password'?'text':'password';b.querySelector('i').className=i.type==='password'?'fa-solid fa-eye':'fa-solid fa-eye-slash';})(this)"
+                  style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#99627A;cursor:pointer;font-size:15px;padding:4px;">
+            <i class="fa-solid fa-eye"></i>
+          </button>
+        </div>
         <small>Isi hanya jika ingin mengganti password</small>
       </div>
       <div style="display:flex;gap:10px;margin-top:6px;">

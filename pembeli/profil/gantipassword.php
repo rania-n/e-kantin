@@ -39,6 +39,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// ambil data user
+$qu = $conn->prepare("SELECT * FROM tb_user WHERE id_user=? AND deleted=0");
+$qu->bind_param("i", $idpengguna); $qu->execute();
+$user = $qu->get_result()->fetch_assoc(); $qu->close();
+
+// statistik
+$s1 = $conn->prepare("SELECT COUNT(*) FROM tb_order WHERE id_user=? AND deleted=0 AND status_order NOT IN ('Dibatalkan')");
+$s1->bind_param("i",$idpengguna); $s1->execute();
+$totalpesanan = (int)$s1->get_result()->fetch_row()[0]; $s1->close();
+
+$s2 = $conn->prepare("SELECT COUNT(*) FROM tb_order WHERE id_user=? AND status_order='Selesai' AND deleted=0");
+$s2->bind_param("i",$idpengguna); $s2->execute();
+$totalselesai = (int)$s2->get_result()->fetch_row()[0]; $s2->close();
+
+$s3 = $conn->prepare("SELECT COALESCE(SUM(total_harga),0) FROM tb_order WHERE id_user=? AND status_order='Selesai' AND deleted=0");
+$s3->bind_param("i",$idpengguna); $s3->execute();
+$totalbelanja = (int)$s3->get_result()->fetch_row()[0]; $s3->close();
+
+$formatbelanja = $totalbelanja >= 1000000
+    ? 'Rp ' . number_format($totalbelanja/1000000, 1) . 'jt'
+    : 'Rp ' . number_format($totalbelanja/1000, 0) . 'rb';
+
+$inisial  = strtoupper(mb_substr($user['username'] ?? 'U', 0, 2));
 $pathbase = '..';
 ?>
 <!DOCTYPE html>
@@ -64,6 +87,30 @@ $pathbase = '..';
     </div>
   </div>
 
+  <!-- hero profil -->
+  <div class="heroprofil">
+    <div class="avatar"><?= $inisial ?></div>
+    <div class="namapengguna"><?= htmlspecialchars($user['username']) ?></div>
+    <div class="emailpengguna"><?= htmlspecialchars($user['email']) ?></div>
+    <span class="labelperan"><i class="fa-solid fa-user"></i> Pembeli</span>
+  </div>
+
+  <!-- statistik -->
+  <div class="gridstat" style="margin-bottom:20px;">
+    <div class="kotakstat">
+      <div class="angkastat"><?= $totalpesanan ?></div>
+      <div class="labelstat">Pesanan</div>
+    </div>
+    <div class="kotakstat">
+      <div class="angkastat"><?= $totalselesai ?></div>
+      <div class="labelstat">Selesai</div>
+    </div>
+    <div class="kotakstat">
+      <div class="angkastat" style="font-size:13px;"><?= $formatbelanja ?></div>
+      <div class="labelstat">Belanja</div>
+    </div>
+  </div>
+
   <?php if ($error): ?>
   <div class="peringatan peringatangagal">
     <i class="fa-solid fa-circle-xmark"></i> <?= htmlspecialchars($error) ?>
@@ -81,20 +128,39 @@ $pathbase = '..';
 
       <div class="kelompokform">
         <label>Password Lama</label>
-        <input type="password" name="password_lama"
-               required placeholder="Masukkan password lama...">
+        <div style="position:relative;">
+          <input type="password" name="password_lama" id="pass_lama"
+                 required placeholder="Masukkan password lama..." style="padding-right:44px;">
+          <button type="button" onclick="(function(b){var i=document.getElementById('pass_lama');i.type=i.type==='password'?'text':'password';b.querySelector('i').className=i.type==='password'?'fa-solid fa-eye':'fa-solid fa-eye-slash';})(this)"
+                  style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--tekssamar);cursor:pointer;font-size:15px;padding:4px;">
+            <i class="fa-solid fa-eye"></i>
+          </button>
+        </div>
       </div>
 
       <div class="kelompokform">
         <label>Password Baru</label>
-        <input type="password" name="password_baru"
-               required minlength="8" maxlength="100" placeholder="Minimal 8 karakter...">
+        <div style="position:relative;">
+          <input type="password" name="password_baru" id="pass_baru"
+                 required minlength="8" maxlength="100" placeholder="Minimal 8 karakter..."
+                 style="padding-right:44px;">
+          <button type="button" onclick="(function(b){var i=document.getElementById('pass_baru');i.type=i.type==='password'?'text':'password';b.querySelector('i').className=i.type==='password'?'fa-solid fa-eye':'fa-solid fa-eye-slash';})(this)"
+                  style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--tekssamar);cursor:pointer;font-size:15px;padding:4px;">
+            <i class="fa-solid fa-eye"></i>
+          </button>
+        </div>
       </div>
 
       <div class="kelompokform">
         <label>Konfirmasi Password Baru</label>
-        <input type="password" name="konfirmasi"
-               required placeholder="Ulangi password baru...">
+        <div style="position:relative;">
+          <input type="password" name="konfirmasi" id="pass_konfirmasi"
+                 required placeholder="Ulangi password baru..." style="padding-right:44px;">
+          <button type="button" onclick="(function(b){var i=document.getElementById('pass_konfirmasi');i.type=i.type==='password'?'text':'password';b.querySelector('i').className=i.type==='password'?'fa-solid fa-eye':'fa-solid fa-eye-slash';})(this)"
+                  style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--tekssamar);cursor:pointer;font-size:15px;padding:4px;">
+            <i class="fa-solid fa-eye"></i>
+          </button>
+        </div>
       </div>
     </div>
 

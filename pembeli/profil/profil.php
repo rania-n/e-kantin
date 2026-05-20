@@ -116,24 +116,14 @@ $pathbase = '..';
     <div class="panahpengaturan"><i class="fa-solid fa-chevron-right"></i></div>
   </a>
 
-  <a href="../pesanan/pesanan.php?tab=riwayat" class="itempengaturan">
-    <div class="ikonpengaturan hijau"><i class="fa-solid fa-clock-rotate-left"></i></div>
-    <div class="tekspengaturan">
-      <div class="judul">Riwayat Pesanan</div>
-      <div class="deskripsi"><?= $totalpesanan ?> pesanan</div>
-    </div>
-    <div class="panahpengaturan"><i class="fa-solid fa-chevron-right"></i></div>
-  </a>
-
   <div class="judulbagian" style="margin-top:20px;"><i class="fa-solid fa-ellipsis"></i> Lainnya</div>
 
   <div class="itempengaturan">
     <div class="ikonpengaturan"><i class="fa-solid fa-circle-info"></i></div>
     <div class="tekspengaturan">
-      <div class="judul">Tentang Aplikasi</div>
+      <div class="judul">Tentang Website</div>
       <div class="deskripsi">jajankita v1.0</div>
     </div>
-    <div class="panahpengaturan"><i class="fa-solid fa-chevron-right"></i></div>
   </div>
 
   <!-- Hubungi Admin (mobile: tampil di sini; desktop: di sidebar) -->

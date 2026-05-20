@@ -216,9 +216,9 @@ $cetak = isset($_GET['cetak']);
   <!-- Aksi -->
   <?php if ($pesanan['status_order'] === 'Selesai'): ?>
   <div class="takprint" style="margin-bottom:10px;">
-    <a href="struk.php?id_order=<?= $idpesanan ?>&cetak=1" target="_blank" class="tombolutama blok">
+    <button onclick="window.print()" class="tombolutama blok">
       <i class="fa-solid fa-print"></i> Cetak Struk
-    </a>
+    </button>
   </div>
   <?php endif; ?>
 
@@ -228,9 +228,6 @@ $cetak = isset($_GET['cetak']);
   </a>
   <?php endif; ?>
 
-  <a href="pesanan.php" class="tombolkedua blok takprint" style="margin-bottom:10px;">
-    <i class="fa-solid fa-receipt"></i> Lihat Semua Pesanan
-  </a>
   <a href="../index/index.php" class="tombolringan blok takprint" style="margin-bottom:28px;">
     <i class="fa-solid fa-house"></i> Kembali ke Beranda
   </a>

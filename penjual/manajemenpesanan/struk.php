@@ -58,14 +58,10 @@ function ikonStatus(string $s): string {
 <title>Struk <?= $nomerpesanan ?> - jajankita</title>
 <link rel="stylesheet" href="../../3. komponen/penjual.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<?php if ($cetak): ?>
 <style>
-  .takprint { display: none !important; }
-  .navbarpenjual { display: none !important; }
-  .konten { margin-left: 0 !important; padding: 0 !important; }
-  body { background: white !important; }
+  .konten { padding: 16px; }
+  .konten-sempit { max-width: none; }
 </style>
-<?php endif; ?>
 </head>
 <body>
 
@@ -100,7 +96,7 @@ function ikonStatus(string $s): string {
       <p>Simpan sebagai bukti pembayaran</p>
     </div>
 
-    <div class="isistruk">
+    <div class="isistruk" style="padding-bottom:0;">
 
       <div class="barisstruk">
         <span class="labelstruk">No. Pesanan</span>
@@ -160,11 +156,12 @@ function ikonStatus(string $s): string {
         <span class="labelstruk">Biaya Layanan</span>
         <span class="nilaistruk">Rp <?= number_format(max(0,$biayalayanan),0,',','.') ?></span>
       </div>
-      <div class="totalstruk">
-        <span class="label"><i class="fa-solid fa-coins"></i> Total Bayar</span>
-        <span class="nilai">Rp <?= number_format($pesanan['total_harga'],0,',','.') ?></span>
-      </div>
 
+    </div><!-- tutup isistruk -->
+
+    <div class="totalstruk">
+      <span class="label"><i class="fa-solid fa-coins"></i> Total Bayar</span>
+      <span class="nilai">Rp <?= number_format($pesanan['total_harga'],0,',','.') ?></span>
     </div>
 
     <div class="kakistruk">
@@ -178,17 +175,12 @@ function ikonStatus(string $s): string {
   </div>
 
   <!-- tombol aksi -->
-  <?php if ($pesanan['status_order'] === 'Selesai'): ?>
-  <div class="takprint" style="margin-bottom:10px;">
-    <a href="struk.php?id=<?= $idpesanan ?>&cetak=1" target="_blank" class="tombolutama blok">
+  <div class="takprint" style="margin-top:4px;">
+    <button onclick="window.print()" class="tombolutama blok">
       <i class="fa-solid fa-print"></i> Cetak Struk
-    </a>
+    </button>
   </div>
-  <?php endif; ?>
 
-  <a href="manajemenpesanan.php" class="tombolringan blok takprint" style="margin-bottom:10px;">
-    <i class="fa-solid fa-arrow-left"></i> Kembali ke Pesanan
-  </a>
 
 </div>
 </main>

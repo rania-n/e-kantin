@@ -110,72 +110,67 @@ function bintang(float $r): string {
     <span class="labelperan">
       <i class="fa-solid fa-user-tie"></i> <?= htmlspecialchars($user['username'] ?? '') ?>
     </span>
-    <div style="display:flex;gap:20px;justify-content:center;margin-top:16px;flex-wrap:wrap;">
-      <div style="text-align:center;">
-        <div style="font-size:20px;font-weight:800;"><?= $totalpesanan ?></div>
-        <div style="font-size:11px;opacity:.8;">Pesanan</div>
-      </div>
-      <div style="text-align:center;">
-        <div style="font-size:20px;font-weight:800;"><?= $totalmenu ?></div>
-        <div style="font-size:11px;opacity:.8;">Menu Aktif</div>
-      </div>
-      <div style="text-align:center;">
-        <div style="font-size:20px;font-weight:800;"><?= $ratarating ?: '—' ?></div>
-        <div style="font-size:11px;opacity:.8;"><?= $jmlrating ?> Ulasan</div>
-      </div>
-      <div style="text-align:center;">
-        <div style="font-size:15px;font-weight:800;"><?= singkat($totalpendapatan) ?></div>
-        <div style="font-size:11px;opacity:.8;">Pendapatan</div>
-      </div>
-    </div>
   </div>
 
   <!-- tab view profil -->
   <?php if ($tabaktif === 'profil'): ?>
 
-  <a href="profil.php?tab=edit" class="itempengaturan">
-    <div class="ikonpengaturan">
-      <i class="fa-solid fa-pen"></i>
+  <!-- kotak statistik gelap -->
+  <div class="gridstat" style="margin-bottom:20px;">
+    <div class="kotakstat gelap">
+      <div class="angkastat"><?= $totalpesanan ?></div>
+      <div class="labelstat">Pesanan</div>
     </div>
+    <div class="kotakstat gelap">
+      <div class="angkastat"><?= $totalmenu ?></div>
+      <div class="labelstat">Menu Aktif</div>
+    </div>
+    <div class="kotakstat gelap">
+      <div class="angkastat" style="font-size:13px;"><?= singkat($totalpendapatan) ?></div>
+      <div class="labelstat">Pendapatan</div>
+    </div>
+  </div>
+
+  <div class="judulbagian"><i class="fa-solid fa-user-gear"></i> Akun Saya</div>
+
+  <a href="profil.php?tab=edit" class="itempengaturan">
+    <div class="ikonpengaturan"><i class="fa-solid fa-pen"></i></div>
     <div class="tekspengaturan">
       <div class="judul">Edit Profil &amp; Toko</div>
       <div class="deskripsi">Ubah nama toko, username, email, dan foto toko</div>
     </div>
-    <i class="fa-solid fa-chevron-right panahpengaturan"></i>
+    <div class="panahpengaturan"><i class="fa-solid fa-chevron-right"></i></div>
   </a>
 
   <a href="profil.php?tab=password" class="itempengaturan">
-    <div class="ikonpengaturan biru">
-      <i class="fa-solid fa-lock"></i>
-    </div>
+    <div class="ikonpengaturan biru"><i class="fa-solid fa-lock"></i></div>
     <div class="tekspengaturan">
       <div class="judul">Ganti Password</div>
       <div class="deskripsi">Perbarui kata sandi akunmu</div>
     </div>
-    <i class="fa-solid fa-chevron-right panahpengaturan"></i>
+    <div class="panahpengaturan"><i class="fa-solid fa-chevron-right"></i></div>
   </a>
 
-  <a href="../laporan/laporan.php" class="itempengaturan">
-    <div class="ikonpengaturan hijau">
-      <i class="fa-solid fa-chart-bar"></i>
-    </div>
+  <div class="judulbagian" style="margin-top:20px;"><i class="fa-solid fa-ellipsis"></i> Lainnya</div>
+
+  <div class="itempengaturan">
+    <div class="ikonpengaturan"><i class="fa-solid fa-circle-info"></i></div>
     <div class="tekspengaturan">
-      <div class="judul">Laporan Penjualan</div>
-      <div class="deskripsi">Lihat rekap pendapatan dan statistik toko</div>
+      <div class="judul">Tentang Website</div>
+      <div class="deskripsi">jajankita v1.0</div>
     </div>
-    <i class="fa-solid fa-chevron-right panahpengaturan"></i>
-  </a>
+  </div>
 
-  <a href="../../4. autentifikasi/konfirmasilogout.php?peran=penjual" class="itempengaturan">
-    <div class="ikonpengaturan merah">
-      <i class="fa-solid fa-right-from-bracket"></i>
-    </div>
+  <a href="../../4. autentifikasi/konfirmasilogout.php?peran=penjual" class="itempengaturan sembunyi-desktop">
+    <div class="ikonpengaturan merah"><i class="fa-solid fa-right-from-bracket"></i></div>
     <div class="tekspengaturan">
       <div class="judul" style="color:var(--gagal);">Keluar</div>
       <div class="deskripsi">Logout dari akun penjual</div>
     </div>
-    <i class="fa-solid fa-chevron-right panahpengaturan"></i>
+    <div class="panahpengaturan" style="color:var(--gagal);"><i class="fa-solid fa-chevron-right"></i></div>
   </a>
+
+  <div style="height:24px;"></div>
 
   <?php endif; ?>
 
@@ -236,17 +231,37 @@ function bintang(float $r): string {
     <form method="POST" action="prosesgantipassword.php">
       <div class="kelompokform">
         <label>Password Lama <span style="color:var(--gagal);">*</span></label>
-        <input type="password" name="password_lama" required placeholder="Password saat ini...">
+        <div style="position:relative;">
+          <input type="password" name="password_lama" id="pass_lama" required placeholder="Password saat ini..."
+                 style="padding-right:44px;">
+          <button type="button" onclick="(function(b){var i=document.getElementById('pass_lama');i.type=i.type==='password'?'text':'password';b.querySelector('i').className=i.type==='password'?'fa-solid fa-eye':'fa-solid fa-eye-slash';})(this)"
+                  style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--tekssamar);cursor:pointer;font-size:15px;padding:4px;">
+            <i class="fa-solid fa-eye"></i>
+          </button>
+        </div>
       </div>
       <div class="kelompokform">
         <label>Password Baru <span style="color:var(--gagal);">*</span></label>
-        <input type="password" name="password_baru" required minlength="8" maxlength="100"
-               placeholder="Minimal 8 karakter...">
+        <div style="position:relative;">
+          <input type="password" name="password_baru" id="pass_baru" required minlength="8" maxlength="100"
+                 placeholder="Minimal 8 karakter..." style="padding-right:44px;">
+          <button type="button" onclick="(function(b){var i=document.getElementById('pass_baru');i.type=i.type==='password'?'text':'password';b.querySelector('i').className=i.type==='password'?'fa-solid fa-eye':'fa-solid fa-eye-slash';})(this)"
+                  style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--tekssamar);cursor:pointer;font-size:15px;padding:4px;">
+            <i class="fa-solid fa-eye"></i>
+          </button>
+        </div>
         <small>8–100 karakter</small>
       </div>
       <div class="kelompokform">
         <label>Konfirmasi Password Baru <span style="color:var(--gagal);">*</span></label>
-        <input type="password" name="konfirmasi" required placeholder="Ulangi password baru...">
+        <div style="position:relative;">
+          <input type="password" name="konfirmasi" id="pass_konfirmasi" required placeholder="Ulangi password baru..."
+                 style="padding-right:44px;">
+          <button type="button" onclick="(function(b){var i=document.getElementById('pass_konfirmasi');i.type=i.type==='password'?'text':'password';b.querySelector('i').className=i.type==='password'?'fa-solid fa-eye':'fa-solid fa-eye-slash';})(this)"
+                  style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--tekssamar);cursor:pointer;font-size:15px;padding:4px;">
+            <i class="fa-solid fa-eye"></i>
+          </button>
+        </div>
       </div>
       <div style="display:flex;gap:10px;">
         <a href="profil.php" class="tombolringan">Batal</a>

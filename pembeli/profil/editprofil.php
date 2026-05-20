@@ -8,7 +8,7 @@ include '../../1. koneksi/koneksi.php';
 $idpengguna = (int)$_SESSION['id_user'];
 $error      = '';
 
-// Proses form submit
+// proses form submit
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $usernamebaru = trim($_POST['username'] ?? '');
     $emailbaru    = trim($_POST['email']    ?? '');
@@ -39,10 +39,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Ambil data user
+// ambil data user
 $q = $conn->prepare("SELECT * FROM tb_user WHERE id_user=? AND deleted=0");
 $q->bind_param("i", $idpengguna); $q->execute();
 $user = $q->get_result()->fetch_assoc(); $q->close();
+
+// statistik
+$s1 = $conn->prepare("SELECT COUNT(*) FROM tb_order WHERE id_user=? AND deleted=0 AND status_order NOT IN ('Dibatalkan')");
+$s1->bind_param("i",$idpengguna); $s1->execute();
+$totalpesanan = (int)$s1->get_result()->fetch_row()[0]; $s1->close();
+
+$s2 = $conn->prepare("SELECT COUNT(*) FROM tb_order WHERE id_user=? AND status_order='Selesai' AND deleted=0");
+$s2->bind_param("i",$idpengguna); $s2->execute();
+$totalselesai = (int)$s2->get_result()->fetch_row()[0]; $s2->close();
+
+$s3 = $conn->prepare("SELECT COALESCE(SUM(total_harga),0) FROM tb_order WHERE id_user=? AND status_order='Selesai' AND deleted=0");
+$s3->bind_param("i",$idpengguna); $s3->execute();
+$totalbelanja = (int)$s3->get_result()->fetch_row()[0]; $s3->close();
+
+$formatbelanja = $totalbelanja >= 1000000
+    ? 'Rp ' . number_format($totalbelanja/1000000, 1) . 'jt'
+    : 'Rp ' . number_format($totalbelanja/1000, 0) . 'rb';
 
 $inisial  = strtoupper(mb_substr($user['username'] ?? 'U', 0, 2));
 $pathbase = '..';
@@ -70,19 +87,35 @@ $pathbase = '..';
     </div>
   </div>
 
+  <!-- hero profil -->
+  <div class="heroprofil">
+    <div class="avatar"><?= $inisial ?></div>
+    <div class="namapengguna"><?= htmlspecialchars($user['username']) ?></div>
+    <div class="emailpengguna"><?= htmlspecialchars($user['email']) ?></div>
+    <span class="labelperan"><i class="fa-solid fa-user"></i> Pembeli</span>
+  </div>
+
+  <!-- statistik -->
+  <div class="gridstat" style="margin-bottom:20px;">
+    <div class="kotakstat">
+      <div class="angkastat"><?= $totalpesanan ?></div>
+      <div class="labelstat">Pesanan</div>
+    </div>
+    <div class="kotakstat">
+      <div class="angkastat"><?= $totalselesai ?></div>
+      <div class="labelstat">Selesai</div>
+    </div>
+    <div class="kotakstat">
+      <div class="angkastat" style="font-size:13px;"><?= $formatbelanja ?></div>
+      <div class="labelstat">Belanja</div>
+    </div>
+  </div>
+
   <?php if ($error): ?>
   <div class="peringatan peringatangagal">
     <i class="fa-solid fa-circle-xmark"></i> <?= htmlspecialchars($error) ?>
   </div>
   <?php endif; ?>
-
-  <!-- Avatar -->
-  <div style="text-align:center;margin-bottom:20px;">
-    <div class="avatar" style="width:76px;height:76px;font-size:26px;margin:0 auto 8px;">
-      <?= $inisial ?>
-    </div>
-    <div style="font-size:12px;color:var(--tekssamar);">Avatar otomatis dari nama</div>
-  </div>
 
   <form method="POST" action="editprofil.php">
     <div class="kartu">

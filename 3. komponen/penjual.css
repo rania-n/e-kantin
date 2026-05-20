@@ -190,6 +190,7 @@ ul { list-style: none; }
 /* pembatas lebar untuk halaman struk */
 .konten-sempit {
   max-width: 480px;
+  width: 100%;
   margin: 0 auto;
 }
 
@@ -807,6 +808,35 @@ tbody tr:hover td { background: var(--latar); }
   border: 1px dashed rgba(255,255,255,.35);
 }
 
+/* judulbagian — header bagian di profil */
+.judulbagian {
+  font-size: 11px; font-weight: 700; color: var(--tekssamar);
+  text-transform: uppercase; letter-spacing: .5px;
+  margin: 16px 0 8px;
+  display: flex; align-items: center; gap: 6px;
+}
+.judulbagian i { font-size: 13px; }
+
+/* grid statistik profil penjual */
+.gridstat {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+  gap: 10px; margin-bottom: 16px;
+}
+.kotakstat {
+  background: var(--putih); border-radius: 12px;
+  padding: 12px 8px; text-align: center;
+  border: 1px solid var(--garis); box-shadow: var(--bayang);
+}
+.kotakstat .angkastat { font-size: 17px; font-weight: 800; color: var(--utama); }
+.kotakstat .labelstat { font-size: 10px; color: var(--tekssamar); margin-top: 2px; }
+/* variasi gelap selaras hero profil */
+.kotakstat.gelap {
+  background: var(--utama);
+  border-color: rgba(255,255,255,.1);
+}
+.kotakstat.gelap .angkastat { color: var(--putihbg); }
+.kotakstat.gelap .labelstat { color: rgba(255,255,255,.7); }
+
 /* item pengaturan — seperti punya pembeli, untuk tab profil view */
 .itempengaturan {
   display: flex; align-items: center; gap: 14px;
@@ -1085,17 +1115,6 @@ tbody tr:hover td { background: var(--latar); }
 .mb20 { margin-bottom: 20px; }
 .mt14 { margin-top: 14px; }
 .tengah { text-align: center; }
-.judulbagian {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--utama);
-  text-transform: uppercase;
-  letter-spacing: .5px;
-  margin: 20px 0 10px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
 
 /* ==================================================================
    BOTTOM NAV PENJUAL (mobile only, gaya identik pembeli tapi gelap)
@@ -1173,10 +1192,14 @@ tbody tr:hover td { background: var(--latar); }
   .barisform { grid-template-columns: 1fr; }
 }
 
-/* Desktop: sembunyikan elemen mobile-only */
-.sembunyi-desktop { display: none; }
-@media (max-width: 768px) {
-  .sembunyi-desktop { display: block; }
+/* sembunyimobile: tampil di desktop, sembunyi di mobile */
+.sembunyimobile { display: none; }
+@media (min-width: 769px) {
+  .sembunyimobile { display: initial; }
+}
+/* sembunyi-desktop: sembunyi di desktop, tampil di mobile (dengan display asli elemen) */
+@media (min-width: 769px) {
+  .sembunyi-desktop { display: none !important; }
 }
 
 /* ==================================================================
