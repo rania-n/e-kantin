@@ -4,6 +4,11 @@
    form catatan, pilihan metode pembayaran, dan total biaya
    sebelum pembeli menekan tombol "Pesan" untuk memproses order */
 
+// cegah browser menyimpan cache halaman checkout agar tidak ada form lama yang terisi otomatis
+// ini mencegah pengguna melihat konfirmasi toko yang salah karena halaman tersimpan di cache
+header('Cache-Control: no-store, no-cache, must-revalidate');
+header('Pragma: no-cache');
+
 // guard memastikan hanya pembeli yang login yang bisa mengakses
 include '../../3. komponen/guardpembeli.php';
 include '../../1. koneksi/koneksi.php';
@@ -70,6 +75,8 @@ $pathbase = '..';
   <form method="POST" action="prosespesanan.php">
     <!-- kirim id toko ke proses — dipakai untuk mengambil item dari keranjang session -->
     <input type="hidden" name="id_toko" value="<?= $idtoko ?>">
+    <!-- token unik per sesi untuk mencegah pengiriman form yang tidak sengaja ke toko yang salah -->
+    <input type="hidden" name="token_checkout" value="<?= htmlspecialchars(md5($idtoko . '_' . session_id())) ?>">
 
     <!-- daftar item yang akan dipesan -->
     <div class="judulbagian"><i class="fa-solid fa-list"></i> Detail Pesanan</div>

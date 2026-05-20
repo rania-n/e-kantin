@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 18, 2026 at 07:17 PM
+-- Generation Time: May 20, 2026 at 05:17 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -67,7 +67,52 @@ INSERT INTO `tb_detail_order` (`id_detail`, `id_order`, `id_menu`, `jumlah`, `ha
 (20, 13, 10, 60, 8000.00, 480000.00, '2026-05-17 13:06:51', NULL, 0, NULL),
 (21, 14, 9, 1, 3000.00, 3000.00, '2026-05-17 13:09:22', NULL, 0, NULL),
 (22, 15, 2, 1, 5000.00, 5000.00, '2026-05-18 01:22:00', NULL, 0, NULL),
-(23, 16, 8, 1, 13000.00, 13000.00, '2026-05-18 04:28:43', NULL, 0, NULL);
+(23, 16, 8, 1, 13000.00, 13000.00, '2026-05-18 04:28:43', NULL, 0, NULL),
+(24, 17, 1, 1, 15000.00, 15000.00, '2026-05-19 00:17:16', NULL, 0, NULL),
+(25, 17, 2, 1, 5000.00, 5000.00, '2026-05-19 00:17:16', NULL, 0, NULL),
+(26, 18, 8, 1, 13000.00, 13000.00, '2026-05-19 00:41:58', NULL, 0, NULL),
+(27, 19, 8, 2, 13000.00, 26000.00, '2026-05-19 00:55:47', NULL, 0, NULL),
+(28, 20, 1, 1, 15000.00, 15000.00, '2026-05-19 01:13:29', NULL, 0, NULL),
+(29, 20, 3, 1, 7000.00, 7000.00, '2026-05-19 01:13:29', NULL, 0, NULL),
+(30, 20, 6, 1, 10000.00, 10000.00, '2026-05-19 01:13:29', NULL, 0, NULL),
+(31, 20, 2, 1, 5000.00, 5000.00, '2026-05-19 01:13:29', NULL, 0, NULL),
+(32, 21, 1, 1, 15000.00, 15000.00, '2026-05-19 01:21:26', NULL, 0, NULL),
+(33, 22, 3, 1, 7000.00, 7000.00, '2026-05-19 02:10:46', NULL, 0, NULL),
+(34, 23, 1, 2, 15000.00, 30000.00, '2026-05-19 02:26:41', NULL, 0, NULL),
+(35, 24, 8, 1, 13000.00, 13000.00, '2026-05-19 05:30:35', NULL, 0, NULL),
+(36, 24, 7, 1, 18000.00, 18000.00, '2026-05-19 05:30:35', NULL, 0, NULL),
+(37, 25, 13, 1, 0.00, 0.00, '2026-05-19 05:35:34', NULL, 0, NULL),
+(38, 26, 1, 1, 15000.00, 15000.00, '2026-05-19 05:56:52', NULL, 0, NULL),
+(39, 26, 2, 1, 5000.00, 5000.00, '2026-05-19 05:56:52', NULL, 0, NULL),
+(40, 26, 3, 1, 7000.00, 7000.00, '2026-05-19 05:56:52', NULL, 0, NULL),
+(41, 27, 1, 1, 15000.00, 15000.00, '2026-05-19 08:47:33', NULL, 0, NULL),
+(42, 27, 2, 1, 5000.00, 5000.00, '2026-05-19 08:47:33', NULL, 0, NULL),
+(43, 28, 1, 1, 15000.00, 15000.00, '2026-05-19 15:15:45', NULL, 0, NULL),
+(44, 29, 1, 1, 15000.00, 15000.00, '2026-05-19 17:38:22', NULL, 0, NULL),
+(45, 30, 1, 4, 15000.00, 60000.00, '2026-05-20 02:14:08', NULL, 0, NULL),
+(46, 31, 2, 1, 5000.00, 5000.00, '2026-05-20 02:29:50', NULL, 0, NULL),
+(47, 31, 3, 1, 7000.00, 7000.00, '2026-05-20 02:29:50', NULL, 0, NULL),
+(48, 32, 1, 1, 15000.00, 15000.00, '2026-05-20 07:39:01', NULL, 0, NULL),
+(49, 33, 7, 1, 18000.00, 18000.00, '2026-05-20 07:39:17', NULL, 0, NULL),
+(50, 34, 3, 1, 7000.00, 7000.00, '2026-05-20 07:39:22', NULL, 0, NULL),
+(51, 35, 2, 1, 5000.00, 5000.00, '2026-05-20 07:39:29', NULL, 0, NULL),
+(52, 36, 8, 1, 13000.00, 13000.00, '2026-05-20 07:39:52', NULL, 0, NULL),
+(53, 37, 7, 1, 18000.00, 18000.00, '2026-05-20 07:40:01', NULL, 0, NULL),
+(54, 38, 8, 4, 13000.00, 52000.00, '2026-05-20 07:40:16', NULL, 0, NULL),
+(55, 39, 8, 1, 13000.00, 13000.00, '2026-05-20 07:51:55', NULL, 0, NULL),
+(56, 40, 8, 2, 13000.00, 26000.00, '2026-05-20 12:47:51', NULL, 0, NULL),
+(57, 40, 7, 1, 18000.00, 18000.00, '2026-05-20 12:47:51', NULL, 0, NULL),
+(58, 41, 1, 1, 15000.00, 15000.00, '2026-05-20 12:48:15', NULL, 0, NULL),
+(59, 41, 2, 1, 5000.00, 5000.00, '2026-05-20 12:48:15', NULL, 0, NULL),
+(60, 41, 4, 1, 12000.00, 12000.00, '2026-05-20 12:48:15', NULL, 0, NULL),
+(61, 42, 1, 1, 15000.00, 15000.00, '2026-05-20 12:49:24', NULL, 0, NULL),
+(62, 43, 1, 1, 15000.00, 15000.00, '2026-05-20 12:51:36', NULL, 0, NULL),
+(63, 44, 8, 1, 13000.00, 13000.00, '2026-05-20 12:52:52', NULL, 0, NULL),
+(64, 45, 1, 1, 15000.00, 15000.00, '2026-05-20 13:01:05', NULL, 0, NULL),
+(65, 46, 8, 1, 13000.00, 13000.00, '2026-05-20 13:11:30', NULL, 0, NULL),
+(66, 47, 2, 2, 5000.00, 10000.00, '2026-05-20 13:22:02', NULL, 0, NULL),
+(67, 48, 4, 1, 12000.00, 12000.00, '2026-05-20 13:57:18', NULL, 0, NULL),
+(68, 49, 4, 1, 12000.00, 12000.00, '2026-05-20 13:58:13', NULL, 0, NULL);
 
 -- --------------------------------------------------------
 
@@ -116,19 +161,19 @@ CREATE TABLE `tb_menu` (
 --
 
 INSERT INTO `tb_menu` (`id_menu`, `nama_menu`, `harga`, `stok`, `kategori`, `deskripsi`, `foto`, `status`, `deleted`, `deleted_at`, `created`, `updated`, `id_toko`) VALUES
-(1, 'Bakso Daging', 15000, 40, 'Makanan Berat', 'Bakso sapi asli dengan urat yang kenyal dan kuah gurih.', '69f989784ff3f.jpeg', 'aktif', 0, NULL, '2026-04-25 06:30:43', '2026-05-17 08:56:23', 1),
-(2, 'Teh Manis', 5000, 77, 'Minuman Sehat', 'Teh seduh segar dengan gula asli (Es/Hangat).', '69f98982dc00c.jpeg', 'aktif', 0, NULL, '2026-04-25 06:30:43', '2026-05-18 01:22:00', 1),
-(3, 'Kopi Hitam', 7000, 80, 'Minuman Sehat', 'Kopi robusta mantap untuk penambah semangat.', '69f9898b92cf9.jpeg', 'aktif', 0, NULL, '2026-04-25 06:30:43', '2026-05-17 01:27:13', 1),
-(4, 'Mie Ayam', 12000, 39, 'Makanan Berat', 'Mie kuning dengan potongan ayam kecap dan sawi segar.', '69f989a245a3f.jpeg', 'aktif', 0, NULL, '2026-04-25 06:30:43', '2026-05-17 06:24:19', 1),
+(1, 'Bakso Daging', 15000, 29, 'Makanan Berat', 'Bakso sapi asli dengan urat yang kenyal dan kuah gurih.', '69f989784ff3f.jpeg', 'aktif', 0, NULL, '2026-04-25 06:30:43', '2026-05-20 14:03:19', 1),
+(2, 'Teh Manis', 5000, 74, 'Minuman Sehat', 'Teh seduh segar dengan gula asli (Es/Hangat).', '69f98982dc00c.jpeg', 'aktif', 0, NULL, '2026-04-25 06:30:43', '2026-05-20 13:22:02', 1),
+(3, 'Kopi Hitam', 7000, 76, 'Minuman Sehat', 'Kopi robusta mantap untuk penambah semangat.', '69f9898b92cf9.jpeg', 'aktif', 0, NULL, '2026-04-25 06:30:43', '2026-05-20 07:39:22', 1),
+(4, 'Mie Ayam', 12000, 36, 'Makanan Berat', 'Mie kuning dengan potongan ayam kecap dan sawi segar.', '69f989a245a3f.jpeg', 'aktif', 0, NULL, '2026-04-25 06:30:43', '2026-05-20 13:58:13', 1),
 (5, 'Dimsum Ayam', 15000, 30, 'Makanan Ringan', 'Dimsum lembut isi daging ayam isi 4 per porsi.', '69f989b37462f.jpeg', 'aktif', 0, NULL, '2026-04-25 06:30:43', '2026-05-17 01:28:48', 1),
-(6, 'Nasi Pecel', 10000, 45, 'Makanan Berat', 'Nasi dengan sayuran segar dan bumbu kacang khas.', '69f989c5ec7fb.jpeg', 'aktif', 0, NULL, '2026-04-25 06:30:43', '2026-05-17 01:28:48', 1),
-(7, 'Ayam Geprek', 18000, 22, 'Makanan Berat', 'Ayam goreng tepung renyah dengan sambal korek pedas.', '69f989d48c5cd.jpeg', 'aktif', 0, NULL, '2026-04-25 06:30:43', '2026-05-18 09:48:30', 2),
-(8, 'Soto Ayam', 13000, 29, 'Makanan Berat', 'Soto ayam kuah kuning bening dengan koya gurih.', '69f989f373682.jpeg', 'aktif', 0, NULL, '2026-04-25 06:30:43', '2026-05-18 04:28:43', 2),
+(6, 'Nasi Pecel', 10000, 44, 'Makanan Berat', 'Nasi dengan sayuran segar dan bumbu kacang khas.', '69f989c5ec7fb.jpeg', 'aktif', 0, NULL, '2026-04-25 06:30:43', '2026-05-19 01:13:29', 1),
+(7, 'Ayam Geprek', 18000, 18, 'Makanan Berat', 'Ayam goreng tepung renyah dengan sambal korek pedas.', '69f989d48c5cd.jpeg', 'aktif', 0, NULL, '2026-04-25 06:30:43', '2026-05-20 12:47:51', 2),
+(8, 'Soto Ayam', 13000, 15, 'Makanan Berat', 'Soto ayam kuah kuning bening dengan koya gurih.', '69f989f373682.jpeg', 'aktif', 0, NULL, '2026-04-25 06:30:43', '2026-05-20 13:11:30', 2),
 (9, 'Air Putih', 3000, 198, 'Minuman Sehat', 'Air mineral kemasan botol 600ml.', '69f989ea8c265.jpeg', 'nonaktif', 0, NULL, '2026-04-25 06:30:43', '2026-05-18 09:49:31', 2),
 (10, 'Es Jeruk', 8000, 0, 'Minuman Sehat', 'Perasan jeruk asli yang menyegarkan.', '69f989deae9c9.jpeg', 'aktif', 0, NULL, '2026-04-25 06:30:43', '2026-05-18 04:37:22', 2),
 (11, 'coba', 0, 10, 'Makanan Berat', 'kkk', '69f98961aaf4f.png', 'aktif', 1, '2026-05-05 14:03:41', '2026-05-05 04:20:50', '2026-05-17 01:32:51', 2),
 (12, 'Air Putih', 3000000, -10, 'Minuman Sehat', ';,,lm', '69f9937a6974c.jpeg', 'nonaktif', 1, '2026-05-18 11:23:03', '2026-05-05 06:51:38', '2026-05-18 04:23:03', 2),
-(13, 'kucin', 0, 1000, 'Minuman Ringan', 'fmf', '6a0a960d6189f.png', 'aktif', 0, NULL, '2026-05-18 04:31:09', '2026-05-18 09:48:24', 2);
+(13, 'kucin', 0, 999, 'Minuman Ringan', 'fmf', '6a0a960d6189f.png', 'aktif', 0, NULL, '2026-05-18 04:31:09', '2026-05-20 07:42:04', 2);
 
 -- --------------------------------------------------------
 
@@ -164,16 +209,49 @@ INSERT INTO `tb_order` (`id_order`, `id_user`, `id_toko`, `tanggal_order`, `tota
 (4, 12, NULL, '2026-05-17 10:31:15', 20000.00, 'Menunggu', 'Transfer', NULL, '2026-05-17 03:31:15', NULL, 0, NULL, NULL, NULL),
 (5, 12, NULL, '2026-05-17 10:32:05', 13000.00, 'Menunggu', 'Tunai', NULL, '2026-05-17 03:32:05', '2026-05-17 03:32:25', 0, NULL, 5, 'bgs'),
 (6, 13, NULL, '2026-05-17 10:34:29', 19000.00, 'Menunggu', 'Tunai', NULL, '2026-05-17 03:34:29', NULL, 0, NULL, NULL, NULL),
-(7, 11, 2, '2026-05-17 13:19:36', 14000.00, 'Menunggu', 'Tunai', '', '2026-05-17 06:19:36', NULL, 0, NULL, NULL, NULL),
+(7, 11, 2, '2026-05-17 13:19:36', 14000.00, 'Selesai', 'Tunai', '', '2026-05-17 06:19:36', '2026-05-18 22:07:39', 0, NULL, NULL, NULL),
 (8, 11, 1, '2026-05-17 13:24:19', 83000.00, 'Selesai', 'Transfer', '', '2026-05-17 06:24:19', NULL, 0, NULL, NULL, NULL),
 (9, 11, 2, '2026-05-17 15:44:57', 4000.00, 'Dibatalkan', 'Transfer', '', '2026-05-17 08:44:57', '2026-05-18 09:49:31', 0, NULL, NULL, NULL),
-(10, 11, 1, '2026-05-17 15:46:11', 111000.00, 'Menunggu', 'Tunai', '', '2026-05-17 08:46:11', NULL, 0, NULL, NULL, NULL),
-(11, 11, 1, '2026-05-17 15:56:23', 16000.00, 'Menunggu', 'Tunai', '', '2026-05-17 08:56:23', NULL, 0, NULL, NULL, NULL),
-(12, 11, 1, '2026-05-17 17:23:21', 16000.00, 'Menunggu', 'Tunai', '', '2026-05-17 10:23:21', NULL, 0, NULL, NULL, NULL),
+(10, 11, 1, '2026-05-17 15:46:11', 111000.00, 'Selesai', 'Tunai', '', '2026-05-17 08:46:11', '2026-05-19 09:12:15', 0, NULL, NULL, NULL),
+(11, 11, 1, '2026-05-17 15:56:23', 16000.00, 'Dibatalkan', 'Tunai', '', '2026-05-17 08:56:23', '2026-05-19 01:49:11', 0, NULL, NULL, NULL),
+(12, 11, 1, '2026-05-17 17:23:21', 16000.00, 'Dibatalkan', 'Tunai', '', '2026-05-17 10:23:21', '2026-05-19 00:23:53', 0, NULL, NULL, NULL),
 (13, 11, 2, '2026-05-17 20:06:51', 499000.00, 'Dibatalkan', 'Transfer', '', '2026-05-17 13:06:51', '2026-05-18 05:22:36', 0, NULL, NULL, NULL),
 (14, 12, 2, '2026-05-17 20:09:22', 4000.00, 'Selesai', 'QRIS', '', '2026-05-17 13:09:22', '2026-05-17 13:19:26', 0, NULL, NULL, NULL),
-(15, 12, 1, '2026-05-18 08:22:00', 6000.00, 'Menunggu', 'Tunai', 'dingin yaa..', '2026-05-18 01:22:00', NULL, 0, NULL, NULL, NULL),
-(16, 11, 2, '2026-05-18 11:28:43', 14000.00, 'Selesai', 'Tunai', '', '2026-05-18 04:28:43', '2026-05-18 05:22:01', 0, NULL, NULL, NULL);
+(15, 12, 1, '2026-05-18 08:22:00', 6000.00, 'Dibatalkan', 'Tunai', 'dingin yaa..', '2026-05-18 01:22:00', '2026-05-19 00:23:22', 0, NULL, NULL, NULL),
+(16, 11, 2, '2026-05-18 11:28:43', 14000.00, 'Selesai', 'Tunai', '', '2026-05-18 04:28:43', '2026-05-18 05:22:01', 0, NULL, NULL, NULL),
+(17, 12, 1, '2026-05-19 07:17:16', 21000.00, 'Selesai', 'QRIS', 'mau dibungkus 1 1', '2026-05-19 00:17:16', '2026-05-19 09:12:14', 0, NULL, NULL, NULL),
+(18, 14, 2, '2026-05-19 07:41:58', 14000.00, 'Selesai', 'Transfer', 'hjhjgh', '2026-05-19 00:41:58', '2026-05-19 00:52:46', 0, NULL, NULL, NULL),
+(19, 14, 2, '2026-05-19 07:55:47', 27000.00, 'Selesai', 'Tunai', 'gaenak gaenak', '2026-05-19 00:55:47', '2026-05-19 05:16:46', 0, NULL, NULL, NULL),
+(20, 14, 1, '2026-05-19 08:13:29', 38000.00, 'Selesai', 'Tunai', 'CATATAN CHECKOUT', '2026-05-19 01:13:29', '2026-05-19 01:15:08', 0, NULL, NULL, NULL),
+(21, 14, 1, '2026-05-19 08:21:26', 16000.00, 'Selesai', 'Tunai', 'cekot', '2026-05-19 01:21:26', '2026-05-19 01:49:03', 0, NULL, NULL, NULL),
+(22, 14, 1, '2026-05-19 09:10:46', 8000.00, 'Selesai', 'Transfer', '', '2026-05-19 02:10:46', '2026-05-19 09:12:13', 0, NULL, NULL, NULL),
+(23, 14, 1, '2026-05-19 09:26:41', 31000.00, 'Selesai', 'Tunai', '', '2026-05-19 02:26:41', '2026-05-19 09:12:11', 0, NULL, NULL, NULL),
+(24, 12, 2, '2026-05-19 12:30:35', 32000.00, 'Selesai', 'QRIS', '', '2026-05-19 05:30:35', '2026-05-19 05:33:06', 0, NULL, NULL, NULL),
+(25, 12, 2, '2026-05-19 12:35:34', 1000.00, 'Selesai', 'Tunai', '', '2026-05-19 05:35:34', '2026-05-19 05:42:35', 0, NULL, NULL, NULL),
+(26, 12, 1, '2026-05-19 12:56:52', 28000.00, 'Dibatalkan', 'Tunai', '', '2026-05-19 05:56:52', '2026-05-19 08:49:20', 0, NULL, NULL, NULL),
+(27, 12, 1, '2026-05-19 15:47:33', 21000.00, 'Dibatalkan', 'QRIS', '', '2026-05-19 08:47:33', '2026-05-19 08:48:58', 0, NULL, NULL, NULL),
+(28, 12, 1, '2026-05-19 22:15:45', 16000.00, 'Dibatalkan', 'Tunai', 'nnx', '2026-05-19 15:15:45', '2026-05-19 15:16:13', 0, NULL, NULL, NULL),
+(29, 12, 1, '2026-05-20 00:38:22', 16000.00, 'Dibatalkan', 'Tunai', '', '2026-05-19 17:38:22', '2026-05-19 17:39:41', 0, NULL, NULL, NULL),
+(30, 12, 1, '2026-05-20 09:14:08', 61000.00, 'Selesai', 'Tunai', '', '2026-05-20 02:14:08', '2026-05-20 02:17:13', 0, NULL, NULL, NULL),
+(31, 12, 1, '2026-05-20 09:29:50', 13000.00, 'Selesai', 'Tunai', '', '2026-05-20 02:29:50', '2026-05-20 03:16:49', 0, NULL, NULL, NULL),
+(32, 4, 1, '2026-05-20 14:39:01', 16000.00, 'Selesai', 'Tunai', '', '2026-05-20 07:39:01', '2026-05-20 12:57:46', 0, NULL, NULL, NULL),
+(33, 4, 2, '2026-05-20 14:39:17', 19000.00, 'Selesai', 'Tunai', '', '2026-05-20 07:39:17', '2026-05-20 07:41:13', 0, NULL, NULL, NULL),
+(34, 4, 1, '2026-05-20 14:39:22', 8000.00, 'Selesai', 'Tunai', '', '2026-05-20 07:39:22', '2026-05-20 12:57:45', 0, NULL, NULL, NULL),
+(35, 4, 1, '2026-05-20 14:39:29', 6000.00, 'Selesai', 'Tunai', '', '2026-05-20 07:39:29', '2026-05-20 12:57:44', 0, NULL, NULL, NULL),
+(36, 4, 2, '2026-05-20 14:39:52', 14000.00, 'Selesai', 'Tunai', '', '2026-05-20 07:39:52', '2026-05-20 13:02:48', 0, NULL, NULL, NULL),
+(37, 4, 2, '2026-05-20 14:40:01', 19000.00, 'Selesai', 'Tunai', '', '2026-05-20 07:40:01', '2026-05-20 13:02:47', 0, NULL, NULL, NULL),
+(38, 4, 2, '2026-05-20 14:40:16', 53000.00, 'Selesai', 'Tunai', '', '2026-05-20 07:40:16', '2026-05-20 13:02:47', 0, NULL, NULL, NULL),
+(39, 4, 2, '2026-05-20 14:51:55', 14000.00, 'Selesai', 'Tunai', 'less sugarP', '2026-05-20 07:51:55', '2026-05-20 13:02:45', 0, NULL, NULL, NULL),
+(40, 17, 2, '2026-05-20 19:47:51', 45000.00, 'Selesai', 'QRIS', 'yo ngunu pokok', '2026-05-20 12:47:51', '2026-05-20 13:02:44', 0, NULL, NULL, NULL),
+(41, 17, 1, '2026-05-20 19:48:15', 33000.00, 'Selesai', 'Transfer', 'heleh padakne', '2026-05-20 12:48:15', '2026-05-20 12:57:43', 0, NULL, NULL, NULL),
+(42, 17, 1, '2026-05-20 19:49:24', 16000.00, 'Dibatalkan', 'Tunai', 'larang ndes', '2026-05-20 12:49:24', '2026-05-20 12:54:18', 0, NULL, NULL, NULL),
+(43, 18, 1, '2026-05-20 19:51:36', 16000.00, 'Selesai', 'Tunai', 'jangan kasar', '2026-05-20 12:51:36', '2026-05-20 12:57:48', 0, NULL, NULL, NULL),
+(44, 16, 2, '2026-05-20 19:52:52', 14000.00, 'Selesai', 'Tunai', 'bakso tanpa tepung', '2026-05-20 12:52:52', '2026-05-20 13:02:43', 0, NULL, NULL, NULL),
+(45, 18, 1, '2026-05-20 20:01:05', 16000.00, 'Dibatalkan', 'Tunai', '', '2026-05-20 13:01:05', '2026-05-20 14:03:19', 0, NULL, NULL, NULL),
+(46, 16, 2, '2026-05-20 20:11:30', 14000.00, 'Menunggu', 'Tunai', 'iyadah', '2026-05-20 13:11:30', NULL, 0, NULL, NULL, NULL),
+(47, 16, 1, '2026-05-20 20:22:02', 11000.00, 'Selesai', 'QRIS', '', '2026-05-20 13:22:02', '2026-05-20 13:23:48', 0, NULL, NULL, NULL),
+(48, 16, 1, '2026-05-20 20:57:18', 13000.00, 'Selesai', 'Transfer', 'ga es', '2026-05-20 13:57:18', '2026-05-20 13:59:35', 0, NULL, NULL, NULL),
+(49, 16, 1, '2026-05-20 20:58:13', 13000.00, 'Selesai', 'Tunai', '', '2026-05-20 13:58:13', '2026-05-20 14:01:20', 0, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -197,8 +275,19 @@ CREATE TABLE `tb_rating` (
 --
 
 INSERT INTO `tb_rating` (`id_rating`, `id_order`, `id_user`, `id_toko`, `rating_toko`, `ulasan`, `created`, `deleted`) VALUES
-(1, 8, 11, 1, 5, 'ok\n💰 Worth It', '2026-05-17 08:50:17', 0),
-(2, 14, 12, 2, 3, 'baik', '2026-05-17 13:20:02', 0);
+(1, 8, 11, 1, 5, 'ok\n💰 Worth It', '2026-05-17 08:50:17', 1),
+(2, 14, 12, 2, 3, 'baik', '2026-05-17 13:20:02', 0),
+(3, 16, 11, 2, 3, 'bagus aku suka\r\nEnak Banget', '2026-05-18 22:08:34', 0),
+(4, 18, 14, 2, 5, 'mantap\r\nPelayanan Cepat', '2026-05-19 00:53:15', 0),
+(5, 20, 14, 1, 4, 'ramah bintang 1000', '2026-05-19 01:15:33', 0),
+(6, 24, 12, 2, 1, 'j', '2026-05-19 05:33:30', 0),
+(7, 25, 12, 2, 4, 'ok', '2026-05-19 05:55:33', 0),
+(8, 17, 12, 1, 4, 'ok', '2026-05-20 01:17:05', 0),
+(9, 30, 12, 1, 3, 'Penjual Ramah', '2026-05-20 02:30:55', 0),
+(10, 33, 4, 2, 3, 'ok\nWorth It, Penjual Ramah', '2026-05-20 07:53:27', 0),
+(11, 41, 17, 1, 1, 'IUHH RAUENAK NAJIS, JGN BELI DI SINI!!!! 🤬🤬🤬🤬 GA RAMAH SMA SEKALI', '2026-05-20 12:59:01', 0),
+(12, 44, 16, 2, 4, 'Pelayanan Cepat, Penjual Ramah', '2026-05-20 13:03:00', 0),
+(13, 47, 16, 1, 5, 'okelah\nWorth It', '2026-05-20 13:25:48', 0);
 
 -- --------------------------------------------------------
 
@@ -221,7 +310,9 @@ INSERT INTO `tb_rating_menu` (`id_rating_menu`, `id_rating`, `id_menu`, `rating`
 (1, 1, 1, 2),
 (2, 1, 2, 3),
 (3, 1, 4, 4),
-(4, 2, 9, 3);
+(4, 2, 9, 3),
+(5, 3, 8, 5),
+(6, 4, 8, 1);
 
 -- --------------------------------------------------------
 
@@ -233,6 +324,7 @@ CREATE TABLE `tb_toko` (
   `id_toko` int(11) NOT NULL,
   `id_user` int(11) NOT NULL,
   `nama_toko` varchar(100) NOT NULL,
+  `foto_toko` varchar(255) DEFAULT NULL,
   `created` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `deleted` tinyint(1) DEFAULT 0,
@@ -244,9 +336,10 @@ CREATE TABLE `tb_toko` (
 -- Dumping data for table `tb_toko`
 --
 
-INSERT INTO `tb_toko` (`id_toko`, `id_user`, `nama_toko`, `created`, `updated`, `deleted`, `deleted_at`, `status_toko`) VALUES
-(1, 13, 'Toko kantin', '2026-05-17 01:17:55', '2026-05-17 01:17:55', 0, NULL, 'buka'),
-(2, 6, 'p', '2026-05-17 01:25:55', '2026-05-18 13:55:53', 0, NULL, 'buka');
+INSERT INTO `tb_toko` (`id_toko`, `id_user`, `nama_toko`, `foto_toko`, `created`, `updated`, `deleted`, `deleted_at`, `status_toko`) VALUES
+(1, 13, 'Toko kantin', 'toko_1_1779213421.png', '2026-05-17 01:17:55', '2026-05-20 13:51:50', 0, NULL, 'buka'),
+(2, 6, 'toko penjual', NULL, '2026-05-17 01:25:55', '2026-05-20 07:00:26', 0, NULL, 'buka'),
+(3, 15, 'tes 3', NULL, '2026-05-19 04:11:47', '2026-05-19 09:07:23', 1, NULL, 'buka');
 
 -- --------------------------------------------------------
 
@@ -273,14 +366,19 @@ CREATE TABLE `tb_user` (
 --
 
 INSERT INTO `tb_user` (`id_user`, `username`, `nama_lengkap`, `email`, `foto`, `password`, `role`, `created`, `updated`, `deleted`, `deleted_at`) VALUES
-(4, 'akupintar', NULL, 'aku@gmail.com', NULL, '$2y$10$Holy1Vs/Cq8TbK6gZtaT4OT7QSliyJunsmKGoq.3KMoaCC7lCowTO', 'pembeli', '2026-05-04 05:51:55', '2026-05-04 05:51:55', 0, NULL),
-(5, 'raniaran', NULL, 'rania@gmail.com', NULL, '$2y$10$AnJx56HImmNjBTBC4uBmueh9tMFl9UvfXeo3gqnLZvnjfC.bm52jG', 'pembeli', '2026-05-05 00:56:41', '2026-05-05 00:56:41', 0, NULL),
-(6, 'pep', NULL, 'penjual@gmail.com', NULL, '$2y$10$5LEtwpxlCxqm4/xhwL3mMOtfXd3EGkWVMAbbW65rF8ihhvXiJDPHS', 'penjual', '2026-05-18 10:13:28', '2026-05-18 10:13:28', 0, NULL),
-(7, 'admina', NULL, 'admin@gmail.com', NULL, '$2y$10$An8Yxc5.COESH61WRXfVvuUdd3wWgfqbUKlsLjODuJDJ1jKBy7YSa', 'admin', '2026-05-05 02:12:52', '2026-05-05 02:12:52', 0, NULL),
-(10, 'penjualx', NULL, 'p@gmail.com', NULL, '$2y$10$fl/u0lCYCMBAtN4u.mxOWupWBgt/MMMMt2pKXUjb7cSqPANKojNTK', 'pembeli', '2026-05-05 06:40:34', '2026-05-05 06:40:34', 0, NULL),
-(11, 'raniaii', NULL, 'ranianuril@ail.com', NULL, '$2y$10$/1qCcjI/.oFdcO0aXqhBm.OaZUcLNXdo0go.CU6ueJnd/lO2Vmdo6', 'pembeli', '2026-05-17 06:25:06', '2026-05-17 06:25:06', 0, NULL),
-(12, 'rania', NULL, 'r@gmail.com', NULL, '$2y$10$gZfV6YS4p4gSYIio3XAY7.eebh/V4lKQH52UZPl44h1UHaSxbtU/.', 'pembeli', '2026-05-18 03:54:44', '2026-05-18 03:54:44', 0, NULL),
-(13, 'kantin', NULL, 'kantin@gmail.com', NULL, '$2y$10$zcvbrPyqTY2p7FS05QcVjO2WR/.fIO.D7dBJwkcM4MnOxE5z1X1Ea', 'penjual', '2026-05-17 01:17:55', '2026-05-17 01:17:55', 0, NULL);
+(4, 'pembeli', NULL, 'pembeli@gmail.com', NULL, '$2y$10$tSpy5ezE1y20J2jKcEooOuuiiwwqT.trpQYqfGtK6mNuUWZCmYi2y', 'pembeli', '2026-05-20 06:58:26', '2026-05-20 06:58:26', 0, NULL),
+(5, 'raniaran', NULL, 'rania@gmail.com', NULL, '$2y$10$AnJx56HImmNjBTBC4uBmueh9tMFl9UvfXeo3gqnLZvnjfC.bm52jG', 'penjual', '2026-05-19 14:48:19', '2026-05-19 14:48:19', 1, NULL),
+(6, 'penjual', NULL, 'penjual@gmail.com', NULL, '$2y$10$/ch1szf61K4QcEBIHr2sne63JfLzGx.XcXbXn9ySjLcXu85TtYGT.', 'penjual', '2026-05-20 07:00:26', '2026-05-20 07:00:26', 0, NULL),
+(7, 'adminjajan', NULL, 'admin@gmail.com', NULL, '$2y$10$zGsxkFvmlqrpBvJQf2/YiuC2YtP.boMNm/LKVQ1LVhLeB.RKCVRNi', 'admin', '2026-05-20 06:55:00', '2026-05-20 06:55:00', 0, NULL),
+(10, 'penjualx', NULL, 'p@gmail.com', NULL, '$2y$10$fl/u0lCYCMBAtN4u.mxOWupWBgt/MMMMt2pKXUjb7cSqPANKojNTK', 'pembeli', '2026-05-20 07:01:17', '2026-05-20 07:01:17', 1, NULL),
+(11, 'raniaii', NULL, 'ranianuril@ail.com', NULL, '$2y$10$/1qCcjI/.oFdcO0aXqhBm.OaZUcLNXdo0go.CU6ueJnd/lO2Vmdo6', 'pembeli', '2026-05-20 07:01:26', '2026-05-20 07:01:26', 1, NULL),
+(12, 'rania', NULL, 'r@gmail.com', NULL, '$2y$10$gZfV6YS4p4gSYIio3XAY7.eebh/V4lKQH52UZPl44h1UHaSxbtU/.', 'pembeli', '2026-05-20 07:01:22', '2026-05-20 07:01:22', 1, NULL),
+(13, 'kantin', NULL, 'kantin@gmail.com', NULL, '$2y$10$zcvbrPyqTY2p7FS05QcVjO2WR/.fIO.D7dBJwkcM4MnOxE5z1X1Ea', 'penjual', '2026-05-17 01:17:55', '2026-05-17 01:17:55', 0, NULL),
+(14, 'belibeli', NULL, 'beli@gmail.com', NULL, '$2y$10$l5GDke.p4lpqylQb2UtQJudBG0GCP.b/w8i1g5p6EWuf3cVL3i27m', 'pembeli', '2026-05-19 00:40:36', '2026-05-19 00:40:36', 0, NULL),
+(15, 'pppppp', NULL, 'jjp@gmail.comhh', NULL, '$2y$10$7EA4hM.qPtKitYBKujd9CehApmpqUKLffSW7AKgzLHniCd/9lf59u', 'penjual', '2026-05-19 09:07:23', '2026-05-19 09:07:23', 1, NULL),
+(16, 'caca mei', NULL, 'caca@gmail.com', NULL, '$2y$10$uaEav.qtcabsopJ7UdmEK.wVGizaD23jIE/X9YPgfbuNH9/WucANq', 'pembeli', '2026-05-20 12:43:33', '2026-05-20 12:43:33', 0, NULL),
+(17, 'nanuna', NULL, 'apacoba@gmail.com', NULL, '$2y$10$KkKzJfflwDufLAiagmSTKuWdKPDsBTMtp4GAX2kyp7miXB7KFOIT6', 'pembeli', '2026-05-20 12:45:07', '2026-05-20 12:45:07', 0, NULL),
+(18, 'skaimutbanget', NULL, 'ska@gmail.com', NULL, '$2y$10$Fyq.uc5WgewPmnaIlxcMEOZ0Lrc.60rt4WSyVVkRKxFjjE342pGem', 'pembeli', '2026-05-20 12:45:41', '2026-05-20 12:45:41', 0, NULL);
 
 --
 -- Indexes for dumped tables
@@ -348,7 +446,7 @@ ALTER TABLE `tb_user`
 -- AUTO_INCREMENT for table `tb_detail_order`
 --
 ALTER TABLE `tb_detail_order`
-  MODIFY `id_detail` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+  MODIFY `id_detail` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=69;
 
 --
 -- AUTO_INCREMENT for table `tb_keranjang`
@@ -366,31 +464,31 @@ ALTER TABLE `tb_menu`
 -- AUTO_INCREMENT for table `tb_order`
 --
 ALTER TABLE `tb_order`
-  MODIFY `id_order` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id_order` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
 
 --
 -- AUTO_INCREMENT for table `tb_rating`
 --
 ALTER TABLE `tb_rating`
-  MODIFY `id_rating` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id_rating` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `tb_rating_menu`
 --
 ALTER TABLE `tb_rating_menu`
-  MODIFY `id_rating_menu` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id_rating_menu` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `tb_toko`
 --
 ALTER TABLE `tb_toko`
-  MODIFY `id_toko` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id_toko` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `tb_user`
 --
 ALTER TABLE `tb_user`
-  MODIFY `id_user` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id_user` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- Constraints for dumped tables

@@ -14,6 +14,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header("Location: keranjang.php"); exit;
 }
 
+// ambil id pengguna dari session — digunakan untuk sinkronisasi dengan database
+$idpengguna = (int)$_SESSION['id_user'];
+
 // ambil parameter dari form POST
 // ?? '' artinya jika tidak ada, gunakan string kosong sebagai nilai default
 $aksi    = $_POST['aksi']    ?? '';
@@ -70,6 +73,29 @@ function kembalikan(string $kembali): void {
         default:        header("Location: keranjang.php");        break;
     }
     exit;
+}
+
+/* fungsi bantu untuk sinkronisasi keranjang ke database
+   keranjang disimpan ke tb_keranjang agar tidak hilang saat logout/login ulang */
+
+// simpan atau perbarui satu item keranjang di database
+// menggunakan delete+insert agar tidak perlu cek duplikat terpisah
+function simpanItemKeranjangDB(mysqli $conn, int $iduser, int $idmenu, int $qty): void {
+    // hapus data lama item ini untuk user ini terlebih dahulu
+    $del = $conn->prepare("DELETE FROM tb_keranjang WHERE id_user=? AND id_menu=?");
+    $del->bind_param("ii", $iduser, $idmenu);
+    $del->execute(); $del->close();
+    // masukkan data terbaru dengan jumlah yang sudah diperbarui
+    $ins = $conn->prepare("INSERT INTO tb_keranjang (id_user, id_menu, jumlah) VALUES (?,?,?)");
+    $ins->bind_param("iii", $iduser, $idmenu, $qty);
+    $ins->execute(); $ins->close();
+}
+
+// hapus satu item keranjang dari database
+function hapusItemKeranjangDB(mysqli $conn, int $iduser, int $idmenu): void {
+    $del = $conn->prepare("DELETE FROM tb_keranjang WHERE id_user=? AND id_menu=?");
+    $del->bind_param("ii", $iduser, $idmenu);
+    $del->execute(); $del->close();
 }
 
 /* blok switch utama — pilih aksi berdasarkan nilai POST['aksi'] */
@@ -142,6 +168,8 @@ switch ($aksi) {
                 'nama_toko' => $namatoko,
             ];
         }
+        // simpan perubahan ke database agar keranjang tidak hilang saat logout/login ulang
+        simpanItemKeranjangDB($conn, $idpengguna, $idmenu, $qtybaru);
         kembalikan($kembali);
         break;
 
@@ -153,6 +181,8 @@ switch ($aksi) {
             unset($_SESSION['keranjang'][$idtoko][$idmenu]);
             // hapus slot toko jika sudah kosong setelah penghapusan
             bersihkanTokoKosong($idtoko);
+            // hapus juga dari database agar sinkron dengan session
+            hapusItemKeranjangDB($conn, $idpengguna, $idmenu);
             setFlash($nama . ' dihapus dari keranjang', 'info');
         }
         // setelah hapus selalu kembali ke halaman keranjang
@@ -175,6 +205,8 @@ switch ($aksi) {
             $nama = $_SESSION['keranjang'][$idtoko][$idmenu]['nama_menu'];
             unset($_SESSION['keranjang'][$idtoko][$idmenu]);
             bersihkanTokoKosong($idtoko);
+            // hapus juga dari database agar tidak muncul kembali saat login ulang
+            hapusItemKeranjangDB($conn, $idpengguna, $idmenu);
             setFlash($nama . ' dihapus dari keranjang', 'info');
         } else {
             // jika menambah qty, cek dulu apakah stok di database mencukupi
@@ -193,6 +225,8 @@ switch ($aksi) {
             }
             // simpan qty baru ke session
             $_SESSION['keranjang'][$idtoko][$idmenu]['qty'] = $qtybaru;
+            // simpan juga ke database agar perubahan qty tidak hilang saat logout
+            simpanItemKeranjangDB($conn, $idpengguna, $idmenu, $qtybaru);
         }
         header("Location: keranjang.php"); exit;
 

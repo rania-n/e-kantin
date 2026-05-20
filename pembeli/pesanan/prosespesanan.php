@@ -117,6 +117,13 @@ try {
     $conn->commit();
     // hapus toko ini dari keranjang session karena sudah dipesan
     unset($_SESSION['keranjang'][$idtoko]);
+    // hapus juga item-item yang sudah dipesan dari tabel tb_keranjang di database
+    // agar keranjang di database sinkron dengan session dan tidak muncul kembali saat login ulang
+    foreach ($daftaritem as $item) {
+        $delk = $conn->prepare("DELETE FROM tb_keranjang WHERE id_user=? AND id_menu=?");
+        $delk->bind_param("ii", $idpengguna, $item['id_menu']);
+        $delk->execute(); $delk->close();
+    }
     // redirect ke struk dengan parameter ?baru=1 untuk menampilkan banner sukses
     header("Location: struk.php?id_order=$idpesananbaru&baru=1"); exit;
 

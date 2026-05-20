@@ -113,6 +113,49 @@ if ($user['role'] === 'penjual') {
     }
 }
 
+// langkah 8b: jika user adalah pembeli, muat ulang keranjang dari database ke session
+// ini mencegah keranjang hilang saat pembeli logout lalu login kembali
+if ($user['role'] === 'pembeli') {
+    $iduserkeranjang = (int)$user['id_user'];
+    // ambil semua item keranjang di database milik pembeli ini
+    // join ke tb_menu dan tb_toko untuk mendapatkan semua data yang dibutuhkan tampilan
+    $qkeranjang = $conn->prepare(
+        "SELECT k.id_menu, k.jumlah, m.nama_menu, m.harga, m.foto, m.id_toko, t.nama_toko
+         FROM tb_keranjang k
+         JOIN tb_menu m ON k.id_menu=m.id_menu
+         JOIN tb_toko t ON m.id_toko=t.id_toko
+         WHERE k.id_user=? AND m.deleted=0 AND m.status='aktif' AND t.deleted=0"
+    );
+    $qkeranjang->bind_param("i", $iduserkeranjang);
+    $qkeranjang->execute();
+    $bariskeranjang = $qkeranjang->get_result()->fetch_all(MYSQLI_ASSOC);
+    $qkeranjang->close();
+    // bangun ulang struktur keranjang di session sama persis seperti saat item ditambahkan
+    if (!empty($bariskeranjang)) {
+        $_SESSION['keranjang'] = []; // reset session keranjang dulu
+        foreach ($bariskeranjang as $baris) {
+            $idtokoitem = (int)$baris['id_toko'];
+            $idmenuitem = (int)$baris['id_menu'];
+            // buat slot toko di session jika belum ada
+            if (!isset($_SESSION['keranjang'][$idtokoitem])) {
+                $_SESSION['keranjang'][$idtokoitem] = [
+                    '_info' => ['nama_toko' => $baris['nama_toko'], 'id_toko' => $idtokoitem]
+                ];
+            }
+            // masukkan item dengan seluruh data yang dibutuhkan halaman keranjang
+            $_SESSION['keranjang'][$idtokoitem][$idmenuitem] = [
+                'id_menu'   => $idmenuitem,
+                'nama_menu' => $baris['nama_menu'],
+                'harga'     => (int)$baris['harga'],
+                'foto'      => $baris['foto'],
+                'qty'       => (int)$baris['jumlah'],
+                'id_toko'   => $idtokoitem,
+                'nama_toko' => $baris['nama_toko'],
+            ];
+        }
+    }
+}
+
 // langkah 9: arahkan pengguna ke halaman utama sesuai dengan perannya
 // header("Location: ...") melakukan redirect ke url yang dituju
 // exit setelah header penting agar script berhenti dan tidak mengeksekusi baris berikutnya

@@ -319,6 +319,8 @@ ul { list-style: none; }
   display: flex; gap: 12px;
   overflow-x: auto; padding-bottom: 4px;
   scrollbar-width: none; /* sembunyikan scrollbar di firefox */
+  -webkit-overflow-scrolling: touch; /* scroll lebih halus di ios */
+  touch-action: pan-x; /* hanya tangani geser horizontal agar tap tidak terhalang */
 }
 .geserkantin::-webkit-scrollbar { display: none; } /* sembunyikan di chrome/safari */
 
@@ -328,6 +330,9 @@ ul { list-style: none; }
   display: flex; flex-direction: column;
   align-items: center; gap: 6px;
   width: 66px;
+  touch-action: manipulation; /* hilangkan delay 300ms saat tap di mobile */
+  cursor: pointer; /* tunjukkan kursor tangan agar jelas bisa diklik */
+  -webkit-tap-highlight-color: transparent; /* hilangkan efek highlight biru saat tap di android */
 }
 /* ikon kotak kantin */
 .itemkantin .ikon {
@@ -371,7 +376,10 @@ ul { list-style: none; }
 /* tombol submit pencarian */
 .tombolcari {
   background: none; border: none; cursor: pointer;
-  color: var(--utama); font-size: 14px; padding: 0;
+  color: var(--utama); font-size: 14px; padding: 4px 6px; /* area tap lebih besar */
+  touch-action: manipulation; /* hilangkan delay tap di mobile */
+  min-width: 32px; min-height: 32px; /* ukuran minimum agar mudah ditap */
+  display: flex; align-items: center; justify-content: center;
 }
 
 /* filter kategori — chip button (gaya identik penjual) */

@@ -367,7 +367,11 @@ $startx = 70; $chartH = 160;
         <!-- baris total di footer tabel -->
         <tfoot>
           <tr>
-            <td colspan="4" style="font-weight:700;background:var(--latar);padding:10px 16px;">TOTAL</td>
+            <!-- colspan 2 agar hanya mencakup kolom yang selalu tampil (no. pesanan + tanggal) -->
+            <td colspan="2" style="font-weight:700;background:var(--latar);padding:10px 16px;">TOTAL</td>
+            <!-- dua sel kosong untuk kolom pembeli dan metode yang disembunyikan di mobile -->
+            <td class="sembunyimobile" style="background:var(--latar);padding:10px 16px;"></td>
+            <td class="sembunyimobile" style="background:var(--latar);padding:10px 16px;"></td>
             <td style="font-weight:800;text-align:right;background:var(--latar);padding:10px 16px;color:var(--utama);"><?= rp($totalpendapatan) ?></td>
           </tr>
         </tfoot>

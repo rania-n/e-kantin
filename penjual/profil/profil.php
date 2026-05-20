@@ -183,6 +183,16 @@ function bintang(float $r): string {
     </div>
   </div>
 
+  <!-- tombol hubungi admin hanya tampil di mobile — di desktop sudah ada di sidebar navbar -->
+  <a href="#modal-kontak" class="itempengaturan sembunyi-desktop">
+    <div class="ikonpengaturan"><i class="fa-solid fa-headset"></i></div>
+    <div class="tekspengaturan">
+      <div class="judul">Hubungi Admin</div>
+      <div class="deskripsi">Bantuan &amp; informasi</div>
+    </div>
+    <div class="panahpengaturan"><i class="fa-solid fa-chevron-right"></i></div>
+  </a>
+
   <!-- tombol logout hanya tampil di mobile (di desktop sudah ada di navbar) -->
   <a href="../../4. autentifikasi/konfirmasilogout.php?peran=penjual" class="itempengaturan sembunyi-desktop">
     <div class="ikonpengaturan merah"><i class="fa-solid fa-right-from-bracket"></i></div>

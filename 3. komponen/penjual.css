@@ -275,6 +275,13 @@ ul { list-style: none; }
   display: flex;
   align-items: flex-start;
   gap: 14px;
+  overflow: hidden; /* cegah isi kartu meluber keluar batas rounded border */
+}
+/* area teks di sisi kanan ikon — harus bisa menyusut agar tidak overflow grid */
+.kartu-stat .isi-stat {
+  min-width: 0; /* flex child default min-width:auto, tanpa ini konten tidak bisa menyusut */
+  flex: 1;
+  overflow: hidden;
 }
 /* ikon kotak di sisi kiri kartu statistik */
 .kartu-stat .ikon-stat {
@@ -686,10 +693,12 @@ tbody tr:hover td { background: var(--latar); }
   flex-direction: column;
   gap: 3px;
 }
-.kartu-menu .nama-menu { font-size: 14px; font-weight: 700; }
-.kartu-menu .kategori-menu { font-size: 11px; color: var(--tekssamar); }
+/* nama menu dipotong dengan ellipsis jika terlalu panjang untuk lebar kartu */
+.kartu-menu .nama-menu { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* kategori juga dipotong agar tidak mendorong tinggi kartu secara tidak merata */
+.kartu-menu .kategori-menu { font-size: 11px; color: var(--tekssamar); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* harga menu yang paling mencolok di kartu */
-.kartu-menu .harga-menu { font-size: 16px; font-weight: 800; color: var(--utama); margin-top: 4px; }
+.kartu-menu .harga-menu { font-size: 16px; font-weight: 800; color: var(--utama); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .kartu-menu .stok-menu { font-size: 11px; color: var(--tekskecil); }
 /* area tombol aksi di bagian bawah kartu menu */
 .kartu-menu .aksi-menu {
@@ -732,9 +741,11 @@ tbody tr:hover td { background: var(--latar); }
   align-items: flex-start;
   margin-bottom: 8px;
 }
-.nomer-pesanan  { font-size: 14px; font-weight: 800; color: var(--utama); }
-.tanggal-pesanan{ font-size: 11px; color: var(--tekssamar); }
-.pembeli-pesanan{ font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+/* nomor dan tanggal pesanan berada di baris flex — min-width:0 agar tidak bocor ke kanan */
+.nomer-pesanan  { font-size: 14px; font-weight: 800; color: var(--utama); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tanggal-pesanan{ font-size: 11px; color: var(--tekssamar); white-space: nowrap; }
+/* nama pembeli dipotong ellipsis jika terlalu panjang */
+.pembeli-pesanan{ font-size: 13px; font-weight: 600; margin-bottom: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* kotak catatan pesanan dengan latar berbeda agar mudah diperhatikan */
 .catatan-pesanan{ font-size: 12px; color: var(--tekskecil); background: var(--latar); padding: 8px 10px; border-radius: 8px; margin-bottom: 10px; }
 /* area daftar item dalam pesanan */
@@ -904,7 +915,8 @@ tbody tr:hover td { background: var(--latar); }
   padding: 12px 8px; text-align: center;
   border: 1px solid var(--garis); box-shadow: var(--bayang);
 }
-.kotakstat .angkastat { font-size: 17px; font-weight: 800; color: var(--utama); }
+/* angka statistik dibatasi satu baris agar tidak meluber dari kotak di layar sempit */
+.kotakstat .angkastat { font-size: 17px; font-weight: 800; color: var(--utama); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .kotakstat .labelstat { font-size: 10px; color: var(--tekssamar); margin-top: 2px; }
 /* variasi gelap selaras hero profil — dipakai di banner hero */
 .kotakstat.gelap {
@@ -935,10 +947,11 @@ tbody tr:hover td { background: var(--latar); }
 .ikonpengaturan.hijau   { background: var(--suksesbg); color: var(--sukses); }
 .ikonpengaturan.merah   { background: var(--gagalbg);  color: var(--gagal); }
 .ikonpengaturan.biru    { background: var(--infobg);   color: var(--info); }
-/* area teks item pengaturan */
-.tekspengaturan { flex: 1; }
-.tekspengaturan .judul     { font-size: 14px; font-weight: 700; }
-.tekspengaturan .deskripsi { font-size: 12px; color: var(--tekssamar); }
+/* area teks item pengaturan — min-width:0 wajib agar flex child bisa menyusut dan tidak bocor */
+.tekspengaturan { flex: 1; min-width: 0; overflow: hidden; }
+/* judul dan deskripsi dibatasi satu baris dengan ellipsis agar tidak meluber keluar kartu */
+.tekspengaturan .judul     { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tekspengaturan .deskripsi { font-size: 12px; color: var(--tekssamar); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* ikon panah di kanan item pengaturan */
 .panahpengaturan { color: var(--tekssamar); font-size: 13px; }
 
