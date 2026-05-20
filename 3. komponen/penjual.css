@@ -242,9 +242,13 @@ ul { list-style: none; }
    ================================================================== */
 .grid-stat {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 14px;
   margin-bottom: 20px;
+}
+/* medium desktop: 2+2 agar tidak mepet dengan sidebar */
+@media (max-width: 1000px) {
+  .grid-stat { grid-template-columns: repeat(2, 1fr); }
 }
 .kartu-stat {
   background: var(--putih);
