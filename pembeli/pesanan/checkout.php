@@ -21,27 +21,31 @@ $keranjang = $_SESSION['keranjang'] ?? [];
 $itemtoko  = null;
 
 // cari toko berdasarkan kunci array session (cara utama)
+// kunci array session adalah id_toko sebagai integer, sama dengan nilai dari url
 if ($idtoko && isset($keranjang[$idtoko])) {
-    $itemtoko = $keranjang[$idtoko];
+    $itemtoko = $keranjang[$idtoko]; // ambil seluruh data toko berikut item-itemnya
 }
 
 // fallback: jika kunci tidak cocok (misalnya perbedaan tipe string/int saat deserialisasi),
 // scan seluruh keranjang dan cocokkan id_toko dari _info yang tersimpan secara eksplisit
+// cara ini lebih tahan terhadap ketidakcocokan tipe karena membandingkan nilai cast ke int
 if (!$itemtoko && $idtoko) {
     foreach ($keranjang as $kuncitoko => $datatoko) {
         // bandingkan id_toko yang tersimpan di _info dengan id dari url
         if ((int)($datatoko['_info']['id_toko'] ?? 0) === $idtoko) {
-            $itemtoko = $datatoko;
-            $idtoko   = (int)$kuncitoko; // selaraskan $idtoko dengan kunci yang ditemukan
-            break;
+            $itemtoko = $datatoko;          // simpan data toko yang cocok
+            $idtoko   = (int)$kuncitoko;   // selaraskan $idtoko dengan kunci yang ditemukan
+            break;                          // hentikan pencarian setelah toko ditemukan
         }
     }
 }
 
-// jika toko tidak ditemukan lewat kedua cara, arahkan kembali ke keranjang
+// jika toko tidak ditemukan lewat kedua cara, tolak dan arahkan kembali ke keranjang
+// kondisi ini terjadi jika url dimanipulasi atau session sudah kedaluwarsa
 if (!$idtoko || !$itemtoko) {
     header("Location: ../keranjang/keranjang.php"); exit;
 }
+
 // ambil nama toko dari data _info yang tersimpan di session
 $namatoko   = $itemtoko['_info']['nama_toko'] ?? 'Kantin';
 $daftaritem = [];
@@ -62,9 +66,12 @@ $biayalayanan = 1000;
 $totalbayar   = $subtotal + $biayalayanan;
 
 $pathbase = '..';
+
 // simpan id toko yang sudah divalidasi ke variabel terpisah sebelum html dimulai
-// navbarpembeli.php yang di-include dalam template akan menimpa $idtoko dan $itemtoko
-// dengan kunci toko terakhir di keranjang — variabel ini tidak boleh dipakai di form setelah include
+// navbarpembeli.php yang di-include di dalam template menjalankan foreach dengan
+// variabel bernama $idtoko dan $itemtoko — karena include berbagi scope, keduanya
+// akan tertimpa oleh nilai toko terakhir di keranjang setelah include selesai
+// solusi: simpan dulu ke variabel baru sebelum include dijalankan
 $idtokosudahpilih = $idtoko;
 ?>
 <!DOCTYPE html>

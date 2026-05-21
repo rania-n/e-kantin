@@ -140,8 +140,10 @@ $pathbase = '..';
     </div>
     <?php endforeach; ?>
 
-    <!-- tombol checkout untuk toko ini — id diambil dari _info agar tidak bergantung pada kunci foreach yang bisa terkontaminasi include sebelumnya -->
-    <?php $idtokocheckout = (int)($itemtoko['_info']['id_toko'] ?? $idtoko); ?>
+    <!-- tombol checkout untuk toko ini — id_toko diambil dari data _info yang disimpan secara eksplisit
+         bukan dari variabel $idtoko kunci foreach, karena navbarpembeli.php yang di-include sebelumnya
+         sudah menimpa $idtoko dengan kunci toko terakhir di keranjang saat include dijalankan -->
+    <?php $idtokocheckout = (int)($itemtoko['_info']['id_toko'] ?? $idtoko); // cast int agar url aman ?>
     <a href="../pesanan/checkout.php?toko=<?= $idtokocheckout ?>" class="tombolutama blok" style="margin-top:10px;">
       <i class="fa-solid fa-bag-shopping"></i>
       Checkout <?= htmlspecialchars($namatoko) ?> &mdash; Rp <?= number_format($subtokototal,0,',','.') ?>
