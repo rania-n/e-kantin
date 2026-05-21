@@ -39,11 +39,8 @@ $tglpesanan = $pesanan['tanggal_order'];
 $qa->bind_param("isi", $idtoko, $tglpesanan, $idpesanan); $qa->execute();
 $antrian = (int)$qa->get_result()->fetch_row()[0]; $qa->close();
 
-// hitung subtotal semua item (sebelum biaya layanan)
+// hitung subtotal semua item untuk ditampilkan di struk
 $subtotalitem = array_sum(array_column($items, 'subtotal'));
-
-// biaya layanan = total yang dibayar dikurangi subtotal item
-$biayalayanan = $pesanan['total_harga'] - $subtotalitem;
 
 // format nomor pesanan: EK-000001
 $nomerpesanan = 'EK-' . str_pad($idpesanan, 6, '0', STR_PAD_LEFT);
@@ -176,15 +173,10 @@ function ikonStatus(string $s): string {
       <!-- pemisah sebelum ringkasan harga -->
       <div class="pemisah"><hr><span><i class="fa-solid fa-star"></i></span><hr></div>
 
-      <!-- ringkasan harga: subtotal item dan biaya layanan -->
+      <!-- ringkasan harga: hanya subtotal, tidak ada biaya tambahan -->
       <div class="barisstruk">
         <span class="labelstruk">Subtotal</span>
         <span class="nilaistruk">Rp <?= number_format($subtotalitem,0,',','.') ?></span>
-      </div>
-      <div class="barisstruk">
-        <span class="labelstruk">Biaya Layanan</span>
-        <!-- max(0,...) memastikan biaya layanan tidak negatif akibat pembulatan -->
-        <span class="nilaistruk">Rp <?= number_format(max(0,$biayalayanan),0,',','.') ?></span>
       </div>
 
     </div><!-- tutup isistruk -->

@@ -58,11 +58,9 @@ $cr->execute();
 $sudahrating = $cr->get_result()->num_rows > 0;
 $cr->close();
 
-// hitung ulang subtotal dari detail item
-// biaya layanan = total_harga - subtotal item (selisihnya adalah biaya layanan)
+// hitung ulang subtotal dari detail item untuk ditampilkan di struk
 $subtotalitem = 0;
 foreach ($detail as $dt) $subtotalitem += $dt['subtotal'];
-$biayalayanan = $pesanan['total_harga'] - $subtotalitem;
 $namatoko     = $pesanan['nama_toko'] ?? 'Kantin';
 // format nomor pesanan: EK-000001 (6 digit dengan nol di depan)
 $nomerpesanan = 'EK-' . str_pad($idpesanan, 6, '0', STR_PAD_LEFT);
@@ -214,15 +212,10 @@ $cetak = isset($_GET['cetak']);
 
       <div class="pemisah"><hr><span><i class="fa-solid fa-star"></i></span><hr></div>
 
-      <!-- ringkasan biaya -->
+      <!-- ringkasan biaya: hanya subtotal, tidak ada biaya tambahan -->
       <div class="barisstruk">
         <span class="labelstruk">Subtotal</span>
         <span class="nilaistruk">Rp <?= number_format($subtotalitem,0,',','.') ?></span>
-      </div>
-      <div class="barisstruk">
-        <span class="labelstruk">Biaya Layanan</span>
-        <!-- max(0,...) memastikan biaya layanan tidak tampil negatif -->
-        <span class="nilaistruk">Rp <?= number_format(max(0,$biayalayanan),0,',','.') ?></span>
       </div>
       <!-- total yang harus dibayar -->
       <div class="totalstruk">

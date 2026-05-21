@@ -46,9 +46,8 @@ if (empty($daftaritem)) {
     header("Location: ../keranjang/keranjang.php"); exit;
 }
 
-// hitung total yang akan disimpan ke database
-$biayalayanan = 1000;
-$totalbayar   = $subtotal + $biayalayanan;
+// total yang disimpan ke database sama dengan subtotal — tidak ada biaya tambahan
+$totalbayar = $subtotal;
 
 /* validasi 1: cek apakah toko masih buka saat proses checkout
    ini penting karena status toko bisa berubah antara saat pembeli melihat menu

@@ -61,9 +61,8 @@ foreach ($itemtoko as $k => $v) {
 // jika tidak ada item (keranjang toko kosong), kembali ke keranjang
 if (empty($daftaritem)) { header("Location: ../keranjang/keranjang.php"); exit; }
 
-// biaya layanan tetap Rp1.000 per transaksi
-$biayalayanan = 1000;
-$totalbayar   = $subtotal + $biayalayanan;
+// total yang dibayar sama dengan subtotal — tidak ada biaya layanan
+$totalbayar = $subtotal;
 
 $pathbase = '..';
 
@@ -154,17 +153,12 @@ $idtokosudahpilih = $idtoko;
     <div class="judulbagian"><i class="fa-solid fa-receipt"></i> Ringkasan Pembayaran</div>
     <div class="kartu">
       <div class="ringkasan" style="margin-bottom:16px;">
-        <!-- subtotal = harga semua item tanpa biaya layanan -->
+        <!-- jumlah item dan harga total keseluruhan -->
         <div class="barisringkasan">
           <span>Subtotal (<?= count($daftaritem) ?> item)</span>
           <b>Rp <?= number_format($subtotal,0,',','.') ?></b>
         </div>
-        <!-- biaya layanan tetap Rp1.000 -->
-        <div class="barisringkasan">
-          <span>Biaya Layanan</span>
-          <b>Rp <?= number_format($biayalayanan,0,',','.') ?></b>
-        </div>
-        <!-- total yang harus dibayar pembeli -->
+        <!-- total sama dengan subtotal karena tidak ada biaya tambahan -->
         <div class="barisringkasan total">
           <span>Total Bayar</span>
           <b>Rp <?= number_format($totalbayar,0,',','.') ?></b>
