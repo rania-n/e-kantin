@@ -17,14 +17,31 @@ include '../../1. koneksi/koneksi.php';
 $idtoko    = (int)($_GET['toko'] ?? 0);
 // ambil keranjang dari session
 $keranjang = $_SESSION['keranjang'] ?? [];
+// reset itemtoko sebelum dicari
+$itemtoko  = null;
 
-// validasi: jika id toko tidak valid atau toko tidak ada di keranjang, kembali ke keranjang
-if (!$idtoko || !isset($keranjang[$idtoko])) {
-    header("Location: ../keranjang/keranjang.php"); exit;
+// cari toko berdasarkan kunci array session (cara utama)
+if ($idtoko && isset($keranjang[$idtoko])) {
+    $itemtoko = $keranjang[$idtoko];
 }
 
-// ambil item dari toko yang dipilih
-$itemtoko   = $keranjang[$idtoko];
+// fallback: jika kunci tidak cocok (misalnya perbedaan tipe string/int saat deserialisasi),
+// scan seluruh keranjang dan cocokkan id_toko dari _info yang tersimpan secara eksplisit
+if (!$itemtoko && $idtoko) {
+    foreach ($keranjang as $kuncitoko => $datatoko) {
+        // bandingkan id_toko yang tersimpan di _info dengan id dari url
+        if ((int)($datatoko['_info']['id_toko'] ?? 0) === $idtoko) {
+            $itemtoko = $datatoko;
+            $idtoko   = (int)$kuncitoko; // selaraskan $idtoko dengan kunci yang ditemukan
+            break;
+        }
+    }
+}
+
+// jika toko tidak ditemukan lewat kedua cara, arahkan kembali ke keranjang
+if (!$idtoko || !$itemtoko) {
+    header("Location: ../keranjang/keranjang.php"); exit;
+}
 // ambil nama toko dari data _info yang tersimpan di session
 $namatoko   = $itemtoko['_info']['nama_toko'] ?? 'Kantin';
 $daftaritem = [];
@@ -45,6 +62,10 @@ $biayalayanan = 1000;
 $totalbayar   = $subtotal + $biayalayanan;
 
 $pathbase = '..';
+// simpan id toko yang sudah divalidasi ke variabel terpisah sebelum html dimulai
+// navbarpembeli.php yang di-include dalam template akan menimpa $idtoko dan $itemtoko
+// dengan kunci toko terakhir di keranjang — variabel ini tidak boleh dipakai di form setelah include
+$idtokosudahpilih = $idtoko;
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -73,10 +94,10 @@ $pathbase = '..';
 
   <!-- form pengiriman ke prosespesanan.php via POST -->
   <form method="POST" action="prosespesanan.php">
-    <!-- kirim id toko ke proses — dipakai untuk mengambil item dari keranjang session -->
-    <input type="hidden" name="id_toko" value="<?= $idtoko ?>">
-    <!-- token unik per sesi untuk mencegah pengiriman form yang tidak sengaja ke toko yang salah -->
-    <input type="hidden" name="token_checkout" value="<?= htmlspecialchars(md5($idtoko . '_' . session_id())) ?>">
+    <!-- kirim id toko ke proses — pakai variabel yang disimpan sebelum navbarpembeli.php menimpa $idtoko -->
+    <input type="hidden" name="id_toko" value="<?= $idtokosudahpilih ?>">
+    <!-- token dihitung dari id toko yang sudah disimpan, bukan $idtoko yang sudah tertimpa -->
+    <input type="hidden" name="token_checkout" value="<?= htmlspecialchars(md5($idtokosudahpilih . '_' . session_id())) ?>">
 
     <!-- daftar item yang akan dipesan -->
     <div class="judulbagian"><i class="fa-solid fa-list"></i> Detail Pesanan</div>
