@@ -180,7 +180,14 @@ a { text-decoration: none; color: inherit; }
     </a>
   </div>
 
-  <div class="label-domain">jajankita.my.id</div>
+  <!-- link login admin terpisah — disembunyikan di bawah agar tidak mencolok -->
+  <div class="label-domain">
+    jajankita.my.id &nbsp;·&nbsp;
+    <!-- link ke login admin terpisah dari login pembeli/penjual -->
+    <a href="admin/login/loginadmin.php" style="color:rgba(255,255,255,.4);font-size:11px;">
+      <i class="fa-solid fa-shield-halved"></i> Admin
+    </a>
+  </div>
 </section>
 
 <!-- fitur -->
@@ -216,7 +223,9 @@ a { text-decoration: none; color: inherit; }
   <p>
     &copy; 2025 <a href="index.php">jajankita</a> &mdash; jajankita.my.id &nbsp;|&nbsp;
     <a href="4. autentifikasi/login.php">Masuk</a> &nbsp;&middot;&nbsp;
-    <a href="4. autentifikasi/register.php">Daftar</a>
+    <a href="4. autentifikasi/register.php">Daftar</a> &nbsp;&middot;&nbsp;
+    <!-- link ke login admin di footer agar mudah ditemukan oleh admin sekolah -->
+    <a href="admin/login/loginadmin.php"><i class="fa-solid fa-shield-halved"></i> Admin</a>
   </p>
 </footer>
 

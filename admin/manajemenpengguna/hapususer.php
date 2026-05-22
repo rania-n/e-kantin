@@ -1,7 +1,8 @@
 <?php
-/* halaman konfirmasi hapus pengguna — menampilkan nama pengguna
-   dan peringatan bahwa toko miliknya juga akan ikut dihapus.
-   penghapusan baru dieksekusi setelah admin klik tombol konfirmasi. */
+/* halaman konfirmasi hapus pengguna.
+   menampilkan nama pengguna dan peringatan bahwa jika penjual:
+   - akunnya akan dihapus (soft delete)
+   - kantin yang ditempatinya akan DIKOSONGKAN (tidak dihapus) agar bisa dipakai penjual lain */
 
 // sambungkan ke database dan pastikan yang mengakses adalah admin
 include '../../1. koneksi/koneksi.php';
@@ -24,12 +25,15 @@ $user = $qu->get_result()->fetch_assoc(); $qu->close();
 // jika pengguna tidak ditemukan, kembalikan ke daftar
 if (!$user) { header("Location: user.php"); exit; }
 
-// jika pengguna ini adalah penjual, ambil nama tokonya untuk ditampilkan dalam peringatan
-$toko = null;
+// jika pengguna ini adalah penjual, ambil data kantin yang ditempatinya
+$kantin = null;
 if ($user['role'] === 'penjual') {
-    $qt = $conn->prepare("SELECT nama_toko FROM tb_toko WHERE id_user=? AND deleted=0");
+    // query mencari kantin berdasarkan id_user (bukan deleted, karena kantin tidak pernah dihapus)
+    $qt = $conn->prepare(
+        "SELECT nomor_kantin, nama_toko FROM tb_toko WHERE id_user=? AND deleted=0"
+    );
     $qt->bind_param("i", $id); $qt->execute();
-    $toko = $qt->get_result()->fetch_assoc(); $qt->close();
+    $kantin = $qt->get_result()->fetch_assoc(); $qt->close();
 }
 ?>
 <!DOCTYPE html>
@@ -54,13 +58,16 @@ if ($user['role'] === 'penjual') {
     <p>
       Kamu akan menghapus akun <strong><?= htmlspecialchars($user['username']) ?></strong>
       (<?= htmlspecialchars($user['email']) ?>).
-      <?php if ($toko): ?>
-      <!-- peringatan tambahan jika pengguna ini adalah penjual yang punya toko -->
-      Toko <strong>"<?= htmlspecialchars($toko['nama_toko']) ?>"</strong> juga akan ikut dihapus.
+      <?php if ($kantin): ?>
+      <!-- peringatan untuk penjual: kantin tidak ikut dihapus, hanya dikosongkan -->
+      Kantin <strong>ke-<?= (int)$kantin['nomor_kantin'] ?></strong>
+      ("<?= htmlspecialchars($kantin['nama_toko'] ?? '-') ?>") akan
+      <strong>dikosongkan</strong> dan tersedia untuk penjual baru.
+      Kantin tidak ikut dihapus dari database.
       <?php endif; ?>
-      Tindakan ini tidak dapat dibatalkan.
+      Akun yang dihapus tidak bisa dipulihkan.
     </p>
-    <!-- form konfirmasi hapus: id_user dikirim ke proseshapususer.php -->
+    <!-- form konfirmasi hapus: id_user dikirim ke proseshapususer.php via POST -->
     <form method="POST" action="proseshapususer.php">
       <input type="hidden" name="id_user" value="<?= $id ?>">
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
@@ -70,7 +77,7 @@ if ($user['role'] === 'penjual') {
         </a>
         <!-- tombol hapus: mengirim form POST ke proseshapususer.php -->
         <button type="submit" class="tombolbahaya">
-          <i class="fa-solid fa-trash"></i> Ya, Hapus Permanen
+          <i class="fa-solid fa-trash"></i> Ya, Hapus Akun
         </button>
       </div>
     </form>

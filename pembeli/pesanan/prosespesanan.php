@@ -16,8 +16,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 // ambil data dari form checkout
 $idtoko     = (int)($_POST['id_toko'] ?? 0);
-// trim menghapus spasi di awal dan akhir
-$metode     = trim($_POST['metode']   ?? 'Tunai');
+// metode pembayaran selalu Tunai — tidak ada opsi lain
+// meskipun ada nilai lain dari POST, paksa ke 'Tunai' untuk keamanan
+$metode     = 'Tunai';
 $catatan    = trim($_POST['catatan']  ?? '');
 $idpengguna = (int)$_SESSION['id_user'];
 // ambil keranjang dari session — data item ada di sini

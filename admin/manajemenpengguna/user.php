@@ -26,8 +26,12 @@ $jmlsemua = array_sum($jmlrole); // total semua pengguna dari semua role
    menggunakan subquery untuk menghitung pesanan toko dan pesanan user
    agar tidak terjadi penggandaan baris akibat join berganda.
    urut_role: penjual di atas, pembeli di tengah, admin di bawah. */
+/* query utama: ambil semua pengguna beserta info kantin yang ditempati (jika penjual).
+   kolom nomor_kantin disertakan untuk ditampilkan di kolom "Info Toko".
+   left join ke tb_toko agar pengguna tanpa toko (pembeli/admin) tetap muncul.
+   kantin sekarang bisa punya id_user=NULL (kosong), tapi join di sini ke tb_user jadi aman. */
 $sql = "SELECT u.id_user, u.username, u.email, u.role, u.created,
-               t.id_toko, t.nama_toko, t.status_toko,
+               t.id_toko, t.nomor_kantin, t.nama_toko, t.status_toko,
                CASE u.role WHEN 'penjual' THEN 0 WHEN 'pembeli' THEN 1 ELSE 2 END AS urut_role,
                (SELECT COUNT(*) FROM tb_order o  WHERE o.id_toko=t.id_toko  AND o.deleted=0) AS pesanan_toko,
                (SELECT COUNT(*) FROM tb_order o2 WHERE o2.id_user=u.id_user AND o2.deleted=0) AS pesanan_user
@@ -242,14 +246,18 @@ if (!empty($_SESSION['flash'])) {
               <span class="badge <?= $u['role'] ?>"><?= ucfirst($u['role']) ?></span>
             </td>
             <td>
-              <!-- info toko hanya ditampilkan untuk penjual yang sudah punya toko -->
+              <!-- info kantin hanya ditampilkan untuk penjual yang punya kantin -->
               <?php if ($u['role'] === 'penjual' && $u['id_toko']): ?>
+              <!-- tampilkan nomor kantin sebagai identitas utama -->
+              <div style="font-size:11px;font-weight:700;color:var(--tekssamar);text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px;">
+                Kantin ke-<?= (int)$u['nomor_kantin'] ?>
+              </div>
               <div style="font-size:13px;font-weight:700;color:var(--teks);margin-bottom:3px;">
-                <?= htmlspecialchars($u['nama_toko']) ?>
+                <?= htmlspecialchars($u['nama_toko'] ?? '—') ?>
               </div>
               <a href="../manajementoko/viewtoko.php?id=<?= $u['id_toko'] ?>"
                  style="font-size:11px;color:var(--info);">
-                Lihat detail toko →
+                Lihat detail kantin →
               </a>
               <?php else: ?>
               <span style="color:var(--tekssamar);font-size:12px;">—</span>

@@ -15,8 +15,9 @@ $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 // jika id tidak valid, kembalikan ke daftar toko
 if (!$id) { header("Location: toko.php"); exit; }
 
-// ambil data toko beserta nama pemiliknya (join ke tb_user)
-$qt = $conn->prepare("SELECT t.*, u.username FROM tb_toko t JOIN tb_user u ON t.id_user=u.id_user WHERE t.id_toko=? AND t.deleted=0");
+// ambil data toko beserta nama pemiliknya
+// LEFT JOIN karena kantin bisa saja kosong (id_user NULL)
+$qt = $conn->prepare("SELECT t.*, u.username FROM tb_toko t LEFT JOIN tb_user u ON t.id_user=u.id_user AND u.deleted=0 WHERE t.id_toko=? AND t.deleted=0");
 $qt->bind_param("i", $id); $qt->execute();
 $toko = $qt->get_result()->fetch_assoc(); $qt->close();
 
@@ -48,8 +49,11 @@ if (!empty($_SESSION['flash'])) {
 
   <div class="header-halaman">
     <div class="kiri">
-      <h1><i class="fa-solid fa-store"></i> Edit Toko</h1>
-      <p>Ubah informasi <?= htmlspecialchars($toko['nama_toko']) ?></p>
+      <!-- tampilkan nomor kantin bersama nama toko di judul halaman -->
+      <h1><i class="fa-solid fa-store"></i>
+        Edit Kantin ke-<?= (int)($toko['nomor_kantin'] ?? '?') ?>
+      </h1>
+      <p>Ubah informasi <?= htmlspecialchars($toko['nama_toko'] ?? '(Kosong)') ?></p>
     </div>
     <a href="viewtoko.php?id=<?= $id ?>" class="tombolringan">
       <i class="fa-solid fa-arrow-left"></i> Kembali
@@ -75,10 +79,16 @@ if (!empty($_SESSION['flash'])) {
         <input type="text" name="nama_toko" required maxlength="100"
                value="<?= htmlspecialchars($toko['nama_toko']) ?>">
       </div>
+      <!-- nomor kantin ditampilkan sebagai informasi saja, tidak bisa diubah -->
+      <div class="kelompokform">
+        <label>Nomor Kantin</label>
+        <input type="text" value="Kantin ke-<?= (int)($toko['nomor_kantin'] ?? '?') ?>" disabled>
+        <small>Nomor kantin fisik — tidak bisa diubah</small>
+      </div>
       <div class="kelompokform">
         <label>Pemilik</label>
         <!-- disabled: tidak dikirim ke server, hanya informasi saja -->
-        <input type="text" value="<?= htmlspecialchars($toko['username']) ?>" disabled>
+        <input type="text" value="<?= htmlspecialchars($toko['username'] ?? '— (Kosong)') ?>" disabled>
       </div>
       <div class="kelompokform">
         <label>Status Toko</label>

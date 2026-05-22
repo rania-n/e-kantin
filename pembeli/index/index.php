@@ -21,8 +21,9 @@ $cari     = isset($_GET['cari'])     ? $conn->real_escape_string($_GET['cari']) 
 $idtoko   = isset($_GET['toko'])     ? (int)$_GET['toko']                           : 0;
 
 // ambil semua toko yang sedang buka (status_toko='buka') dan belum dihapus (deleted=0)
-// pembeli hanya bisa melihat toko yang aktif buka
-$hasiltoko  = $conn->query("SELECT t.id_toko, t.nama_toko, t.foto_toko FROM tb_toko t WHERE t.deleted=0 AND t.status_toko='buka' ORDER BY t.id_toko");
+// ambil juga nomor_kantin agar bisa ditampilkan ke pembeli sebagai identitas "Kantin ke-X"
+// diurutkan berdasarkan nomor_kantin agar urutan konsisten
+$hasiltoko  = $conn->query("SELECT t.id_toko, t.nama_toko, t.foto_toko, t.nomor_kantin FROM tb_toko t WHERE t.deleted=0 AND t.status_toko='buka' AND t.id_user IS NOT NULL ORDER BY t.nomor_kantin");
 $daftartoko = $hasiltoko->fetch_all(MYSQLI_ASSOC);
 
 // jika pembeli memilih toko tertentu lewat URL ?toko=X, cek apakah toko itu sedang tutup
@@ -162,11 +163,19 @@ $pathbase = '..';
              style="width:100%;height:100%;object-fit:cover;">
       </div>
       <?php else: ?>
+      <!-- inisial toko berwarna sebagai pengganti foto -->
       <div class="ikon" style="background:var(--<?= $warnakini ?>);color:var(--putihbg);font-size:14px;font-weight:800;">
         <?= $inisialkantin ?>
       </div>
       <?php endif; ?>
+      <!-- tampilkan nama toko DAN nomor kantin di bawahnya sebagai identitas fisik -->
       <span class="namakan"><?= htmlspecialchars($toko['nama_toko']) ?></span>
+      <?php if (!empty($toko['nomor_kantin'])): ?>
+      <!-- "Kantin ke-X" sebagai identitas lokasi fisik yang bisa dilihat pembeli -->
+      <span style="font-size:9px;color:var(--tekssamar);display:block;margin-top:1px;line-height:1.2;">
+        Kantin ke-<?= (int)$toko['nomor_kantin'] ?>
+      </span>
+      <?php endif; ?>
     </a>
     <?php endforeach; ?>
 

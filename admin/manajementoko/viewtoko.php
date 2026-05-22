@@ -16,15 +16,17 @@ $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 // jika id tidak valid, kembalikan ke manajemen pengguna (penjual)
 if (!$id) { header("Location: ../../admin/manajemenpengguna/user.php?role=penjual"); exit; }
 
-// ambil data toko beserta informasi pemiliknya (join ke tb_user)
+// ambil data toko beserta informasi pemiliknya
+// LEFT JOIN ke tb_user karena kantin bisa kosong (id_user NULL)
 $qt = $conn->prepare("SELECT t.*, u.username, u.email, u.id_user AS id_pemilik
-                      FROM tb_toko t JOIN tb_user u ON t.id_user=u.id_user
+                      FROM tb_toko t
+                      LEFT JOIN tb_user u ON t.id_user=u.id_user AND u.deleted=0
                       WHERE t.id_toko=? AND t.deleted=0");
 $qt->bind_param("i", $id); $qt->execute();
 $toko = $qt->get_result()->fetch_assoc(); $qt->close();
 
-// jika toko tidak ditemukan, kembali ke daftar
-if (!$toko) { header("Location: toko.php"); exit; }
+// jika toko tidak ditemukan, kembali ke daftar kantin
+if (!$toko) { header("Location: kantin.php"); exit; }
 
 // hitung total pesanan masuk ke toko ini dan total uangnya (semua status)
 $qs1 = $conn->prepare("SELECT COUNT(*), COALESCE(SUM(total_harga),0) FROM tb_order WHERE id_toko=? AND deleted=0");
@@ -107,17 +109,36 @@ function singkat(float $n): string {
 
   <div class="header-halaman">
     <div class="kiri">
-      <h1><i class="fa-solid fa-store"></i> <?= htmlspecialchars($toko['nama_toko']) ?></h1>
-      <p>Detail &amp; performa toko — pemilik: <?= htmlspecialchars($toko['username']) ?></p>
+      <!-- tampilkan nomor kantin sebagai identitas fisik, lalu nama toko -->
+      <h1>
+        <i class="fa-solid fa-store"></i>
+        Kantin ke-<?= (int)($toko['nomor_kantin'] ?? '?') ?>
+        <?php if (!empty($toko['nama_toko'])): ?>
+        — <?= htmlspecialchars($toko['nama_toko']) ?>
+        <?php else: ?>
+        <span style="font-weight:400;color:var(--tekssamar);font-size:16px;">(Kosong)</span>
+        <?php endif; ?>
+      </h1>
+      <p>
+        Detail &amp; performa kantin
+        <?php if (!empty($toko['username'])): ?>
+        — pemilik: <?= htmlspecialchars($toko['username']) ?>
+        <?php else: ?>
+        — belum ada penjual
+        <?php endif; ?>
+      </p>
     </div>
     <div style="display:flex;gap:8px;">
       <a href="edittoko.php?id=<?= $id ?>" class="tombolutama">
         <i class="fa-solid fa-pen"></i> Edit
       </a>
+      <?php if (!empty($toko['id_user'])): ?>
+      <!-- tombol kosongkan kantin hanya tampil jika kantin terisi -->
       <a href="hapustoko.php?id=<?= $id ?>" class="tombolbahaya">
-        <i class="fa-solid fa-trash"></i> Hapus
+        <i class="fa-solid fa-store-slash"></i> Kosongkan
       </a>
-      <a href="toko.php" class="tombolringan">
+      <?php endif; ?>
+      <a href="kantin.php" class="tombolringan">
         <i class="fa-solid fa-arrow-left"></i> Kembali
       </a>
     </div>
@@ -161,23 +182,38 @@ function singkat(float $n): string {
     <!-- informasi dasar toko dan link ke profil pemilik -->
     <div class="kartu">
       <h3><i class="fa-solid fa-circle-info"></i> Informasi Toko</h3>
+      <!-- nomor kantin ditampilkan sebagai identitas fisik lokasi -->
+      <div class="baris-info">
+        <div class="label-info">Nomor Kantin</div>
+        <div class="nilai-info" style="font-weight:800;font-size:18px;color:var(--utama);">
+          Kantin ke-<?= (int)($toko['nomor_kantin'] ?? '?') ?>
+        </div>
+      </div>
       <div class="baris-info">
         <div class="label-info">Nama Toko</div>
-        <div class="nilai-info"><?= htmlspecialchars($toko['nama_toko']) ?></div>
+        <div class="nilai-info">
+          <?= !empty($toko['nama_toko']) ? htmlspecialchars($toko['nama_toko']) : '<em style="color:var(--tekssamar);">Belum ada nama (kantin kosong)</em>' ?>
+        </div>
       </div>
       <div class="baris-info">
         <div class="label-info">Pemilik</div>
         <div class="nilai-info">
+          <?php if (!empty($toko['id_pemilik'])): ?>
           <!-- link ke halaman detail pengguna pemilik toko -->
           <a href="../manajemenpengguna/viewuser.php?id=<?= $toko['id_pemilik'] ?>"
              style="color:var(--kedua);font-weight:700;">
-            <?= htmlspecialchars($toko['username']) ?>
+            <?= htmlspecialchars($toko['username'] ?? '—') ?>
           </a>
+          <?php else: ?>
+          <em style="color:var(--tekssamar);">Kosong — belum ada penjual</em>
+          <?php endif; ?>
         </div>
       </div>
       <div class="baris-info">
         <div class="label-info">Email</div>
-        <div class="nilai-info"><?= htmlspecialchars($toko['email']) ?></div>
+        <div class="nilai-info">
+          <?= !empty($toko['email']) ? htmlspecialchars($toko['email']) : '<em style="color:var(--tekssamar);">—</em>' ?>
+        </div>
       </div>
       <div class="baris-info">
         <div class="label-info">Status</div>

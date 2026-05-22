@@ -7,14 +7,12 @@
 
 // jika $halamansaatini belum didefinisikan oleh halaman pemanggil, tentukan sendiri
 // basename($_SERVER['PHP_SELF'], '.php') mengambil nama file saat ini tanpa ekstensi
-// contoh: jika url adalah /admin/index/index.php maka hasilnya 'index'
 if (!isset($halamansaatini)) {
     $halamansaatini = basename($_SERVER['PHP_SELF'], '.php');
 }
 
 // ambil username admin dari session untuk ditampilkan di sidebar
-// operator ?? dipakai sebagai nilai default jika kunci tidak ada di session
-// htmlspecialchars() mencegah serangan XSS dengan mengubah karakter < > " menjadi entitas HTML
+// htmlspecialchars() mencegah XSS dengan mengubah karakter < > " menjadi entitas HTML
 $namaadmin = htmlspecialchars($_SESSION['username'] ?? 'Admin');
 ?>
 
@@ -38,12 +36,18 @@ $namaadmin = htmlspecialchars($_SESSION['username'] ?? 'Admin');
       <span>Dashboard</span>
     </a>
 
-    <!-- menu manajemen pengguna — aktif di semua halaman terkait user dan toko
-         in_array() dipakai karena ada banyak sub-halaman yang termasuk kelompok ini -->
+    <!-- menu manajemen pengguna — aktif di semua halaman terkait user dan toko -->
     <a href="../../admin/manajemenpengguna/user.php"
-       class="sidebar-item <?= in_array($halamansaatini, ['user','viewuser','tambahuser','edituser','hapususer','toko','viewtoko','edittoko','hapustoko']) ? 'aktif' : '' ?>">
+       class="sidebar-item <?= in_array($halamansaatini, ['user','viewuser','tambahuser','edituser','hapususer','toko','viewtoko','edittoko','hapustoko','detailtoko']) ? 'aktif' : '' ?>">
       <i class="fa-solid fa-users"></i>
       <span>Manajemen Pengguna</span>
+    </a>
+
+    <!-- menu status kantin — tampilkan semua 10 slot kantin (kosong/terisi) -->
+    <a href="../../admin/manajementoko/kantin.php"
+       class="sidebar-item <?= in_array($halamansaatini, ['kantin']) ? 'aktif' : '' ?>">
+      <i class="fa-solid fa-store"></i>
+      <span>Status Kantin</span>
     </a>
 
     <!-- menu laporan platform — aktif hanya jika nama halaman persis 'laporan' -->
@@ -57,8 +61,7 @@ $namaadmin = htmlspecialchars($_SESSION['username'] ?? 'Admin');
 
   <!-- bagian bawah sidebar: tombol keluar dari akun -->
   <div class="sidebar-footer">
-    <!-- link keluar mengarah ke halaman konfirmasi logout dengan parameter peran=admin
-         parameter peran dipakai oleh halaman konfirmasi untuk menentukan session mana yang dihapus -->
+    <!-- link keluar mengarah ke halaman konfirmasi logout dengan parameter peran=admin -->
     <a href="../../4. autentifikasi/konfirmasilogout.php?peran=admin"
        class="sidebar-item">
       <i class="fa-solid fa-right-from-bracket"></i>

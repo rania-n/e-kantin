@@ -131,22 +131,22 @@ $idtokosudahpilih = $idtoko;
       <textarea name="catatan" rows="2" placeholder="Misal: pisahkan sambelnya, jangan pedas..."></textarea>
     </div>
 
-    <!-- pilihan metode pembayaran — wajib dipilih, default Tunai -->
+    <!-- metode pembayaran: hanya tunai (bayar di tempat ke penjual langsung) -->
     <div class="judulbagian"><i class="fa-solid fa-wallet"></i> Metode Pembayaran</div>
     <div style="margin-bottom:18px;">
-      <!-- radio button: hanya satu yang bisa dipilih sekaligus -->
-      <label class="pilihanmetode">
-        <input type="radio" name="metode" value="Tunai" required checked>
-        <span><i class="fa-solid fa-money-bill-wave"></i> Bayar di Tempat (Tunai)</span>
-      </label>
-      <label class="pilihanmetode">
-        <input type="radio" name="metode" value="QRIS">
-        <span><i class="fa-solid fa-qrcode"></i> QRIS / Dompet Digital</span>
-      </label>
-      <label class="pilihanmetode">
-        <input type="radio" name="metode" value="Transfer">
-        <span><i class="fa-solid fa-building-columns"></i> Transfer Bank</span>
-      </label>
+      <!-- input hidden: metode selalu Tunai, tidak perlu dipilih lagi -->
+      <input type="hidden" name="metode" value="Tunai">
+      <!-- tampilkan info bahwa pembayaran hanya tunai -->
+      <div class="pilihanmetode" style="cursor:default;border-color:var(--utama);background:rgba(99,56,67,.05);">
+        <span>
+          <i class="fa-solid fa-money-bill-wave" style="color:var(--utama);"></i>
+          <strong>Bayar Tunai di Kantin</strong>
+          <br>
+          <small style="color:var(--tekssamar);font-weight:400;">
+            Pembayaran dilakukan langsung ke penjual saat mengambil pesanan di kantin.
+          </small>
+        </span>
+      </div>
     </div>
 
     <!-- ringkasan harga dan tombol aksi -->

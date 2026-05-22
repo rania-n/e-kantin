@@ -157,11 +157,13 @@ if ($user['role'] === 'pembeli') {
 }
 
 // langkah 9: arahkan pengguna ke halaman utama sesuai dengan perannya
-// header("Location: ...") melakukan redirect ke url yang dituju
-// exit setelah header penting agar script berhenti dan tidak mengeksekusi baris berikutnya
+// catatan: admin memiliki halaman login sendiri (admin/login/loginadmin.php)
+// jika admin mencoba login dari halaman ini, arahkan ke login admin
 switch ($user['role']) {
     case 'admin':
-        header("Location: ../admin/index/index.php");
+        // admin tidak boleh login dari halaman ini — arahkan ke halaman login admin
+        header("Location: ../admin/login/loginadmin.php?error=" . urlencode("Gunakan halaman login admin.") .
+               "&usernameemail=" . urlencode($usernameemail));
         break;
     case 'penjual':
         header("Location: ../penjual/index/index.php");

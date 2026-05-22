@@ -109,16 +109,17 @@ $qtl = $conn->query("SELECT m.nama_menu, t.nama_toko, SUM(d.jumlah) AS terjual, 
                      ORDER BY terjual DESC LIMIT 5");
 $terlaris = $qtl->fetch_all(MYSQLI_ASSOC);
 
-/* ambil performa setiap toko: total pesanan, jumlah dibatalkan, omset, dan rating.
-   menggunakan subquery agar tidak terjadi penggandaan baris saat join dengan beberapa tabel */
-$qtoko2 = $conn->query("SELECT t.id_toko, t.nama_toko, t.status_toko,
+/* ambil performa setiap toko (hanya yang terisi — punya penjual).
+   menggunakan subquery agar tidak terjadi penggandaan baris saat join.
+   kolom nomor_kantin disertakan untuk identitas fisik kantin. */
+$qtoko2 = $conn->query("SELECT t.id_toko, t.nomor_kantin, t.nama_toko, t.status_toko,
                                 (SELECT COUNT(*) FROM tb_order o WHERE o.id_toko=t.id_toko AND o.deleted=0) AS total_order,
                                 (SELECT COUNT(*) FROM tb_order o WHERE o.id_toko=t.id_toko AND o.status_order='Dibatalkan' AND o.deleted=0) AS jml_dibatalkan,
                                 (SELECT COALESCE(SUM(o2.total_harga),0) FROM tb_order o2 WHERE o2.id_toko=t.id_toko AND o2.status_order IN ('Selesai','Dibatalkan') AND o2.deleted=0) AS omset,
                                 (SELECT COALESCE(ROUND(AVG(r.rating_toko),1),0) FROM tb_rating r WHERE r.id_toko=t.id_toko AND r.deleted=0) AS rating
                          FROM tb_toko t
-                         WHERE t.deleted=0
-                         ORDER BY omset DESC");
+                         WHERE t.deleted=0 AND t.id_user IS NOT NULL
+                         ORDER BY t.nomor_kantin ASC");
 $perftoko = $qtoko2->fetch_all(MYSQLI_ASSOC);
 
 // ambil 5 pengguna yang paling baru mendaftar
@@ -381,6 +382,8 @@ $startx = 70; $chartH = 160;           // titik mulai bar dan tinggi area chart
       <table>
         <thead>
           <tr>
+            <!-- kolom nomor kantin untuk identitas fisik -->
+            <th class="tengah">No.</th>
             <th>Nama Toko</th>
             <th class="tengah">Status</th>
             <th class="tengah">Total Pesanan</th>
@@ -392,10 +395,14 @@ $startx = 70; $chartH = 160;           // titik mulai bar dan tinggi area chart
         </thead>
         <tbody>
           <?php if (empty($perftoko)): ?>
-          <tr><td colspan="7"><div class="kosong" style="padding:20px;"><p>Belum ada toko</p></div></td></tr>
+          <tr><td colspan="8"><div class="kosong" style="padding:20px;"><p>Belum ada toko</p></div></td></tr>
           <?php else: ?>
           <?php foreach ($perftoko as $t): ?>
           <tr>
+            <!-- tampilkan nomor kantin sebagai kolom pertama -->
+            <td class="tengah" style="font-weight:800;font-size:16px;color:var(--utama);">
+              <?= (int)$t['nomor_kantin'] ?>
+            </td>
             <td><strong><?= htmlspecialchars($t['nama_toko']) ?></strong></td>
             <td class="tengah">
               <span class="badge <?= $t['status_toko'] === 'buka' ? 'buka' : 'tutup' ?>">

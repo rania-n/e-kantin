@@ -2,8 +2,9 @@
 /* halaman laporan platform untuk admin.
    menampilkan ringkasan pesanan, omset, pengguna baru, chart harian,
    produk terlaris, breakdown status pesanan, dan performa tiap toko.
-   mendukung filter periode: 7 hari, 14 hari, 30 hari, atau custom tanggal.
-   tambahkan ?cetak=1 di url untuk mengaktifkan tampilan cetak. */
+   mendukung filter periode: 7/14/30 hari atau custom tanggal.
+   mendukung filter per kantin (nomor_kantin) atau semua kantin.
+   mendukung cetak: ?cetak=1 untuk seluruh data, ?cetak=kantin&nomor=X untuk satu kantin. */
 
 // sambungkan ke database dan pastikan yang mengakses adalah admin
 include '../../1. koneksi/koneksi.php';
@@ -12,8 +13,14 @@ include '../../3. komponen/guardadmin.php';
 // tandai menu "laporan" sebagai aktif di navbar
 $halamansaatini = 'laporan';
 
-// cek apakah ada parameter ?cetak di url (untuk mode cetak / print)
-$cetak = isset($_GET['cetak']);
+// baca mode cetak dari url:
+// cetak=1 → cetak semua laporan
+// cetak=kantin → cetak laporan satu kantin saja (perlu parameter nomor=X)
+$cetakmode    = $_GET['cetak'] ?? ''; // '' | '1' | 'kantin'
+$cetaknomor   = (int)($_GET['nomor'] ?? 0); // nomor_kantin yang dicetak (jika mode=kantin)
+$cetakglobal  = ($cetakmode === '1');
+$cetakperkant = ($cetakmode === 'kantin' && $cetaknomor > 0);
+$sedangcetak  = $cetakglobal || $cetakperkant;
 
 // baca pilihan periode dari url, default 7 hari jika tidak ada atau tidak valid
 $periode = $_GET['periode'] ?? '7';
@@ -21,7 +28,7 @@ if (!in_array($periode, ['7','14','30','custom'])) $periode = '7';
 
 // tentukan tanggal mulai dan tanggal akhir sesuai pilihan periode
 if ($periode === 'custom') {
-    // jika custom, baca dari parameter url ?dari= dan ?sampai=, fallback ke 7 hari terakhir jika kosong
+    // jika custom, baca dari parameter url ?dari= dan ?sampai=
     $dari   = isset($_GET['dari'])   && $_GET['dari']   ? $_GET['dari']   : date('Y-m-d', strtotime('-7 days'));
     $sampai = isset($_GET['sampai']) && $_GET['sampai'] ? $_GET['sampai'] : date('Y-m-d');
     $tglmulai = date('Y-m-d', strtotime($dari));
@@ -35,7 +42,7 @@ if ($periode === 'custom') {
     $dari = $tglmulai; $sampai = $tgljin;
 }
 
-// hitung total pesanan dalam periode yang dipilih
+// hitung total pesanan dalam periode
 $qr1 = $conn->prepare("SELECT COUNT(*) FROM tb_order WHERE DATE(tanggal_order) BETWEEN ? AND ? AND deleted=0");
 $qr1->bind_param("ss", $tglmulai, $tgljin); $qr1->execute();
 $totalorder = (int)$qr1->get_result()->fetch_row()[0]; $qr1->close();
@@ -50,53 +57,61 @@ $qr3 = $conn->prepare("SELECT COUNT(*) FROM tb_user WHERE DATE(created) BETWEEN 
 $qr3->bind_param("ss", $tglmulai, $tgljin); $qr3->execute();
 $userbarujml = (int)$qr3->get_result()->fetch_row()[0]; $qr3->close();
 
-// ambil jumlah pesanan per status (Menunggu, Diproses, Selesai, dll.) dalam periode
+// ambil jumlah pesanan per status dalam periode
 $qstat = $conn->prepare("SELECT status_order, COUNT(*) AS jml FROM tb_order WHERE DATE(tanggal_order) BETWEEN ? AND ? AND deleted=0 GROUP BY status_order");
 $qstat->bind_param("ss", $tglmulai, $tgljin); $qstat->execute();
 $statpesanan = []; $res = $qstat->get_result();
 while ($rs = $res->fetch_assoc()) $statpesanan[$rs['status_order']] = (int)$rs['jml'];
 $qstat->close();
 
-/* ambil performa setiap toko dalam periode:
-   total pesanan, jumlah dibatalkan, pendapatan (selesai + dibatalkan), dan rating rata-rata.
-   left join digunakan agar toko tanpa pesanan tetap muncul dengan nilai 0. */
-$qtoko = $conn->prepare("SELECT t.id_toko, t.nama_toko, t.status_toko,
-                                 COUNT(DISTINCT o.id_order) AS total_order,
-                                 COALESCE(SUM(CASE WHEN o.status_order='Dibatalkan' THEN 1 ELSE 0 END),0) AS jml_dibatalkan,
-                                 COALESCE(SUM(CASE WHEN o.status_order IN ('Selesai','Dibatalkan') THEN o.total_harga ELSE 0 END),0) AS pendapatan,
-                                 (SELECT COALESCE(ROUND(AVG(r.rating_toko),1),0) FROM tb_rating r WHERE r.id_toko=t.id_toko AND r.deleted=0) AS rating
-                          FROM tb_toko t
-                          LEFT JOIN tb_order o ON t.id_toko=o.id_toko
-                            AND DATE(o.tanggal_order) BETWEEN ? AND ? AND o.deleted=0
-                          WHERE t.deleted=0
-                          GROUP BY t.id_toko, t.nama_toko, t.status_toko
-                          ORDER BY pendapatan DESC");
+/* ambil performa setiap kantin dalam periode.
+   SEMUA 10 kantin ditampilkan, termasuk yang kosong (id_user IS NULL).
+   kolom nomor_kantin diikutsertakan untuk identitas fisik.
+   left join ke tb_user untuk mendapatkan nama penjual (NULL jika kosong). */
+$qtoko = $conn->prepare(
+    "SELECT t.id_toko, t.nomor_kantin, t.nama_toko, t.status_toko,
+            t.id_user, u.username AS nama_penjual,
+            COUNT(DISTINCT o.id_order) AS total_order,
+            COALESCE(SUM(CASE WHEN o.status_order='Dibatalkan' THEN 1 ELSE 0 END),0) AS jml_dibatalkan,
+            COALESCE(SUM(CASE WHEN o.status_order IN ('Selesai','Dibatalkan') THEN o.total_harga ELSE 0 END),0) AS pendapatan,
+            (SELECT COALESCE(ROUND(AVG(r.rating_toko),1),0) FROM tb_rating r WHERE r.id_toko=t.id_toko AND r.deleted=0) AS rating
+     FROM tb_toko t
+     LEFT JOIN tb_user u ON t.id_user=u.id_user AND u.deleted=0
+     LEFT JOIN tb_order o ON t.id_toko=o.id_toko
+       AND DATE(o.tanggal_order) BETWEEN ? AND ? AND o.deleted=0
+     WHERE t.deleted=0
+     GROUP BY t.id_toko, t.nomor_kantin, t.nama_toko, t.status_toko, t.id_user, u.username
+     ORDER BY t.nomor_kantin ASC"
+);
 $qtoko->bind_param("ss", $tglmulai, $tgljin); $qtoko->execute();
 $perftoko = $qtoko->get_result()->fetch_all(MYSQLI_ASSOC); $qtoko->close();
 
-// ambil 10 produk terlaris di seluruh platform dalam periode (kecuali pesanan dibatalkan)
-$qtl = $conn->prepare("SELECT m.nama_menu, t.nama_toko, SUM(d.jumlah) AS terjual, SUM(d.subtotal) AS omset
-                        FROM tb_detail_order d
-                        JOIN tb_menu m ON d.id_menu=m.id_menu
-                        JOIN tb_toko t ON m.id_toko=t.id_toko
-                        JOIN tb_order o ON d.id_order=o.id_order
-                        WHERE DATE(o.tanggal_order) BETWEEN ? AND ?
-                          AND d.deleted=0 AND o.deleted=0 AND o.status_order != 'Dibatalkan'
-                        GROUP BY m.id_menu, m.nama_menu, t.nama_toko
-                        ORDER BY terjual DESC LIMIT 10");
+// ambil 10 produk terlaris di seluruh platform dalam periode
+$qtl = $conn->prepare(
+    "SELECT m.nama_menu, t.nama_toko, t.nomor_kantin,
+            SUM(d.jumlah) AS terjual, SUM(d.subtotal) AS omset
+     FROM tb_detail_order d
+     JOIN tb_menu m ON d.id_menu=m.id_menu
+     JOIN tb_toko t ON m.id_toko=t.id_toko
+     JOIN tb_order o ON d.id_order=o.id_order
+     WHERE DATE(o.tanggal_order) BETWEEN ? AND ?
+       AND d.deleted=0 AND o.deleted=0 AND o.status_order != 'Dibatalkan'
+     GROUP BY m.id_menu, m.nama_menu, t.nama_toko, t.nomor_kantin
+     ORDER BY terjual DESC LIMIT 10"
+);
 $qtl->bind_param("ss", $tglmulai, $tgljin); $qtl->execute();
 $terlaris = $qtl->get_result()->fetch_all(MYSQLI_ASSOC); $qtl->close();
 
-/* fungsi pembantu: mengubah kode hari bahasa inggris menjadi singkatan bahasa indonesia */
+/* fungsi pembantu: mengubah kode hari bahasa inggris menjadi bahasa indonesia */
 function namahari(string $tgl): string {
     $map = ['Sun'=>'Min','Mon'=>'Sen','Tue'=>'Sel','Wed'=>'Rab','Thu'=>'Kam','Fri'=>'Jum','Sat'=>'Sab'];
     return $map[date('D', strtotime($tgl))] ?? date('D', strtotime($tgl));
 }
 
-// ambil total revenue per hari dalam periode, hanya pesanan selesai dan dibatalkan
+// ambil total revenue per hari dalam periode
 $qchart = $conn->prepare("SELECT DATE(tanggal_order) AS tgl, COALESCE(SUM(total_harga),0) AS nilai FROM tb_order WHERE DATE(tanggal_order) BETWEEN ? AND ? AND status_order IN ('Selesai','Dibatalkan') AND deleted=0 GROUP BY DATE(tanggal_order)");
 $qchart->bind_param("ss", $tglmulai, $tgljin); $qchart->execute();
-$rawchart = []; // array sementara dengan kunci tanggal
+$rawchart = [];
 $resc = $qchart->get_result();
 while ($row = $resc->fetch_assoc()) $rawchart[$row['tgl']] = (float)$row['nilai'];
 $qchart->close();
@@ -108,7 +123,6 @@ $selisih = (int)ceil((strtotime($tgljin) - strtotime($tglmulai)) / 86400) + 1;
 $chartdata = [];
 for ($i = 0; $i < $selisih; $i++) {
     $tgl = date('Y-m-d', strtotime($tglmulai) + $i * 86400);
-    // label berisi nama hari + tanggal, contoh: "Sen 12"
     $chartdata[] = ['tgl'=>$tgl,'label'=>namahari($tgl).' '.date('d',strtotime($tgl)),'nilai'=>$rawchart[$tgl]??0.0];
 }
 
@@ -118,7 +132,7 @@ $maxnilai = max(array_column($chartdata,'nilai')) ?: 1;
 // fungsi pembantu: format angka menjadi rupiah lengkap
 function rp(float $n): string { return 'Rp ' . number_format($n, 0, ',', '.'); }
 
-// fungsi pembantu: singkatkan nilai rupiah besar (Jt / M)
+// fungsi pembantu: singkatkan nilai rupiah besar
 function singkat(float $n): string {
     if ($n >= 1_000_000_000) { $v=$n/1_000_000_000; return 'Rp '.rtrim(rtrim(number_format($v,1,',',''),'0'),',').' M'; }
     if ($n >= 1_000_000)     { $v=$n/1_000_000;     return 'Rp '.rtrim(rtrim(number_format($v,1,',',''),'0'),',').' Jt'; }
@@ -135,10 +149,17 @@ $labelterpilih = $periode === 'custom'
 
 // hitung dimensi svg chart agar proporsional dengan jumlah data
 $n      = count($chartdata);
-$svgw   = max(700, $n * 30);           // lebar minimal 700px
-$barw   = max(8, min(40, (int)(($svgw - 80) / $n) - 4)); // lebar tiap bar
-$gap    = max(4, (int)(($svgw - 80 - $n * $barw) / max(1, $n - 1))); // jarak antar bar
+$svgw   = max(700, $n * 30);
+$barw   = max(8, min(40, (int)(($svgw - 80) / $n) - 4));
+$gap    = max(4, (int)(($svgw - 80 - $n * $barw) / max(1, $n - 1)));
 $startx = 70; $chartH = 160;
+
+// buat string parameter url saat ini untuk dipertahankan di link cetak
+$urlparams = http_build_query(array_filter([
+    'periode' => $periode,
+    'dari'    => ($periode==='custom') ? $dari : '',
+    'sampai'  => ($periode==='custom') ? $sampai : '',
+]));
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -149,30 +170,81 @@ $startx = 70; $chartH = 160;
 <link rel="stylesheet" href="../../3. komponen/admin.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
-  /* setting ukuran kertas saat dicetak */
-  @media print { @page { size: A4; margin: 12mm; } }
+/* setting ukuran kertas saat dicetak */
+@media print { @page { size: A4; margin: 12mm; } }
+
+/* tombol cetak per seksi — tampil di setiap baris tabel -->
+.btn-cetak-satu {
+    font-size:10px;
+    padding:4px 10px;
+    border:1px solid var(--garis);
+    border-radius:6px;
+    background:var(--latar);
+    color:var(--teks);
+    cursor:pointer;
+    white-space:nowrap;
+    text-decoration:none;
+    display:inline-block;
+}
+.btn-cetak-satu:hover { background:var(--utama);color:white;border-color:var(--utama); }
+
+/* kotak cetak per kantin — dipakai oleh halaman cetak satu kantin */
+.seksi-kantin-cetak {
+    border: 1px solid var(--garis);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 18px;
+    break-inside: avoid;
+}
+
+/* judul yang hanya muncul saat dicetak */
+.judulcetak {
+    display: none;
+    text-align: center;
+    margin-bottom: 20px;
+}
+@media print {
+    .judulcetak { display: block !important; }
+    .takprint   { display: none !important; }
+    .seksi-kantin-cetak { break-inside: avoid; border: 1px solid #ccc; }
+}
 </style>
 </head>
 <body>
 
+<?php if (!$sedangcetak): ?>
 <?php include '../../3. komponen/navbaradmin.php'; ?>
+<?php endif; ?>
 
 <main class="konten">
 
-  <!-- header halaman: judul dan tombol cetak (disembunyikan saat print dengan class takprint) -->
+  <!-- header halaman dengan tombol-tombol cetak -->
   <div class="header-halaman takprint">
     <div class="kiri">
       <h1><i class="fa-solid fa-chart-bar"></i> Laporan Platform</h1>
       <p>Ringkasan performa jajankita — <?= $labelterpilih ?></p>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <!-- tombol cetak SEMUA laporan — JS diizinkan untuk print -->
       <button onclick="window.print()" class="tombolringan takprint">
-        <i class="fa-solid fa-print"></i> Cetak
+        <i class="fa-solid fa-print"></i> Cetak Semua
       </button>
+      <!-- link ke halaman cetak per-kantin (membuka jendela baru untuk print) -->
+      <a href="laporan.php?cetak=kantin&nomor=0&<?= $urlparams ?>"
+         onclick="window.open(this.href,'_blank','width=900,height=700');return false;"
+         class="tombolringan takprint">
+        <i class="fa-solid fa-store"></i> Cetak Per Kantin
+      </a>
     </div>
   </div>
 
-  <!-- filter periode: chip-chip untuk memilih 7/14/30 hari atau custom -->
+  <!-- judul yang muncul di versi cetak -->
+  <div class="judulcetak">
+    <h2>Laporan Platform jajankita</h2>
+    <p>Periode: <?= $labelterpilih ?> | Dicetak: <?= date('d M Y H:i') ?></p>
+  </div>
+
+  <!-- filter periode: chip untuk memilih 7/14/30 hari atau custom -->
   <div class="takprint" style="margin-bottom:18px;">
     <div class="filter-bar" style="margin-bottom:10px;">
       <a href="laporan.php?periode=7"  class="chip-filter <?= $periode==='7'  ?'aktif':'' ?>">7 Hari</a>
@@ -182,7 +254,7 @@ $startx = 70; $chartH = 160;
          class="chip-filter <?= $periode==='custom' ?'aktif':'' ?>">Custom</a>
     </div>
     <?php if ($periode === 'custom'): ?>
-    <!-- form input tanggal custom, hanya muncul jika pilihan custom aktif -->
+    <!-- form input tanggal custom -->
     <form method="GET" action="laporan.php" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
       <input type="hidden" name="periode" value="custom">
       <div>
@@ -202,7 +274,7 @@ $startx = 70; $chartH = 160;
     <?php endif; ?>
   </div>
 
-  <!-- ringkasan statistik utama dalam periode yang dipilih -->
+  <!-- ringkasan statistik utama -->
   <div class="grid-stat">
     <div class="kartu-stat">
       <div class="ikon-stat"><i class="fa-solid fa-receipt"></i></div>
@@ -249,7 +321,6 @@ $startx = 70; $chartH = 160;
         <text x="55" y="<?=$y+4?>" text-anchor="end" fill="#99627A" font-size="9"><?=singkat(($maxnilai/4)*(4-$g))?></text>
         <?php endfor;?>
         <?php foreach($chartdata as $i=>$d):
-          // hitung posisi dan tinggi bar per hari
           $x=$startx+$i*($barw+$gap);
           $barh=$d['nilai']>0?($d['nilai']/$maxnilai)*$chartH:2;
           $by=180-$barh;
@@ -258,11 +329,9 @@ $startx = 70; $chartH = 160;
         <rect x="<?=$x?>" y="<?=$by?>" width="<?=$barw?>" height="<?=$barh?>" rx="3" fill="<?=$isToday?'#643843':'#99627A'?>">
           <title><?=$d['label']?> — <?=rp($d['nilai'])?></title>
         </rect>
-        <!-- label hari di bawah bar, ukuran font dikecilkan jika data terlalu banyak -->
         <text x="<?=$x+$barw/2?>" y="200" text-anchor="middle" fill="<?=$isToday?'#643843':'#99627A'?>"
               font-size="<?=$n>20?'7':'9'?>" font-weight="<?=$isToday?'700':'400'?>"><?=$d['label']?></text>
         <?php if($d['nilai']>0&&$barw>=20):?>
-        <!-- label nilai singkat di atas bar, hanya jika bar cukup lebar -->
         <text x="<?=$x+$barw/2?>" y="<?=max($by-4,14)?>" text-anchor="middle" fill="#643843" font-size="8" font-weight="600">
           <?=number_format($d['nilai']/1000,0)?>k
         </text>
@@ -274,7 +343,7 @@ $startx = 70; $chartH = 160;
 
   <div class="grid-dua">
 
-    <!-- daftar 10 produk terlaris di seluruh platform dalam periode -->
+    <!-- daftar 10 produk terlaris -->
     <div class="kartu">
       <h3><i class="fa-solid fa-fire"></i> Produk Terlaris Platform</h3>
       <?php if (empty($terlaris)): ?>
@@ -289,7 +358,12 @@ $startx = 70; $chartH = 160;
             <?= htmlspecialchars($t['nama_menu']) ?>
           </div>
           <div style="font-size:11px;color:var(--tekssamar);">
-            <?= htmlspecialchars($t['nama_toko']) ?> · <?= rp($t['omset']) ?>
+            <!-- tampilkan nama toko dan nomor kantin sebagai lokasi -->
+            <?= htmlspecialchars($t['nama_toko']) ?>
+            <?php if (!empty($t['nomor_kantin'])): ?>
+            <span style="color:var(--garis);">·</span> Kantin ke-<?= (int)$t['nomor_kantin'] ?>
+            <?php endif; ?>
+            · <?= rp($t['omset']) ?>
           </div>
         </div>
         <div style="font-size:13px;font-weight:700;color:var(--utama);white-space:nowrap;">
@@ -300,17 +374,15 @@ $startx = 70; $chartH = 160;
       <?php endif; ?>
     </div>
 
-    <!-- rincian jumlah pesanan per status dalam periode -->
+    <!-- rincian jumlah pesanan per status -->
     <div class="kartu">
       <h3><i class="fa-solid fa-list-check"></i> Breakdown Status Pesanan</h3>
       <?php
-      // daftar semua status yang mungkin ada
       $statuslist = ['Menunggu','Diproses','Siap Diambil','Selesai','Dibatalkan'];
-      // mapping status ke nama class css untuk warna badge
       $statbadge  = ['Menunggu'=>'menunggu','Diproses'=>'diproses','Siap Diambil'=>'siap','Selesai'=>'selesai','Dibatalkan'=>'dibatalkan'];
       ?>
       <?php foreach ($statuslist as $s): ?>
-      <?php $jml = $statpesanan[$s] ?? 0; // jika status tidak ada di hasil query, berarti 0 ?>
+      <?php $jml = $statpesanan[$s] ?? 0; ?>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--latar);">
         <span class="badge <?= $statbadge[$s] ?>"><?= $s ?></span>
         <strong style="font-size:15px;white-space:nowrap;"><?= $jml ?> pesanan</strong>
@@ -320,55 +392,100 @@ $startx = 70; $chartH = 160;
 
   </div>
 
-  <!-- tabel performa semua toko dalam periode yang dipilih -->
+  <!-- ================================================================
+       TABEL PERFORMA SEMUA KANTIN (termasuk yang kosong)
+       Bisa dicetak seluruhnya atau per satu kantin
+  ================================================================ -->
   <div class="kartu">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-      <h3 style="margin:0;border:none;padding:0;"><i class="fa-solid fa-store"></i> Performa Toko</h3>
+      <h3 style="margin:0;border:none;padding:0;">
+        <i class="fa-solid fa-store"></i> Performa Per Kantin
+        <span style="font-size:12px;font-weight:500;color:var(--tekssamar);">— <?= $labelterpilih ?></span>
+      </h3>
+      <!-- tombol cetak semua kantin (disembunyikan saat print) -->
+      <a href="laporan.php?cetak=1&<?= $urlparams ?>"
+         onclick="var w=window.open(this.href,'_blank','width=900,height=700');return false;"
+         class="tombolringan takprint" style="font-size:12px;">
+        <i class="fa-solid fa-print"></i> Cetak Tabel Ini
+      </a>
     </div>
     <div class="tabel-wrapper">
-      <table style="min-width:600px;">
+      <table style="min-width:680px;">
         <thead>
           <tr>
-            <th>Nama Toko</th>
+            <!-- kolom nomor kantin sebagai identitas fisik -->
+            <th class="tengah">No. Kantin</th>
+            <th>Nama Toko / Pemilik</th>
             <th class="tengah">Status</th>
             <th class="tengah">Total Pesanan</th>
             <th class="tengah">Dibatalkan</th>
             <th class="tengah">Rating</th>
             <th class="kanan">Total Omset</th>
-            <!-- kolom aksi disembunyikan saat dicetak (class takprint) -->
+            <!-- kolom aksi dan cetak disembunyikan saat print -->
             <th class="tengah takprint">Aksi</th>
           </tr>
         </thead>
         <tbody>
           <?php if (empty($perftoko)): ?>
-          <tr><td colspan="7"><div class="kosong" style="padding:20px;"><p>Belum ada toko</p></div></td></tr>
+          <tr><td colspan="8"><div class="kosong" style="padding:20px;"><p>Belum ada kantin</p></div></td></tr>
           <?php else: ?>
           <?php foreach ($perftoko as $t): ?>
           <tr>
-            <td><strong><?= htmlspecialchars($t['nama_toko']) ?></strong></td>
+            <!-- nomor kantin besar dan menonjol -->
             <td class="tengah">
+              <strong style="font-size:18px;color:var(--utama);"><?= (int)$t['nomor_kantin'] ?></strong>
+            </td>
+            <td>
+              <?php if (!empty($t['nama_toko'])): ?>
+              <!-- kantin terisi: tampilkan nama toko dan nama penjual -->
+              <strong><?= htmlspecialchars($t['nama_toko']) ?></strong>
+              <div style="font-size:11px;color:var(--tekssamar);">
+                <i class="fa-solid fa-user" style="font-size:9px;"></i>
+                <?= htmlspecialchars($t['nama_penjual'] ?? '—') ?>
+              </div>
+              <?php else: ?>
+              <!-- kantin kosong: tampilkan placeholder -->
+              <em style="color:var(--tekssamar);font-size:13px;">— Kosong —</em>
+              <?php endif; ?>
+            </td>
+            <td class="tengah">
+              <?php if (empty($t['id_user'])): ?>
+              <!-- badge kosong untuk kantin tanpa penjual -->
+              <span class="badge" style="background:#f5f5f5;color:#9e9e9e;">Kosong</span>
+              <?php else: ?>
               <span class="badge <?= $t['status_toko'] === 'buka' ? 'buka' : 'tutup' ?>">
                 <?= $t['status_toko'] === 'buka' ? 'Buka' : 'Tutup' ?>
               </span>
+              <?php endif; ?>
             </td>
-            <td class="tengah"><?= $t['total_order'] ?></td>
+            <td class="tengah"><?= (int)$t['total_order'] ?></td>
             <td class="tengah" style="color:var(--gagal);"><?= (int)$t['jml_dibatalkan'] ?></td>
             <td class="tengah"><?= $t['rating'] > 0 ? $t['rating'].' ★' : '—' ?></td>
             <td class="kanan" style="font-weight:700;color:var(--sukses);"><?= rp($t['pendapatan']) ?></td>
             <td class="tengah takprint">
-              <a href="../manajementoko/viewtoko.php?id=<?= $t['id_toko'] ?>" class="tombol-aksi" title="Detail">
-                <i class="fa-solid fa-eye"></i>
-              </a>
+              <div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;">
+                <!-- tombol lihat detail toko -->
+                <a href="../manajementoko/viewtoko.php?id=<?= $t['id_toko'] ?>" class="tombol-aksi" title="Detail">
+                  <i class="fa-solid fa-eye"></i>
+                </a>
+                <!-- tombol cetak satu baris kantin ini saja -->
+                <!-- link ini membuka jendela baru khusus print satu kantin -->
+                <a href="laporan.php?cetak=kantin&nomor=<?= (int)$t['nomor_kantin'] ?>&<?= $urlparams ?>"
+                   onclick="window.open(this.href,'_blank','width=800,height=600');return false;"
+                   class="tombol-aksi" title="Cetak kantin ini" style="background:var(--info);color:white;border-color:var(--info);">
+                  <i class="fa-solid fa-print"></i>
+                </a>
+              </div>
             </td>
           </tr>
           <?php endforeach; ?>
           <?php endif; ?>
         </tbody>
         <?php if (!empty($perftoko)): ?>
-        <!-- baris total di bawah tabel: menjumlahkan seluruh omset semua toko -->
+        <!-- baris total di bawah tabel -->
         <tfoot>
           <tr>
-            <td colspan="5"><strong>TOTAL PLATFORM</strong></td>
+            <td colspan="6"><strong>TOTAL SELURUH KANTIN</strong></td>
             <td class="kanan" style="color:var(--sukses);"><strong><?= rp(array_sum(array_column($perftoko,'pendapatan'))) ?></strong></td>
             <td class="takprint"></td>
           </tr>
@@ -377,6 +494,105 @@ $startx = 70; $chartH = 160;
       </table>
     </div>
   </div>
+
+  <?php
+  /* ================================================================
+     SEKSI CETAK PER KANTIN
+     Ditampilkan hanya jika mode cetak = 'kantin' (buka di jendela baru)
+     Setiap kantin ditampilkan dalam kotak terpisah yang bisa di-print
+  ================================================================ */
+  if ($cetakperkant || $cetakglobal):
+  ?>
+  <!-- judul cetak -->
+  <div class="judulcetak" style="display:block;margin-top:30px;padding-top:20px;border-top:2px solid var(--garis);">
+    <h2>Laporan Per Kantin</h2>
+    <p>Periode: <?= $labelterpilih ?> | Dicetak: <?= date('d M Y H:i') ?></p>
+  </div>
+
+  <?php foreach ($perftoko as $t):
+    // jika mode cetak satu kantin, skip yang tidak sesuai
+    if ($cetakperkant && (int)$t['nomor_kantin'] !== $cetaknomor) continue;
+  ?>
+  <!-- kotak data satu kantin — masing-masing bisa di-print terpisah -->
+  <div class="seksi-kantin-cetak">
+    <!-- judul kantin: nomor dan nama -->
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+      <div style="font-size:28px;font-weight:900;color:var(--utama);line-height:1;">
+        <?= (int)$t['nomor_kantin'] ?>
+      </div>
+      <div>
+        <div style="font-size:15px;font-weight:800;">
+          <?= !empty($t['nama_toko']) ? htmlspecialchars($t['nama_toko']) : '— Kosong —' ?>
+        </div>
+        <div style="font-size:12px;color:var(--tekssamar);">
+          Kantin ke-<?= (int)$t['nomor_kantin'] ?>
+          <?php if (!empty($t['nama_penjual'])): ?>
+          · Penjual: <?= htmlspecialchars($t['nama_penjual']) ?>
+          <?php endif; ?>
+        </div>
+      </div>
+      <div style="margin-left:auto;">
+        <?php if (empty($t['id_user'])): ?>
+        <span class="badge" style="background:#f5f5f5;color:#9e9e9e;">Kosong</span>
+        <?php else: ?>
+        <span class="badge <?= $t['status_toko']==='buka'?'buka':'tutup' ?>">
+          <?= $t['status_toko']==='buka'?'Buka':'Tutup' ?>
+        </span>
+        <?php endif; ?>
+      </div>
+    </div>
+
+    <!-- data statistik kantin dalam satu periode -->
+    <table style="width:100%;font-size:13px;border-collapse:collapse;">
+      <tr style="border-bottom:1px solid var(--latar);">
+        <td style="padding:6px 0;color:var(--tekssamar);">Total Pesanan</td>
+        <td style="padding:6px 0;font-weight:700;text-align:right;"><?= (int)$t['total_order'] ?></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--latar);">
+        <td style="padding:6px 0;color:var(--tekssamar);">Pesanan Dibatalkan</td>
+        <td style="padding:6px 0;font-weight:700;text-align:right;color:var(--gagal);"><?= (int)$t['jml_dibatalkan'] ?></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--latar);">
+        <td style="padding:6px 0;color:var(--tekssamar);">Rating</td>
+        <td style="padding:6px 0;font-weight:700;text-align:right;">
+          <?= $t['rating'] > 0 ? $t['rating'] . ' ★' : '—' ?>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:6px 0;color:var(--tekssamar);">Total Omset</td>
+        <td style="padding:6px 0;font-weight:800;text-align:right;color:var(--sukses);font-size:15px;">
+          <?= rp($t['pendapatan']) ?>
+        </td>
+      </tr>
+    </table>
+
+    <!-- tombol cetak kantin ini saja (hanya tampil di layar, tidak saat print) -->
+    <div class="takprint" style="margin-top:12px;text-align:right;">
+      <button onclick="window.print()" class="tombolringan" style="font-size:12px;">
+        <i class="fa-solid fa-print"></i> Cetak Kantin ke-<?= (int)$t['nomor_kantin'] ?>
+      </button>
+    </div>
+  </div>
+  <?php endforeach; ?>
+
+  <?php if ($cetakglobal): ?>
+  <!-- total semua kantin — hanya di mode cetak global -->
+  <div class="seksi-kantin-cetak" style="border-color:var(--utama);">
+    <strong style="font-size:14px;">TOTAL SELURUH KANTIN</strong>
+    <div style="font-size:18px;font-weight:900;color:var(--sukses);margin-top:8px;">
+      <?= rp(array_sum(array_column($perftoko,'pendapatan'))) ?>
+    </div>
+  </div>
+  <?php endif; ?>
+
+  <!-- tombol cetak halaman ini (hanya di mode cetak) -->
+  <div class="takprint" style="text-align:center;margin-top:20px;">
+    <button onclick="window.print()" class="tombolutama">
+      <i class="fa-solid fa-print"></i>
+      <?= $cetakperkant ? "Cetak Kantin ke-{$cetaknomor}" : 'Cetak Semua Kantin' ?>
+    </button>
+  </div>
+  <?php endif; ?>
 
 </main>
 </body>

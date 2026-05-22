@@ -20,8 +20,8 @@ if (session_status() === PHP_SESSION_NONE) {
    operator ?? '' dipakai sebagai nilai default jika kunci 'role' tidak ada di session
 */
 if (empty($_SESSION['id_user']) || ($_SESSION['role'] ?? '') !== 'admin') {
-    // tolak akses dan arahkan ke halaman login
-    header("Location: ../../4. autentifikasi/login.php");
+    // tolak akses dan arahkan ke halaman login KHUSUS ADMIN (bukan login umum pembeli/penjual)
+    header("Location: ../../admin/login/loginadmin.php");
     exit; // wajib ada agar kode di bawah tidak ikut dijalankan meski sudah di-redirect
 }
 ?>
