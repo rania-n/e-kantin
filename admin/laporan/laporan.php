@@ -171,26 +171,15 @@ $urlparams = http_build_query(array_filter([
 <link rel="stylesheet" href="../../3. komponen/admin.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
-/* setting ukuran kertas saat dicetak */
-@media print { @page { size: A4; margin: 12mm; } }
-
-
-/* tombol cetak per seksi — tampil di setiap baris tabel -->
-.btn-cetak-satu {
-    font-size:10px;
-    padding:4px 10px;
-    border:1px solid var(--garis);
-    border-radius:6px;
-    background:var(--latar);
-    color:var(--teks);
-    cursor:pointer;
-    white-space:nowrap;
-    text-decoration:none;
-    display:inline-block;
+@media print {
+    @page { size: A4 landscape; margin: 10mm; }
+    .takprint      { display: none !important; }
+    .sembunyi-cetak { display: none !important; }
+    /* paksa tabel muat di kertas landscape tanpa terpotong */
+    .tabel-wrapper { overflow: visible !important; }
+    .tabel-wrapper table { min-width: 0 !important; width: 100%; font-size: 11px; }
+    .tabel-wrapper td, .tabel-wrapper th { padding: 5px 6px; }
 }
-.btn-cetak-satu:hover { background:var(--utama);color:white;border-color:var(--utama); }
-
-@media print { .takprint { display: none !important; } .sembunyi-cetak { display: none !important; } }
 </style>
 </head>
 <body>
@@ -279,7 +268,7 @@ $urlparams = http_build_query(array_filter([
   </div>
 
   <!-- ringkasan statistik utama -->
-  <div class="grid-stat">
+  <div class="grid-stat" id="seksi-stat-grid">
     <div class="kartu-stat">
       <div class="ikon-stat"><i class="fa-solid fa-receipt"></i></div>
       <div class="isi-stat">
@@ -315,7 +304,7 @@ $urlparams = http_build_query(array_filter([
   </div>
 
   <!-- chart revenue harian dalam periode yang dipilih -->
-  <div class="kartu">
+  <div class="kartu" id="seksi-chart">
     <h3><i class="fa-solid fa-chart-bar"></i> Revenue Platform — <?= $labelterpilih ?></h3>
     <div class="area-chart">
       <svg viewBox="0 0 <?=$svgw?> 210" xmlns="http://www.w3.org/2000/svg" style="min-width:<?=min(700,$svgw)?>px;">
@@ -345,7 +334,7 @@ $urlparams = http_build_query(array_filter([
     </div>
   </div>
 
-  <div class="grid-dua">
+  <div class="grid-dua" id="seksi-grid-dua">
 
     <!-- daftar 10 produk terlaris -->
     <div class="kartu">
@@ -494,15 +483,32 @@ $urlparams = http_build_query(array_filter([
 function cetakKantin() {
     var n = document.getElementById('pilih-kantin-print').value;
     if (!n) { alert('Pilih kantin terlebih dahulu.'); return; }
+
+    // sembunyikan baris kantin lain di tabel performa
     var rows = document.querySelectorAll('tr.baris-kantin');
     rows.forEach(function(tr) {
         if (tr.dataset.nomor !== n) tr.classList.add('sembunyi-cetak');
     });
+
+    // sembunyikan total footer (angka total semua kantin tidak relevan)
     var tfoot = document.querySelector('tfoot');
     if (tfoot) tfoot.classList.add('sembunyi-cetak');
+
+    // sembunyikan seksi yang tidak spesifik per-kantin (statistik global, chart, produk terlaris)
+    var seksi = ['seksi-stat-grid', 'seksi-chart', 'seksi-grid-dua'];
+    seksi.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.classList.add('sembunyi-cetak');
+    });
+
+    // setelah dialog print ditutup, tampilkan kembali semua elemen
     window.onafterprint = function() {
         rows.forEach(function(tr) { tr.classList.remove('sembunyi-cetak'); });
         if (tfoot) tfoot.classList.remove('sembunyi-cetak');
+        seksi.forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.classList.remove('sembunyi-cetak');
+        });
         window.onafterprint = null;
     };
     window.print();
