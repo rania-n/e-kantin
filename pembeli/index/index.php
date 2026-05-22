@@ -20,11 +20,16 @@ $cari     = isset($_GET['cari'])     ? $conn->real_escape_string($_GET['cari']) 
 // (int) memastikan id_toko hanya berisi angka, bukan teks berbahaya
 $idtoko   = isset($_GET['toko'])     ? (int)$_GET['toko']                           : 0;
 
+// cek apakah migrasi nomor_kantin sudah dijalankan agar query tidak crash sebelum migrasi
+$cekkolom = $conn->query("SHOW COLUMNS FROM tb_toko LIKE 'nomor_kantin'");
+$migrasiSudah = ($cekkolom && $cekkolom->num_rows > 0);
+$kolomNomor = $migrasiSudah ? "t.nomor_kantin" : "NULL AS nomor_kantin";
+$orderKolom = $migrasiSudah ? "t.nomor_kantin" : "t.id_toko";
+
 // ambil semua toko yang sedang buka (status_toko='buka') dan belum dihapus (deleted=0)
 // ambil juga nomor_kantin agar bisa ditampilkan ke pembeli sebagai identitas "Kantin ke-X"
-// diurutkan berdasarkan nomor_kantin agar urutan konsisten
-$hasiltoko  = $conn->query("SELECT t.id_toko, t.nama_toko, t.foto_toko, t.nomor_kantin FROM tb_toko t WHERE t.deleted=0 AND t.status_toko='buka' AND t.id_user IS NOT NULL ORDER BY t.nomor_kantin");
-$daftartoko = $hasiltoko->fetch_all(MYSQLI_ASSOC);
+$hasiltoko  = $conn->query("SELECT t.id_toko, t.nama_toko, t.foto_toko, $kolomNomor FROM tb_toko t WHERE t.deleted=0 AND t.status_toko='buka' AND t.id_user IS NOT NULL ORDER BY $orderKolom");
+$daftartoko = $hasiltoko ? $hasiltoko->fetch_all(MYSQLI_ASSOC) : [];
 
 // jika pembeli memilih toko tertentu lewat URL ?toko=X, cek apakah toko itu sedang tutup
 // ini perlu karena link toko bisa tersimpan di bookmark meskipun toko sudah tutup

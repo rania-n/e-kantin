@@ -11,6 +11,11 @@ include '../../3. komponen/guardadmin.php';
 // tandai menu "index" sebagai aktif di navbar
 $halamansaatini = 'index';
 
+// cek apakah migrasi_kantin.sql sudah dijalankan (kolom nomor_kantin harus ada)
+// jika belum, halaman tetap berjalan dengan query lama, dan banner peringatan akan tampil
+$cekkolom = $conn->query("SHOW COLUMNS FROM tb_toko LIKE 'nomor_kantin'");
+$migrasiSudah = ($cekkolom && $cekkolom->num_rows > 0);
+
 // chart selalu menampilkan 7 hari terakhir, tidak bisa diubah dari url
 $hari = 7;
 
@@ -109,17 +114,30 @@ $qtl = $conn->query("SELECT m.nama_menu, t.nama_toko, SUM(d.jumlah) AS terjual, 
                      ORDER BY terjual DESC LIMIT 5");
 $terlaris = $qtl->fetch_all(MYSQLI_ASSOC);
 
-/* ambil performa setiap toko (hanya yang terisi — punya penjual).
-   menggunakan subquery agar tidak terjadi penggandaan baris saat join.
-   kolom nomor_kantin disertakan untuk identitas fisik kantin. */
-$qtoko2 = $conn->query("SELECT t.id_toko, t.nomor_kantin, t.nama_toko, t.status_toko,
-                                (SELECT COUNT(*) FROM tb_order o WHERE o.id_toko=t.id_toko AND o.deleted=0) AS total_order,
-                                (SELECT COUNT(*) FROM tb_order o WHERE o.id_toko=t.id_toko AND o.status_order='Dibatalkan' AND o.deleted=0) AS jml_dibatalkan,
-                                (SELECT COALESCE(SUM(o2.total_harga),0) FROM tb_order o2 WHERE o2.id_toko=t.id_toko AND o2.status_order IN ('Selesai','Dibatalkan') AND o2.deleted=0) AS omset,
-                                (SELECT COALESCE(ROUND(AVG(r.rating_toko),1),0) FROM tb_rating r WHERE r.id_toko=t.id_toko AND r.deleted=0) AS rating
-                         FROM tb_toko t
-                         WHERE t.deleted=0 AND t.id_user IS NOT NULL
-                         ORDER BY t.nomor_kantin ASC");
+/* ambil performa setiap toko.
+   jika migrasi sudah dijalankan: tampilkan nomor_kantin dan filter hanya toko yang terisi.
+   jika belum: gunakan query lama tanpa nomor_kantin agar tidak crash. */
+if ($migrasiSudah) {
+    // query baru: nomor_kantin ada, filter id_user IS NOT NULL, urut nomor_kantin
+    $qtoko2 = $conn->query("SELECT t.id_toko, t.nomor_kantin, t.nama_toko, t.status_toko,
+                                    (SELECT COUNT(*) FROM tb_order o WHERE o.id_toko=t.id_toko AND o.deleted=0) AS total_order,
+                                    (SELECT COUNT(*) FROM tb_order o WHERE o.id_toko=t.id_toko AND o.status_order='Dibatalkan' AND o.deleted=0) AS jml_dibatalkan,
+                                    (SELECT COALESCE(SUM(o2.total_harga),0) FROM tb_order o2 WHERE o2.id_toko=t.id_toko AND o2.status_order IN ('Selesai','Dibatalkan') AND o2.deleted=0) AS omset,
+                                    (SELECT COALESCE(ROUND(AVG(r.rating_toko),1),0) FROM tb_rating r WHERE r.id_toko=t.id_toko AND r.deleted=0) AS rating
+                             FROM tb_toko t
+                             WHERE t.deleted=0 AND t.id_user IS NOT NULL
+                             ORDER BY t.nomor_kantin ASC");
+} else {
+    // query lama: kompatibel sebelum migrasi dijalankan
+    $qtoko2 = $conn->query("SELECT t.id_toko, NULL AS nomor_kantin, t.nama_toko, t.status_toko,
+                                    (SELECT COUNT(*) FROM tb_order o WHERE o.id_toko=t.id_toko AND o.deleted=0) AS total_order,
+                                    (SELECT COUNT(*) FROM tb_order o WHERE o.id_toko=t.id_toko AND o.status_order='Dibatalkan' AND o.deleted=0) AS jml_dibatalkan,
+                                    (SELECT COALESCE(SUM(o2.total_harga),0) FROM tb_order o2 WHERE o2.id_toko=t.id_toko AND o2.status_order IN ('Selesai','Dibatalkan') AND o2.deleted=0) AS omset,
+                                    (SELECT COALESCE(ROUND(AVG(r.rating_toko),1),0) FROM tb_rating r WHERE r.id_toko=t.id_toko AND r.deleted=0) AS rating
+                             FROM tb_toko t
+                             WHERE t.deleted=0
+                             ORDER BY omset DESC");
+}
 $perftoko = $qtoko2->fetch_all(MYSQLI_ASSOC);
 
 // ambil 5 pengguna yang paling baru mendaftar
@@ -164,6 +182,19 @@ $startx = 70; $chartH = 160;           // titik mulai bar dan tinggi area chart
 <?php include '../../3. komponen/navbaradmin.php'; ?>
 
 <main class="konten">
+
+  <?php if (!$migrasiSudah): ?>
+  <!-- banner wajib: tampil jika migrasi_kantin.sql belum dijalankan di phpMyAdmin -->
+  <div class="peringatan peringatangagal" style="margin-bottom:16px;">
+    <i class="fa-solid fa-database"></i>
+    <strong>Migrasi database belum dijalankan!</strong>
+    Buka <strong>phpMyAdmin</strong>, pilih database <code>e_kantin</code>,
+    klik tab <strong>SQL</strong>, lalu jalankan isi file
+    <strong><code>migrasi_kantin.sql</code></strong> yang ada di root folder E-Kantin.
+    Setelah itu refresh halaman ini.
+    Beberapa fitur baru (nomor kantin, sistem 10 slot) belum aktif sampai migrasi dijalankan.
+  </div>
+  <?php endif; ?>
 
   <?php if ($flash): ?>
   <div class="peringatan <?= $flash['jenis'] === 'sukses' ? 'peringatansukses' : 'peringatangagal' ?>" style="margin-bottom:16px;">
@@ -382,8 +413,10 @@ $startx = 70; $chartH = 160;           // titik mulai bar dan tinggi area chart
       <table>
         <thead>
           <tr>
-            <!-- kolom nomor kantin untuk identitas fisik -->
+            <!-- kolom nomor kantin hanya tampil jika migrasi sudah dijalankan -->
+            <?php if ($migrasiSudah): ?>
             <th class="tengah">No.</th>
+            <?php endif; ?>
             <th>Nama Toko</th>
             <th class="tengah">Status</th>
             <th class="tengah">Total Pesanan</th>
@@ -399,10 +432,12 @@ $startx = 70; $chartH = 160;           // titik mulai bar dan tinggi area chart
           <?php else: ?>
           <?php foreach ($perftoko as $t): ?>
           <tr>
-            <!-- tampilkan nomor kantin sebagai kolom pertama -->
+            <!-- kolom nomor kantin hanya ditampilkan jika migrasi sudah dijalankan -->
+            <?php if ($migrasiSudah): ?>
             <td class="tengah" style="font-weight:800;font-size:16px;color:var(--utama);">
               <?= (int)$t['nomor_kantin'] ?>
             </td>
+            <?php endif; ?>
             <td><strong><?= htmlspecialchars($t['nama_toko']) ?></strong></td>
             <td class="tengah">
               <span class="badge <?= $t['status_toko'] === 'buka' ? 'buka' : 'tutup' ?>">

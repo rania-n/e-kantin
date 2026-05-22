@@ -16,6 +16,10 @@ $rolefilter = $_GET['role'] ?? 'semua';
 $cari       = trim($_GET['cari'] ?? '');
 if (!in_array($rolefilter, ['semua','admin','penjual','pembeli'])) $rolefilter = 'semua';
 
+// cek apakah migrasi nomor_kantin sudah dijalankan
+$cekkolom = $conn->query("SHOW COLUMNS FROM tb_toko LIKE 'nomor_kantin'");
+$migrasiSudah = ($cekkolom && $cekkolom->num_rows > 0);
+
 // hitung jumlah pengguna per role untuk ditampilkan di badge tab filter
 $qhitung = $conn->query("SELECT role, COUNT(*) AS jml FROM tb_user WHERE deleted=0 GROUP BY role");
 $jmlrole = ['admin'=>0,'penjual'=>0,'pembeli'=>0];
@@ -26,12 +30,15 @@ $jmlsemua = array_sum($jmlrole); // total semua pengguna dari semua role
    menggunakan subquery untuk menghitung pesanan toko dan pesanan user
    agar tidak terjadi penggandaan baris akibat join berganda.
    urut_role: penjual di atas, pembeli di tengah, admin di bawah. */
+
+// kolom nomor_kantin hanya tersedia setelah migrasi dijalankan; fallback ke NULL agar query tetap jalan
+$kolomNomor = $migrasiSudah ? "t.nomor_kantin," : "NULL AS nomor_kantin,";
+
 /* query utama: ambil semua pengguna beserta info kantin yang ditempati (jika penjual).
-   kolom nomor_kantin disertakan untuk ditampilkan di kolom "Info Toko".
    left join ke tb_toko agar pengguna tanpa toko (pembeli/admin) tetap muncul.
    kantin sekarang bisa punya id_user=NULL (kosong), tapi join di sini ke tb_user jadi aman. */
 $sql = "SELECT u.id_user, u.username, u.email, u.role, u.created,
-               t.id_toko, t.nomor_kantin, t.nama_toko, t.status_toko,
+               t.id_toko, $kolomNomor t.nama_toko, t.status_toko,
                CASE u.role WHEN 'penjual' THEN 0 WHEN 'pembeli' THEN 1 ELSE 2 END AS urut_role,
                (SELECT COUNT(*) FROM tb_order o  WHERE o.id_toko=t.id_toko  AND o.deleted=0) AS pesanan_toko,
                (SELECT COUNT(*) FROM tb_order o2 WHERE o2.id_user=u.id_user AND o2.deleted=0) AS pesanan_user
@@ -248,10 +255,12 @@ if (!empty($_SESSION['flash'])) {
             <td>
               <!-- info kantin hanya ditampilkan untuk penjual yang punya kantin -->
               <?php if ($u['role'] === 'penjual' && $u['id_toko']): ?>
-              <!-- tampilkan nomor kantin sebagai identitas utama -->
+              <!-- tampilkan nomor kantin sebagai identitas utama (hanya setelah migrasi) -->
+              <?php if ($u['nomor_kantin'] !== null): ?>
               <div style="font-size:11px;font-weight:700;color:var(--tekssamar);text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px;">
                 Kantin ke-<?= (int)$u['nomor_kantin'] ?>
               </div>
+              <?php endif; ?>
               <div style="font-size:13px;font-weight:700;color:var(--teks);margin-bottom:3px;">
                 <?= htmlspecialchars($u['nama_toko'] ?? '—') ?>
               </div>

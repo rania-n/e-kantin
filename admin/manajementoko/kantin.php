@@ -14,18 +14,25 @@ $halamansaatini = 'kantin';
 // cek apakah ada parameter ?cetak di url untuk mode print
 $cetak = isset($_GET['cetak']);
 
-// ambil semua kantin diurutkan berdasarkan nomor_kantin
+// cek apakah migrasi nomor_kantin sudah dijalankan; halaman ini butuh kolom tersebut
+$cekkolom = $conn->query("SHOW COLUMNS FROM tb_toko LIKE 'nomor_kantin'");
+$migrasiSudah = ($cekkolom && $cekkolom->num_rows > 0);
+
+// ambil semua kantin diurutkan berdasarkan nomor_kantin (hanya jika migrasi sudah jalan)
 // LEFT JOIN ke tb_user untuk mendapatkan nama penjual (NULL jika kantin kosong)
-$qkantin = $conn->query(
-    "SELECT t.id_toko, t.nomor_kantin, t.id_user, t.nama_toko,
-            t.status_toko, t.deleted,
-            u.username, u.email
-     FROM tb_toko t
-     LEFT JOIN tb_user u ON t.id_user = u.id_user AND u.deleted=0
-     WHERE t.deleted = 0
-     ORDER BY t.nomor_kantin ASC"
-);
-$daftarkantin = $qkantin ? $qkantin->fetch_all(MYSQLI_ASSOC) : [];
+$daftarkantin = [];
+if ($migrasiSudah) {
+    $qkantin = $conn->query(
+        "SELECT t.id_toko, t.nomor_kantin, t.id_user, t.nama_toko,
+                t.status_toko, t.deleted,
+                u.username, u.email
+         FROM tb_toko t
+         LEFT JOIN tb_user u ON t.id_user = u.id_user AND u.deleted=0
+         WHERE t.deleted = 0
+         ORDER BY t.nomor_kantin ASC"
+    );
+    $daftarkantin = $qkantin ? $qkantin->fetch_all(MYSQLI_ASSOC) : [];
+}
 
 // hitung statistik untuk kartu ringkasan
 $totalkantin  = count($daftarkantin);

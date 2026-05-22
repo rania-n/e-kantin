@@ -25,13 +25,16 @@ $user = $qu->get_result()->fetch_assoc(); $qu->close();
 // jika pengguna tidak ditemukan, kembalikan ke daftar
 if (!$user) { header("Location: user.php"); exit; }
 
+// cek apakah migrasi nomor_kantin sudah dijalankan di phpMyAdmin
+$cekkolom = $conn->query("SHOW COLUMNS FROM tb_toko LIKE 'nomor_kantin'");
+$migrasiSudah = ($cekkolom && $cekkolom->num_rows > 0);
+
 // jika pengguna ini adalah penjual, ambil data kantin yang ditempatinya
+// kolom nomor_kantin hanya dipilih jika migrasi sudah berjalan
 $kantin = null;
 if ($user['role'] === 'penjual') {
-    // query mencari kantin berdasarkan id_user (bukan deleted, karena kantin tidak pernah dihapus)
-    $qt = $conn->prepare(
-        "SELECT nomor_kantin, nama_toko FROM tb_toko WHERE id_user=? AND deleted=0"
-    );
+    $kolomNomor = $migrasiSudah ? "nomor_kantin," : "NULL AS nomor_kantin,";
+    $qt = $conn->prepare("SELECT {$kolomNomor} nama_toko FROM tb_toko WHERE id_user=? AND deleted=0");
     $qt->bind_param("i", $id); $qt->execute();
     $kantin = $qt->get_result()->fetch_assoc(); $qt->close();
 }
@@ -60,7 +63,7 @@ if ($user['role'] === 'penjual') {
       (<?= htmlspecialchars($user['email']) ?>).
       <?php if ($kantin): ?>
       <!-- peringatan untuk penjual: kantin tidak ikut dihapus, hanya dikosongkan -->
-      Kantin <strong>ke-<?= (int)$kantin['nomor_kantin'] ?></strong>
+      Kantin<?php if ($kantin['nomor_kantin'] !== null): ?> <strong>ke-<?= (int)$kantin['nomor_kantin'] ?></strong><?php endif; ?>
       ("<?= htmlspecialchars($kantin['nama_toko'] ?? '-') ?>") akan
       <strong>dikosongkan</strong> dan tersedia untuk penjual baru.
       Kantin tidak ikut dihapus dari database.

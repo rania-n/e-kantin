@@ -18,10 +18,15 @@ $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 // jika id tidak valid, kembalikan ke daftar kantin
 if (!$id) { header("Location: kantin.php"); exit; }
 
+// cek apakah migrasi nomor_kantin sudah dijalankan
+$cekkolom = $conn->query("SHOW COLUMNS FROM tb_toko LIKE 'nomor_kantin'");
+$migrasiSudah = ($cekkolom && $cekkolom->num_rows > 0);
+$kolomNomor = $migrasiSudah ? "t.nomor_kantin," : "NULL AS nomor_kantin,";
+
 // ambil data toko beserta nomor kantin dan nama pemilik
 // LEFT JOIN karena kantin bisa saja sudah kosong (id_user NULL)
 $qt = $conn->prepare(
-    "SELECT t.id_toko, t.nomor_kantin, t.nama_toko, t.id_user,
+    "SELECT t.id_toko, $kolomNomor t.nama_toko, t.id_user,
             u.username
      FROM tb_toko t
      LEFT JOIN tb_user u ON t.id_user = u.id_user AND u.deleted=0
@@ -60,7 +65,7 @@ if (!$toko['id_user']) {
     <h2>Kosongkan Kantin?</h2>
     <p>
       Kamu akan melepas penjual <strong><?= htmlspecialchars($toko['username'] ?? '—') ?></strong>
-      dari <strong>Kantin ke-<?= (int)$toko['nomor_kantin'] ?></strong>
+      dari <strong><?= $toko['nomor_kantin'] !== null ? 'Kantin ke-' . (int)$toko['nomor_kantin'] : 'Kantin #' . (int)$toko['id_toko'] ?></strong>
       ("<?= htmlspecialchars($toko['nama_toko'] ?? '—') ?>").
       <br><br>
       <!-- penjelasan perbedaan: kantin tidak dihapus, hanya dikosongkan -->

@@ -23,13 +23,16 @@ if (!empty($_SESSION['flash'])) {
 $roledefault = $_GET['role'] ?? 'penjual';
 if (!in_array($roledefault, ['penjual','pembeli','admin'])) $roledefault = 'penjual';
 
+// cek apakah migrasi nomor_kantin sudah dijalankan di phpMyAdmin
+$cekkolom = $conn->query("SHOW COLUMNS FROM tb_toko LIKE 'nomor_kantin'");
+$migrasiSudah = ($cekkolom && $cekkolom->num_rows > 0);
+
 // ambil daftar kantin yang masih kosong (id_user IS NULL) untuk dropdown penjual
-// kantin kosong adalah kantin yang belum punya penjual — tersedia untuk ditempati
-$kantinkosong = $conn->query(
-    "SELECT id_toko, nomor_kantin FROM tb_toko
-     WHERE id_user IS NULL AND deleted=0
-     ORDER BY nomor_kantin ASC"
-)->fetch_all(MYSQLI_ASSOC);
+// kolom nomor_kantin hanya dipilih jika migrasi sudah berjalan
+$kolomNomor = $migrasiSudah ? "nomor_kantin" : "NULL AS nomor_kantin";
+$orderKolom = $migrasiSudah ? "nomor_kantin ASC" : "id_toko ASC";
+$resKantin  = $conn->query("SELECT id_toko, {$kolomNomor} FROM tb_toko WHERE id_user IS NULL AND deleted=0 ORDER BY $orderKolom");
+$kantinkosong = $resKantin ? $resKantin->fetch_all(MYSQLI_ASSOC) : [];
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -136,7 +139,7 @@ $kantinkosong = $conn->query(
               <?php foreach ($kantinkosong as $k): ?>
               <!-- tampilkan nomor kantin agar admin tahu slot mana yang dipilih -->
               <option value="<?= (int)$k['id_toko'] ?>">
-                Kantin ke-<?= (int)$k['nomor_kantin'] ?>
+                <?= $k['nomor_kantin'] !== null ? 'Kantin ke-' . (int)$k['nomor_kantin'] : 'Kantin #' . (int)$k['id_toko'] . ' (belum migrasi)' ?>
               </option>
               <?php endforeach; ?>
             </select>

@@ -79,8 +79,13 @@ $ce->close();
 // jika penjual: validasi bahwa kantin yang dipilih memang kosong (belum punya pemilik)
 // ini mencegah kondisi race-condition jika dua admin tambah penjual bersamaan
 if ($role === 'penjual') {
+    // cek apakah kolom nomor_kantin sudah ada (migrasi sudah dijalankan)
+    $cekkolom = $conn->query("SHOW COLUMNS FROM tb_toko LIKE 'nomor_kantin'");
+    $migrasiSudah = ($cekkolom && $cekkolom->num_rows > 0);
+    $kolomNomor = $migrasiSudah ? "nomor_kantin" : "NULL AS nomor_kantin";
+
     $cek = $conn->prepare(
-        "SELECT id_toko, nomor_kantin FROM tb_toko
+        "SELECT id_toko, $kolomNomor FROM tb_toko
          WHERE id_toko=? AND id_user IS NULL AND deleted=0"
     );
     $cek->bind_param("i", $idkantin); $cek->execute();
@@ -89,7 +94,10 @@ if ($role === 'penjual') {
         flash('gagal','Kantin yang dipilih sudah terisi atau tidak ditemukan. Pilih kantin lain.');
         redirect('tambahuser.php');
     }
-    $nomorkantin = (int)$kantindata['nomor_kantin'];
+    // label kantin untuk pesan sukses: gunakan nomor jika tersedia
+    $nomorkantin = $kantindata['nomor_kantin'] !== null
+        ? (int)$kantindata['nomor_kantin']
+        : 0; // fallback sebelum migrasi
 }
 
 // hash password menggunakan bcrypt — tidak pernah simpan password polos
@@ -120,7 +128,8 @@ if ($role === 'penjual') {
     $upk->bind_param("isi", $iduser, $namatoko, $idkantin);
     $upk->execute(); $upk->close();
 
-    flash('sukses', "Penjual \"$username\" berhasil ditambahkan di Kantin ke-{$nomorkantin} dengan toko \"$namatoko\".");
+    $labelKantin = $nomorkantin > 0 ? "Kantin ke-{$nomorkantin}" : "kantin #$idkantin";
+    flash('sukses', "Penjual \"$username\" berhasil ditambahkan di {$labelKantin} dengan toko \"$namatoko\".");
     redirect('user.php?role=penjual');
 } else {
     flash('sukses', ucfirst($role) . " \"$username\" berhasil ditambahkan.");

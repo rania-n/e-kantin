@@ -13,6 +13,10 @@ include '../../3. komponen/guardadmin.php';
 // tandai menu "laporan" sebagai aktif di navbar
 $halamansaatini = 'laporan';
 
+// cek apakah migrasi nomor_kantin sudah dijalankan di phpMyAdmin
+$cekkolom = $conn->query("SHOW COLUMNS FROM tb_toko LIKE 'nomor_kantin'");
+$migrasiSudah = ($cekkolom && $cekkolom->num_rows > 0);
+
 // baca mode cetak dari url:
 // cetak=1 → cetak semua laporan
 // cetak=kantin → cetak laporan satu kantin saja (perlu parameter nomor=X)
@@ -65,11 +69,14 @@ while ($rs = $res->fetch_assoc()) $statpesanan[$rs['status_order']] = (int)$rs['
 $qstat->close();
 
 /* ambil performa setiap kantin dalam periode.
-   SEMUA 10 kantin ditampilkan, termasuk yang kosong (id_user IS NULL).
-   kolom nomor_kantin diikutsertakan untuk identitas fisik.
+   SEMUA kantin ditampilkan, termasuk yang kosong (id_user IS NULL).
+   kolom nomor_kantin hanya diikutsertakan jika migrasi sudah jalan.
    left join ke tb_user untuk mendapatkan nama penjual (NULL jika kosong). */
+$kolomNomor  = $migrasiSudah ? "t.nomor_kantin,"          : "NULL AS nomor_kantin,";
+$groupNomor  = $migrasiSudah ? ", t.nomor_kantin"          : "";
+$orderKolom  = $migrasiSudah ? "t.nomor_kantin ASC"       : "t.id_toko ASC";
 $qtoko = $conn->prepare(
-    "SELECT t.id_toko, t.nomor_kantin, t.nama_toko, t.status_toko,
+    "SELECT t.id_toko, $kolomNomor t.nama_toko, t.status_toko,
             t.id_user, u.username AS nama_penjual,
             COUNT(DISTINCT o.id_order) AS total_order,
             COALESCE(SUM(CASE WHEN o.status_order='Dibatalkan' THEN 1 ELSE 0 END),0) AS jml_dibatalkan,
@@ -80,15 +87,18 @@ $qtoko = $conn->prepare(
      LEFT JOIN tb_order o ON t.id_toko=o.id_toko
        AND DATE(o.tanggal_order) BETWEEN ? AND ? AND o.deleted=0
      WHERE t.deleted=0
-     GROUP BY t.id_toko, t.nomor_kantin, t.nama_toko, t.status_toko, t.id_user, u.username
-     ORDER BY t.nomor_kantin ASC"
+     GROUP BY t.id_toko, t.nama_toko, t.status_toko, t.id_user, u.username $groupNomor
+     ORDER BY $orderKolom"
 );
 $qtoko->bind_param("ss", $tglmulai, $tgljin); $qtoko->execute();
 $perftoko = $qtoko->get_result()->fetch_all(MYSQLI_ASSOC); $qtoko->close();
 
 // ambil 10 produk terlaris di seluruh platform dalam periode
+// kolom nomor_kantin hanya dipilih jika migrasi sudah berjalan
+$kolomNomorTl = $migrasiSudah ? "t.nomor_kantin," : "NULL AS nomor_kantin,";
+$groupNomorTl = $migrasiSudah ? ", t.nomor_kantin" : "";
 $qtl = $conn->prepare(
-    "SELECT m.nama_menu, t.nama_toko, t.nomor_kantin,
+    "SELECT m.nama_menu, t.nama_toko, $kolomNomorTl
             SUM(d.jumlah) AS terjual, SUM(d.subtotal) AS omset
      FROM tb_detail_order d
      JOIN tb_menu m ON d.id_menu=m.id_menu
@@ -96,7 +106,7 @@ $qtl = $conn->prepare(
      JOIN tb_order o ON d.id_order=o.id_order
      WHERE DATE(o.tanggal_order) BETWEEN ? AND ?
        AND d.deleted=0 AND o.deleted=0 AND o.status_order != 'Dibatalkan'
-     GROUP BY m.id_menu, m.nama_menu, t.nama_toko, t.nomor_kantin
+     GROUP BY m.id_menu, m.nama_menu, t.nama_toko $groupNomorTl
      ORDER BY terjual DESC LIMIT 10"
 );
 $qtl->bind_param("ss", $tglmulai, $tgljin); $qtl->execute();
