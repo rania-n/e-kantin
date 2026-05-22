@@ -176,6 +176,17 @@ $startx = 70; $chartH = 160;           // titik mulai bar dan tinggi area chart
 <title>Dashboard Admin - jajankita</title>
 <link rel="stylesheet" href="../../3. komponen/admin.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+/* tombol cetak kecil di pojok kanan header tiap kartu */
+.btn-cetak-mini {
+  background:none; border:1px solid var(--garis); border-radius:6px;
+  padding:4px 9px; cursor:pointer; color:var(--tekssamar);
+  font-size:11px; display:inline-flex; align-items:center; gap:4px;
+  font-family:inherit;
+}
+.btn-cetak-mini:hover { background:var(--utama); color:white; border-color:var(--utama); }
+@media print { .btn-cetak-mini { display:none !important; } }
+</style>
 </head>
 <body>
 
@@ -305,8 +316,14 @@ $startx = 70; $chartH = 160;           // titik mulai bar dan tinggi area chart
   <div class="grid-dua">
 
     <!-- TOP PRODUK -->
-    <div class="kartu">
-      <h3><i class="fa-solid fa-fire"></i> Produk Terlaris Platform</h3>
+    <div class="kartu" id="seksi-terlaris">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <h3 style="margin:0;border:none;padding:0;"><i class="fa-solid fa-fire"></i> Produk Terlaris Platform</h3>
+        <!-- tombol cetak hanya seksi ini — JS diizinkan untuk print -->
+        <button onclick="cetakBagian('seksi-terlaris','Produk Terlaris Platform')" class="btn-cetak-mini">
+          <i class="fa-solid fa-print"></i> Cetak
+        </button>
+      </div>
       <?php if (empty($terlaris)): ?>
       <div class="kosong" style="padding:20px;"><p>Belum ada data penjualan</p></div>
       <?php else: ?>
@@ -332,12 +349,18 @@ $startx = 70; $chartH = 160;           // titik mulai bar dan tinggi area chart
     </div>
 
     <!-- PENGGUNA TERBARU -->
-    <div class="kartu">
+    <div class="kartu" id="seksi-pengguna-baru">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
         <h3 style="margin:0;border:none;padding:0;">
           <i class="fa-solid fa-user-plus"></i> Pengguna Terbaru
         </h3>
-        <a href="../manajemenpengguna/user.php" style="font-size:12px;color:var(--kedua);font-weight:600;">Lihat Semua →</a>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <a href="../manajemenpengguna/user.php" style="font-size:12px;color:var(--kedua);font-weight:600;">Lihat Semua →</a>
+          <!-- tombol cetak seksi ini saja -->
+          <button onclick="cetakBagian('seksi-pengguna-baru','Pengguna Terbaru')" class="btn-cetak-mini">
+            <i class="fa-solid fa-print"></i> Cetak
+          </button>
+        </div>
       </div>
       <?php if (empty($penggunabarufull)): ?>
       <div class="kosong" style="padding:20px;"><p>Belum ada pengguna</p></div>
@@ -364,8 +387,13 @@ $startx = 70; $chartH = 160;           // titik mulai bar dan tinggi area chart
 
   <!-- TOP PELANGGAN -->
   <div class="grid-dua">
-    <div class="kartu">
-      <h3><i class="fa-solid fa-cart-shopping"></i> Pelanggan Terbanyak Pesan</h3>
+    <div class="kartu" id="seksi-pelanggan-banyak">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <h3 style="margin:0;border:none;padding:0;"><i class="fa-solid fa-cart-shopping"></i> Pelanggan Terbanyak Pesan</h3>
+        <button onclick="cetakBagian('seksi-pelanggan-banyak','Pelanggan Terbanyak Pesan')" class="btn-cetak-mini">
+          <i class="fa-solid fa-print"></i> Cetak
+        </button>
+      </div>
       <?php if (empty($topbelibanyak)): ?>
       <div class="kosong" style="padding:20px;"><p>Belum ada data</p></div>
       <?php else: ?>
@@ -382,8 +410,13 @@ $startx = 70; $chartH = 160;           // titik mulai bar dan tinggi area chart
       <?php endforeach; ?>
       <?php endif; ?>
     </div>
-    <div class="kartu">
-      <h3><i class="fa-solid fa-wallet"></i> Pelanggan Pengeluaran Terbesar</h3>
+    <div class="kartu" id="seksi-pelanggan-mahal">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <h3 style="margin:0;border:none;padding:0;"><i class="fa-solid fa-wallet"></i> Pelanggan Pengeluaran Terbesar</h3>
+        <button onclick="cetakBagian('seksi-pelanggan-mahal','Pelanggan Pengeluaran Terbesar')" class="btn-cetak-mini">
+          <i class="fa-solid fa-print"></i> Cetak
+        </button>
+      </div>
       <?php if (empty($topbelimahal)): ?>
       <div class="kosong" style="padding:20px;"><p>Belum ada data</p></div>
       <?php else: ?>
@@ -402,12 +435,18 @@ $startx = 70; $chartH = 160;           // titik mulai bar dan tinggi area chart
   </div>
 
   <!-- PERFORMA TOKO -->
-  <div class="kartu">
+  <div class="kartu" id="seksi-performa">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
       <h3 style="margin:0;border:none;padding:0;">
         <i class="fa-solid fa-store"></i> Performa Toko
       </h3>
-      <a href="../manajemenpengguna/user.php?role=penjual" style="font-size:12px;color:var(--kedua);font-weight:600;">Kelola Penjual →</a>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <a href="../manajemenpengguna/user.php?role=penjual" style="font-size:12px;color:var(--kedua);font-weight:600;">Kelola Penjual →</a>
+        <!-- tombol cetak tabel performa ini saja -->
+        <button onclick="cetakBagian('seksi-performa','Performa Toko')" class="btn-cetak-mini">
+          <i class="fa-solid fa-print"></i> Cetak
+        </button>
+      </div>
     </div>
     <div class="tabel-wrapper">
       <table>
@@ -496,5 +535,66 @@ $startx = 70; $chartH = 160;           // titik mulai bar dan tinggi area chart
   </div>
 
 </main>
+
+<!-- fungsi JS untuk cetak satu seksi — diizinkan karena hanya untuk keperluan print -->
+<script>
+function cetakBagian(id, judul) {
+    var el = document.getElementById(id);
+    if (!el) return;
+
+    // format tanggal cetak dalam bahasa indonesia
+    var tgl = new Date().toLocaleDateString('id-ID', {day:'2-digit', month:'long', year:'numeric'});
+    var jam = new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+
+    // CSS minimal yang dibutuhkan agar tampilan print rapi
+    var css = [
+        ':root{--utama:#643843;--kedua:#99627A;--latar:#EFD9D4;--putihbg:#F8EBF1;--putih:#FFFFFF;--garis:#E7CBCB;--teks:#3D2C33;--tekssamar:#8B6475;--sukses:#2e7d32;--gagal:#c62828;}',
+        'body{font-family:Poppins,"Segoe UI",sans-serif;padding:20px;color:#3D2C33;font-size:13px;}',
+        '.header-cetak{display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;border-bottom:2px solid #643843;margin-bottom:18px;}',
+        '.header-cetak h2{font-size:16px;font-weight:800;color:#643843;margin:0;}',
+        '.header-cetak span{font-size:11px;color:#99627A;}',
+        '.baris-produk{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #EFD9D4;}',
+        '.rangking-produk{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;background:#E7CBCB;color:#643843;}',
+        '.rangking-produk.emas{background:#FFF9C4;color:#F57F17;}',
+        '.rangking-produk.perak{background:#F5F5F5;color:#616161;}',
+        '.rangking-produk.perunggu{background:#FBE9E7;color:#BF360C;}',
+        '.avatar-tabel{width:34px;height:34px;border-radius:50%;background:#643843;color:white;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;}',
+        '.badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700;}',
+        '.badge.penjual{background:#E8F5E9;color:#2E7D32;}',
+        '.badge.pembeli{background:#E3F2FD;color:#1565C0;}',
+        '.badge.admin{background:#FFF3E0;color:#E65100;}',
+        '.badge.buka{background:#E8F5E9;color:#2E7D32;}',
+        '.badge.tutup{background:#FFEBEE;color:#C62828;}',
+        'table{width:100%;border-collapse:collapse;}',
+        'th,td{padding:8px 10px;text-align:left;border-bottom:1px solid #E7CBCB;font-size:12px;}',
+        'th{font-size:11px;font-weight:700;color:#99627A;text-transform:uppercase;}',
+        '.tengah{text-align:center;} .kanan{text-align:right;}',
+        '.tabel-wrapper{overflow:auto;}',
+        '.btn-cetak-mini,.tombol-aksi{display:none!important;}',
+        '@media print{@page{size:A4;margin:15mm;} .btn-cetak-mini{display:none!important;}}',
+    ].join('');
+
+    var fa = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css';
+
+    // buka jendela baru dan tulis HTML dengan konten seksi yang dipilih
+    var w = window.open('', '_blank', 'width=820,height=680');
+    w.document.write(
+        '<!DOCTYPE html><html lang="id"><head>'
+        + '<meta charset="UTF-8">'
+        + '<title>' + judul + ' — jajankita</title>'
+        + '<link rel="stylesheet" href="' + fa + '">'
+        + '<style>' + css + '</style>'
+        + '</head><body>'
+        + '<div class="header-cetak">'
+        + '  <h2>' + judul + '</h2>'
+        + '  <span>jajankita &mdash; ' + tgl + ', ' + jam + '</span>'
+        + '</div>'
+        + el.innerHTML
+        + '<script>window.onload=function(){window.print();};<\/script>'
+        + '</body></html>'
+    );
+    w.document.close();
+}
+</script>
 </body>
 </html>

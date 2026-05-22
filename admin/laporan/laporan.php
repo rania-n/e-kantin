@@ -183,6 +183,16 @@ $urlparams = http_build_query(array_filter([
 /* setting ukuran kertas saat dicetak */
 @media print { @page { size: A4; margin: 12mm; } }
 
+/* tombol cetak kecil di pojok kanan header tiap kartu */
+.btn-cetak-mini {
+  background:none; border:1px solid var(--garis); border-radius:6px;
+  padding:4px 9px; cursor:pointer; color:var(--tekssamar);
+  font-size:11px; display:inline-flex; align-items:center; gap:4px;
+  font-family:inherit;
+}
+.btn-cetak-mini:hover { background:var(--utama); color:white; border-color:var(--utama); }
+@media print { .btn-cetak-mini { display:none !important; } }
+
 /* tombol cetak per seksi — tampil di setiap baris tabel -->
 .btn-cetak-satu {
     font-size:10px;
@@ -285,7 +295,12 @@ $urlparams = http_build_query(array_filter([
   </div>
 
   <!-- ringkasan statistik utama -->
-  <div class="grid-stat">
+  <div style="display:flex;justify-content:flex-end;margin-bottom:6px;" class="takprint">
+    <button onclick="cetakBagian('seksi-statistik','Ringkasan Statistik — <?= addslashes($labelterpilih) ?>')" class="btn-cetak-mini">
+      <i class="fa-solid fa-print"></i> Cetak Ringkasan
+    </button>
+  </div>
+  <div class="grid-stat" id="seksi-statistik">
     <div class="kartu-stat">
       <div class="ikon-stat"><i class="fa-solid fa-receipt"></i></div>
       <div class="isi-stat">
@@ -321,8 +336,13 @@ $urlparams = http_build_query(array_filter([
   </div>
 
   <!-- chart revenue harian dalam periode yang dipilih -->
-  <div class="kartu">
-    <h3><i class="fa-solid fa-chart-bar"></i> Revenue Platform — <?= $labelterpilih ?></h3>
+  <div class="kartu" id="seksi-chart">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <h3 style="margin:0;border:none;padding:0;"><i class="fa-solid fa-chart-bar"></i> Revenue Platform — <?= $labelterpilih ?></h3>
+      <button onclick="cetakBagian('seksi-chart','Revenue Platform — <?= addslashes($labelterpilih) ?>')" class="btn-cetak-mini takprint">
+        <i class="fa-solid fa-print"></i> Cetak
+      </button>
+    </div>
     <div class="area-chart">
       <svg viewBox="0 0 <?=$svgw?> 210" xmlns="http://www.w3.org/2000/svg" style="min-width:<?=min(700,$svgw)?>px;">
         <?php for($g=0;$g<=4;$g++):$y=20+($g*40);?>
@@ -354,8 +374,13 @@ $urlparams = http_build_query(array_filter([
   <div class="grid-dua">
 
     <!-- daftar 10 produk terlaris -->
-    <div class="kartu">
-      <h3><i class="fa-solid fa-fire"></i> Produk Terlaris Platform</h3>
+    <div class="kartu" id="seksi-terlaris">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <h3 style="margin:0;border:none;padding:0;"><i class="fa-solid fa-fire"></i> Produk Terlaris Platform</h3>
+        <button onclick="cetakBagian('seksi-terlaris','Produk Terlaris Platform')" class="btn-cetak-mini takprint">
+          <i class="fa-solid fa-print"></i> Cetak
+        </button>
+      </div>
       <?php if (empty($terlaris)): ?>
       <div class="kosong" style="padding:20px;"><p>Belum ada data penjualan pada periode ini</p></div>
       <?php else: ?>
@@ -385,8 +410,13 @@ $urlparams = http_build_query(array_filter([
     </div>
 
     <!-- rincian jumlah pesanan per status -->
-    <div class="kartu">
-      <h3><i class="fa-solid fa-list-check"></i> Breakdown Status Pesanan</h3>
+    <div class="kartu" id="seksi-status">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <h3 style="margin:0;border:none;padding:0;"><i class="fa-solid fa-list-check"></i> Breakdown Status Pesanan</h3>
+        <button onclick="cetakBagian('seksi-status','Breakdown Status Pesanan')" class="btn-cetak-mini takprint">
+          <i class="fa-solid fa-print"></i> Cetak
+        </button>
+      </div>
       <?php
       $statuslist = ['Menunggu','Diproses','Siap Diambil','Selesai','Dibatalkan'];
       $statbadge  = ['Menunggu'=>'menunggu','Diproses'=>'diproses','Siap Diambil'=>'siap','Selesai'=>'selesai','Dibatalkan'=>'dibatalkan'];
@@ -605,5 +635,67 @@ $urlparams = http_build_query(array_filter([
   <?php endif; ?>
 
 </main>
+
+<!-- fungsi JS untuk cetak satu seksi — diizinkan karena hanya untuk keperluan print -->
+<script>
+function cetakBagian(id, judul) {
+    var el = document.getElementById(id);
+    if (!el) return;
+
+    var tgl = new Date().toLocaleDateString('id-ID', {day:'2-digit', month:'long', year:'numeric'});
+    var jam = new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+
+    var css = [
+        ':root{--utama:#643843;--kedua:#99627A;--latar:#EFD9D4;--putihbg:#F8EBF1;--putih:#FFFFFF;--garis:#E7CBCB;--teks:#3D2C33;--tekssamar:#8B6475;--sukses:#2e7d32;--gagal:#c62828;}',
+        'body{font-family:Poppins,"Segoe UI",sans-serif;padding:20px;color:#3D2C33;font-size:13px;}',
+        '.header-cetak{display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;border-bottom:2px solid #643843;margin-bottom:18px;}',
+        '.header-cetak h2{font-size:16px;font-weight:800;color:#643843;margin:0;}',
+        '.header-cetak span{font-size:11px;color:#99627A;}',
+        '.baris-produk{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #EFD9D4;}',
+        '.rangking-produk{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;background:#E7CBCB;color:#643843;}',
+        '.rangking-produk.emas{background:#FFF9C4;color:#F57F17;}',
+        '.rangking-produk.perak{background:#F5F5F5;color:#616161;}',
+        '.rangking-produk.perunggu{background:#FBE9E7;color:#BF360C;}',
+        '.badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700;}',
+        '.badge.menunggu{background:#FFF8E1;color:#F57F17;}',
+        '.badge.diproses{background:#E3F2FD;color:#1565C0;}',
+        '.badge.siap{background:#E8F5E9;color:#2E7D32;}',
+        '.badge.selesai{background:#E8F5E9;color:#1B5E20;}',
+        '.badge.dibatalkan{background:#FFEBEE;color:#C62828;}',
+        '.kartu-stat{display:inline-block;border:1px solid #E7CBCB;border-radius:12px;padding:14px 18px;margin:6px;min-width:160px;}',
+        '.grid-stat{display:flex;flex-wrap:wrap;gap:10px;}',
+        '.nilai{font-size:24px;font-weight:800;color:#643843;}',
+        '.label{font-size:13px;font-weight:600;}',
+        '.sub{font-size:11px;color:#99627A;}',
+        '.area-chart{overflow-x:auto;}',
+        'table{width:100%;border-collapse:collapse;}',
+        'th,td{padding:8px 10px;text-align:left;border-bottom:1px solid #E7CBCB;font-size:12px;}',
+        'th{font-size:11px;font-weight:700;color:#99627A;text-transform:uppercase;}',
+        '.tengah{text-align:center;} .kanan{text-align:right;}',
+        '.btn-cetak-mini,.takprint{display:none!important;}',
+        '@media print{@page{size:A4;margin:12mm;} .btn-cetak-mini,.takprint{display:none!important;}}',
+    ].join('');
+
+    var fa = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css';
+
+    var w = window.open('', '_blank', 'width=820,height=680');
+    w.document.write(
+        '<!DOCTYPE html><html lang="id"><head>'
+        + '<meta charset="UTF-8">'
+        + '<title>' + judul + ' — jajankita</title>'
+        + '<link rel="stylesheet" href="' + fa + '">'
+        + '<style>' + css + '</style>'
+        + '</head><body>'
+        + '<div class="header-cetak">'
+        + '  <h2>' + judul + '</h2>'
+        + '  <span>jajankita &mdash; ' + tgl + ', ' + jam + '</span>'
+        + '</div>'
+        + el.innerHTML
+        + '<script>window.onload=function(){window.print();};<\/script>'
+        + '</body></html>'
+    );
+    w.document.close();
+}
+</script>
 </body>
 </html>
