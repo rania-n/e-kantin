@@ -171,14 +171,20 @@ $urlparams = http_build_query(array_filter([
 <link rel="stylesheet" href="../../3. komponen/admin.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
+/* kartu cetak per-kantin: hanya muncul saat dicetak via cetakKantin() */
+#kartu-cetak-kantin { display: none; }
+
 @media print {
     @page { size: A4 landscape; margin: 10mm; }
-    .takprint      { display: none !important; }
+    .takprint       { display: none !important; }
     .sembunyi-cetak { display: none !important; }
     /* paksa tabel muat di kertas landscape tanpa terpotong */
-    .tabel-wrapper { overflow: visible !important; }
+    .tabel-wrapper  { overflow: visible !important; }
     .tabel-wrapper table { min-width: 0 !important; width: 100%; font-size: 11px; }
     .tabel-wrapper td, .tabel-wrapper th { padding: 5px 6px; }
+    /* saat cetak per-kantin: sembunyikan seluruh halaman, tampilkan hanya kartu */
+    body.mode-cetak-kantin > *:not(#kartu-cetak-kantin) { display: none !important; }
+    body.mode-cetak-kantin #kartu-cetak-kantin { display: block !important; }
 }
 </style>
 </head>
@@ -417,7 +423,16 @@ $urlparams = http_build_query(array_filter([
           <tr><td colspan="8"><div class="kosong" style="padding:20px;"><p>Belum ada kantin</p></div></td></tr>
           <?php else: ?>
           <?php foreach ($perftoko as $t): ?>
-          <tr class="baris-kantin" data-nomor="<?= (int)$t['nomor_kantin'] ?>">
+          <tr class="baris-kantin"
+              data-nomor="<?= (int)$t['nomor_kantin'] ?>"
+              data-nomatoko="<?= htmlspecialchars($t['nama_toko'] ?? '', ENT_QUOTES) ?>"
+              data-penjual="<?= htmlspecialchars($t['nama_penjual'] ?? '', ENT_QUOTES) ?>"
+              data-status="<?= $t['status_toko'] === 'buka' ? 'buka' : 'tutup' ?>"
+              data-terisi="<?= empty($t['id_user']) ? '0' : '1' ?>"
+              data-order="<?= (int)$t['total_order'] ?>"
+              data-batal="<?= (int)$t['jml_dibatalkan'] ?>"
+              data-rating="<?= (float)$t['rating'] ?>"
+              data-omset="<?= (float)$t['pendapatan'] ?>">
             <!-- nomor kantin besar dan menonjol -->
             <td class="tengah">
               <strong style="font-size:18px;color:var(--utama);"><?= (int)$t['nomor_kantin'] ?></strong>
@@ -484,31 +499,93 @@ function cetakKantin() {
     var n = document.getElementById('pilih-kantin-print').value;
     if (!n) { alert('Pilih kantin terlebih dahulu.'); return; }
 
-    // sembunyikan baris kantin lain di tabel performa
-    var rows = document.querySelectorAll('tr.baris-kantin');
-    rows.forEach(function(tr) {
-        if (tr.dataset.nomor !== n) tr.classList.add('sembunyi-cetak');
-    });
+    var tr = document.querySelector('tr.baris-kantin[data-nomor="' + n + '"]');
+    if (!tr) { alert('Data kantin tidak ditemukan.'); return; }
 
-    // sembunyikan total footer (angka total semua kantin tidak relevan)
-    var tfoot = document.querySelector('tfoot');
-    if (tfoot) tfoot.classList.add('sembunyi-cetak');
+    // baca semua data kantin dari atribut data-*
+    var nomatoko = tr.dataset.nomatoko || '';
+    var penjual  = tr.dataset.penjual  || '';
+    var terisi   = tr.dataset.terisi   === '1';
+    var status   = tr.dataset.status;
+    var order    = parseInt(tr.dataset.order)  || 0;
+    var batal    = parseInt(tr.dataset.batal)  || 0;
+    var rating   = parseFloat(tr.dataset.rating) || 0;
+    var omset    = parseFloat(tr.dataset.omset)  || 0;
+    var periode  = '<?= addslashes($labelterpilih) ?>';
 
-    // sembunyikan seksi yang tidak spesifik per-kantin (statistik global, chart, produk terlaris)
-    var seksi = ['seksi-stat-grid', 'seksi-chart', 'seksi-grid-dua'];
-    seksi.forEach(function(id) {
-        var el = document.getElementById(id);
-        if (el) el.classList.add('sembunyi-cetak');
-    });
+    // format rupiah: pisah ribuan dengan titik (format indonesia)
+    function rpFmt(v) {
+        return 'Rp ' + Math.floor(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
 
-    // setelah dialog print ditutup, tampilkan kembali semua elemen
+    // tentukan label dan warna status
+    var statusLabel = !terisi ? 'Kosong' : (status === 'buka' ? 'Buka' : 'Tutup');
+    var statusColor = !terisi ? '#9e9e9e' : (status === 'buka' ? '#2e7d32' : '#c62828');
+
+    // format tanggal cetak
+    var tglCetak = new Date().toLocaleDateString('id-ID', {day:'2-digit', month:'long', year:'numeric'});
+
+    // bangun HTML kartu print yang lengkap
+    var html =
+        '<div style="font-family:Poppins,\'Segoe UI\',sans-serif;padding:28px;max-width:640px;margin:0 auto;color:#3D2C33;">'
+
+        // kop laporan
+        + '<div style="text-align:center;padding-bottom:14px;border-bottom:2px solid #643843;margin-bottom:22px;">'
+        +   '<div style="font-size:24px;font-weight:900;color:#643843;letter-spacing:-0.5px;">jajankita</div>'
+        +   '<div style="font-size:16px;font-weight:700;margin-top:4px;">Laporan Kantin ke-' + n + '</div>'
+        +   '<div style="font-size:12px;color:#8B6475;margin-top:4px;">Periode: ' + periode + ' &nbsp;&middot;&nbsp; Dicetak: ' + tglCetak + '</div>'
+        + '</div>'
+
+        // identitas kantin
+        + '<div style="display:flex;align-items:center;gap:18px;padding:16px 20px;background:#F8EBF1;border-radius:12px;margin-bottom:20px;">'
+        +   '<div style="font-size:52px;font-weight:900;color:#643843;line-height:1;min-width:60px;text-align:center;">' + n + '</div>'
+        +   '<div style="flex:1;">'
+        +     '<div style="font-size:19px;font-weight:800;">' + (nomatoko ? nomatoko : '— Kosong —') + '</div>'
+        +     (penjual ? '<div style="font-size:12px;color:#8B6475;margin-top:3px;"><i>Penjual: ' + penjual + '</i></div>' : '')
+        +     '<div style="font-size:13px;font-weight:700;margin-top:5px;color:' + statusColor + ';">' + statusLabel + '</div>'
+        +   '</div>'
+        + '</div>'
+
+        // tabel statistik kantin
+        + '<table style="width:100%;border-collapse:collapse;font-size:13px;">'
+        + '<tr style="border-bottom:1px solid #EFD9D4;">'
+        +   '<td style="padding:11px 0;color:#8B6475;">Total Pesanan</td>'
+        +   '<td style="padding:11px 0;font-weight:700;text-align:right;">' + order + '</td>'
+        + '</tr>'
+        + '<tr style="border-bottom:1px solid #EFD9D4;">'
+        +   '<td style="padding:11px 0;color:#8B6475;">Pesanan Dibatalkan</td>'
+        +   '<td style="padding:11px 0;font-weight:700;text-align:right;color:#c62828;">' + batal + '</td>'
+        + '</tr>'
+        + '<tr style="border-bottom:1px solid #EFD9D4;">'
+        +   '<td style="padding:11px 0;color:#8B6475;">Pesanan Berhasil</td>'
+        +   '<td style="padding:11px 0;font-weight:700;text-align:right;color:#2e7d32;">' + (order - batal) + '</td>'
+        + '</tr>'
+        + '<tr style="border-bottom:1px solid #EFD9D4;">'
+        +   '<td style="padding:11px 0;color:#8B6475;">Rating Toko</td>'
+        +   '<td style="padding:11px 0;font-weight:700;text-align:right;">' + (rating > 0 ? rating + ' ★' : '—') + '</td>'
+        + '</tr>'
+        + '<tr>'
+        +   '<td style="padding:14px 0;font-weight:800;font-size:14px;">Total Omset</td>'
+        +   '<td style="padding:14px 0;font-weight:900;text-align:right;font-size:20px;color:#2e7d32;">' + rpFmt(omset) + '</td>'
+        + '</tr>'
+        + '</table>'
+
+        + '</div>';
+
+    // inject kartu ke DOM
+    var kartu = document.getElementById('kartu-cetak-kantin');
+    if (!kartu) {
+        kartu = document.createElement('div');
+        kartu.id = 'kartu-cetak-kantin';
+        document.body.appendChild(kartu);
+    }
+    kartu.innerHTML = html;
+
+    // mode cetak kantin: @media print akan sembunyikan semua kecuali kartu
+    document.body.classList.add('mode-cetak-kantin');
+
     window.onafterprint = function() {
-        rows.forEach(function(tr) { tr.classList.remove('sembunyi-cetak'); });
-        if (tfoot) tfoot.classList.remove('sembunyi-cetak');
-        seksi.forEach(function(id) {
-            var el = document.getElementById(id);
-            if (el) el.classList.remove('sembunyi-cetak');
-        });
+        document.body.classList.remove('mode-cetak-kantin');
         window.onafterprint = null;
     };
     window.print();
