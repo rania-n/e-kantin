@@ -3,8 +3,7 @@
    menampilkan ringkasan pesanan, omset, pengguna baru, chart harian,
    produk terlaris, breakdown status pesanan, dan performa tiap toko.
    mendukung filter periode: 7/14/30 hari atau custom tanggal.
-   mendukung filter per kantin (nomor_kantin) atau semua kantin.
-   mendukung cetak: ?cetak=1 untuk seluruh data, ?cetak=kantin&nomor=X untuk satu kantin. */
+   cetak dilakukan langsung via window.print() — tidak buka jendela baru. */
 
 // sambungkan ke database dan pastikan yang mengakses adalah admin
 include '../../1. koneksi/koneksi.php';
@@ -16,15 +15,6 @@ $halamansaatini = 'laporan';
 // cek apakah migrasi nomor_kantin sudah dijalankan di phpMyAdmin
 $cekkolom = $conn->query("SHOW COLUMNS FROM tb_toko LIKE 'nomor_kantin'");
 $migrasiSudah = ($cekkolom && $cekkolom->num_rows > 0);
-
-// baca mode cetak dari url:
-// cetak=1 → cetak semua laporan
-// cetak=kantin → cetak laporan satu kantin saja (perlu parameter nomor=X)
-$cetakmode    = $_GET['cetak'] ?? ''; // '' | '1' | 'kantin'
-$cetaknomor   = (int)($_GET['nomor'] ?? 0); // nomor_kantin yang dicetak (jika mode=kantin)
-$cetakglobal  = ($cetakmode === '1');
-$cetakperkant = ($cetakmode === 'kantin' && $cetaknomor > 0);
-$sedangcetak  = $cetakglobal || $cetakperkant;
 
 // baca pilihan periode dari url, default 7 hari jika tidak ada atau tidak valid
 $periode = $_GET['periode'] ?? '7';
@@ -171,125 +161,6 @@ $urlparams = http_build_query(array_filter([
     'sampai'  => ($periode==='custom') ? $sampai : '',
 ]));
 
-/* ================================================================
-   MODE CETAK BERSIH — jika URL mengandung ?cetak=..., tampilkan
-   halaman print minimalis (hanya data kantin) lalu auto-print.
-   Ini mencegah halaman cetak menampilkan seluruh laporan (stuck).
-================================================================ */
-if ($sedangcetak):
-    // tentukan kantin yang akan dicetak: satu atau semua
-    $kantincetak = $cetakperkant
-        ? array_filter($perftoko, fn($t) => (int)($t['nomor_kantin'] ?? 0) === $cetaknomor)
-        : $perftoko;
-    $judulcetak = $cetakperkant
-        ? "Laporan Kantin ke-{$cetaknomor}"
-        : "Laporan Semua Kantin";
-?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title><?= htmlspecialchars($judulcetak) ?> — jajankita</title>
-<link rel="stylesheet" href="../../3. komponen/admin.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<style>
-@media print { @page { size: A4; margin: 15mm; } }
-.seksi-cetak { break-inside: avoid; border: 1px solid var(--garis); border-radius: 10px; padding: 18px; margin-bottom: 16px; }
-</style>
-</head>
-<body style="padding: 24px; max-width: 700px; margin: 0 auto;">
-
-<!-- kop laporan cetak -->
-<div style="text-align:center; margin-bottom:24px; padding-bottom:14px; border-bottom:2px solid var(--utama);">
-  <div style="font-size:22px; font-weight:900; color:var(--utama); letter-spacing:-0.5px;">jajankita</div>
-  <div style="font-size:15px; font-weight:700; color:var(--teks); margin-top:4px;"><?= htmlspecialchars($judulcetak) ?></div>
-  <div style="font-size:12px; color:var(--tekssamar); margin-top:4px;">
-    Periode: <?= $labelterpilih ?> &nbsp;&middot;&nbsp; Dicetak: <?= date('d M Y H:i') ?>
-  </div>
-</div>
-
-<!-- tombol aksi: hanya tampil di layar, hilang saat print -->
-<div class="takprint" style="display:flex; gap:10px; justify-content:center; margin-bottom:24px;">
-  <button onclick="window.print()" class="tombolutama" style="font-size:13px;">
-    <i class="fa-solid fa-print"></i> Cetak
-  </button>
-  <button onclick="window.close()" class="tombolringan" style="font-size:13px;">
-    <i class="fa-solid fa-xmark"></i> Tutup Jendela
-  </button>
-</div>
-
-<!-- data kantin yang dicetak -->
-<?php foreach ($kantincetak as $t): ?>
-<div class="seksi-cetak">
-  <div style="display:flex; align-items:center; gap:14px; margin-bottom:14px;">
-    <!-- nomor kantin besar sebagai identitas fisik -->
-    <div style="font-size:36px; font-weight:900; color:var(--utama); line-height:1; min-width:44px; text-align:center;">
-      <?= (int)($t['nomor_kantin'] ?? '?') ?>
-    </div>
-    <div style="flex:1;">
-      <div style="font-size:16px; font-weight:800; color:var(--teks);">
-        <?= !empty($t['nama_toko']) ? htmlspecialchars($t['nama_toko']) : '— Kosong —' ?>
-      </div>
-      <div style="font-size:12px; color:var(--tekssamar); margin-top:2px;">
-        Kantin ke-<?= (int)($t['nomor_kantin'] ?? '?') ?>
-        <?php if (!empty($t['nama_penjual'])): ?>
-        &nbsp;&middot;&nbsp; Penjual: <?= htmlspecialchars($t['nama_penjual']) ?>
-        <?php endif; ?>
-        &nbsp;&middot;&nbsp;
-        <span style="font-weight:700; color:<?= $t['id_user'] ? ($t['status_toko']==='buka' ? 'var(--sukses)' : 'var(--gagal)') : 'var(--tekssamar)' ?>;">
-          <?= $t['id_user'] ? ($t['status_toko']==='buka' ? 'Buka' : 'Tutup') : 'Kosong' ?>
-        </span>
-      </div>
-    </div>
-  </div>
-  <!-- statistik kantin dalam periode -->
-  <table style="width:100%; border-collapse:collapse; font-size:13px;">
-    <tr style="border-bottom:1px solid var(--latar);">
-      <td style="padding:7px 0; color:var(--tekssamar);">Total Pesanan</td>
-      <td style="padding:7px 0; font-weight:700; text-align:right;"><?= (int)$t['total_order'] ?></td>
-    </tr>
-    <tr style="border-bottom:1px solid var(--latar);">
-      <td style="padding:7px 0; color:var(--tekssamar);">Pesanan Dibatalkan</td>
-      <td style="padding:7px 0; font-weight:700; text-align:right; color:var(--gagal);"><?= (int)$t['jml_dibatalkan'] ?></td>
-    </tr>
-    <tr style="border-bottom:1px solid var(--latar);">
-      <td style="padding:7px 0; color:var(--tekssamar);">Rating</td>
-      <td style="padding:7px 0; font-weight:700; text-align:right;"><?= $t['rating'] > 0 ? $t['rating'].' ★' : '—' ?></td>
-    </tr>
-    <tr>
-      <td style="padding:7px 0; font-weight:700;">Total Omset</td>
-      <td style="padding:7px 0; font-weight:900; text-align:right; font-size:16px; color:var(--sukses);"><?= rp($t['pendapatan']) ?></td>
-    </tr>
-  </table>
-</div>
-<?php endforeach; ?>
-
-<?php if (empty($kantincetak)): ?>
-<div style="text-align:center; padding:40px; color:var(--tekssamar);">
-  <i class="fa-solid fa-circle-xmark" style="font-size:32px; margin-bottom:12px; display:block;"></i>
-  Data kantin tidak ditemukan.
-</div>
-<?php endif; ?>
-
-<!-- total baris (hanya mode cetak semua) -->
-<?php if (!$cetakperkant && !empty($perftoko)): ?>
-<div style="text-align:right; padding:14px 0; border-top:2px solid var(--utama); margin-top:8px;">
-  <span style="font-size:13px; font-weight:600; color:var(--tekssamar);">TOTAL SELURUH KANTIN</span>
-  <span style="font-size:20px; font-weight:900; color:var(--sukses); margin-left:14px;">
-    <?= rp(array_sum(array_column($perftoko,'pendapatan'))) ?>
-  </span>
-</div>
-<?php endif; ?>
-
-<!-- auto-print dijalankan saat halaman ini selesai dimuat -->
-<script>window.onload = function() { window.print(); };</script>
-</body>
-</html>
-<?php
-    exit; // hentikan eksekusi — tidak perlu render halaman laporan penuh
-endif; // akhir blok $sedangcetak
-
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -319,7 +190,7 @@ endif; // akhir blok $sedangcetak
 }
 .btn-cetak-satu:hover { background:var(--utama);color:white;border-color:var(--utama); }
 
-@media print { .takprint { display: none !important; } }
+@media print { .takprint { display: none !important; } .sembunyi-cetak { display: none !important; } }
 </style>
 </head>
 <body>
@@ -370,8 +241,8 @@ endif; // akhir blok $sedangcetak
       <?php endforeach; ?>
     </select>
 
-    <!-- tombol cetak kantin yang dipilih di dropdown — JS untuk buka window print -->
-    <button onclick="bukaCetakKantin()" class="tombolringan" style="padding:8px 16px;font-size:13px;">
+    <!-- tombol cetak kantin yang dipilih — JS menyembunyikan baris lain lalu window.print() -->
+    <button onclick="cetakKantin()" class="tombolringan" style="padding:8px 16px;font-size:13px;">
       <i class="fa-solid fa-store"></i> Cetak Kantin Ini
     </button>
 
@@ -535,12 +406,6 @@ endif; // akhir blok $sedangcetak
         <i class="fa-solid fa-store"></i> Performa Per Kantin
         <span style="font-size:12px;font-weight:500;color:var(--tekssamar);">— <?= $labelterpilih ?></span>
       </h3>
-      <!-- tombol cetak semua kantin (disembunyikan saat print) -->
-      <a href="laporan.php?cetak=1&<?= $urlparams ?>"
-         onclick="var w=window.open(this.href,'_blank','width=900,height=700');return false;"
-         class="tombolringan takprint" style="font-size:12px;">
-        <i class="fa-solid fa-print"></i> Cetak Tabel Ini
-      </a>
     </div>
     <div class="tabel-wrapper">
       <table style="min-width:680px;">
@@ -563,7 +428,7 @@ endif; // akhir blok $sedangcetak
           <tr><td colspan="8"><div class="kosong" style="padding:20px;"><p>Belum ada kantin</p></div></td></tr>
           <?php else: ?>
           <?php foreach ($perftoko as $t): ?>
-          <tr>
+          <tr class="baris-kantin" data-nomor="<?= (int)$t['nomor_kantin'] ?>">
             <!-- nomor kantin besar dan menonjol -->
             <td class="tengah">
               <strong style="font-size:18px;color:var(--utama);"><?= (int)$t['nomor_kantin'] ?></strong>
@@ -601,13 +466,6 @@ endif; // akhir blok $sedangcetak
                 <a href="../manajementoko/viewtoko.php?id=<?= $t['id_toko'] ?>" class="tombol-aksi" title="Detail">
                   <i class="fa-solid fa-eye"></i>
                 </a>
-                <!-- tombol cetak satu baris kantin ini saja -->
-                <!-- link ini membuka jendela baru khusus print satu kantin -->
-                <a href="laporan.php?cetak=kantin&nomor=<?= (int)$t['nomor_kantin'] ?>&<?= $urlparams ?>"
-                   onclick="window.open(this.href,'_blank','width=800,height=600');return false;"
-                   class="tombol-aksi" title="Cetak kantin ini" style="background:var(--info);color:white;border-color:var(--info);">
-                  <i class="fa-solid fa-print"></i>
-                </a>
               </div>
             </td>
           </tr>
@@ -631,12 +489,23 @@ endif; // akhir blok $sedangcetak
 
 </main>
 
-<!-- JS untuk dropdown pilih kantin dan buka halaman cetak — diizinkan untuk print -->
+<!-- JS cetak: window.print() langsung tanpa buka jendela baru — diizinkan untuk print -->
 <script>
-function bukaCetakKantin() {
+function cetakKantin() {
     var n = document.getElementById('pilih-kantin-print').value;
     if (!n) { alert('Pilih kantin terlebih dahulu.'); return; }
-    window.open('laporan.php?cetak=kantin&nomor=' + n + '&<?= addslashes($urlparams) ?>', '_blank', 'width=760,height=640');
+    var rows = document.querySelectorAll('tr.baris-kantin');
+    rows.forEach(function(tr) {
+        if (tr.dataset.nomor !== n) tr.classList.add('sembunyi-cetak');
+    });
+    var tfoot = document.querySelector('tfoot');
+    if (tfoot) tfoot.classList.add('sembunyi-cetak');
+    window.onafterprint = function() {
+        rows.forEach(function(tr) { tr.classList.remove('sembunyi-cetak'); });
+        if (tfoot) tfoot.classList.remove('sembunyi-cetak');
+        window.onafterprint = null;
+    };
+    window.print();
 }
 </script>
 </body>
