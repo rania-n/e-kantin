@@ -170,6 +170,126 @@ $urlparams = http_build_query(array_filter([
     'dari'    => ($periode==='custom') ? $dari : '',
     'sampai'  => ($periode==='custom') ? $sampai : '',
 ]));
+
+/* ================================================================
+   MODE CETAK BERSIH — jika URL mengandung ?cetak=..., tampilkan
+   halaman print minimalis (hanya data kantin) lalu auto-print.
+   Ini mencegah halaman cetak menampilkan seluruh laporan (stuck).
+================================================================ */
+if ($sedangcetak):
+    // tentukan kantin yang akan dicetak: satu atau semua
+    $kantincetak = $cetakperkant
+        ? array_filter($perftoko, fn($t) => (int)($t['nomor_kantin'] ?? 0) === $cetaknomor)
+        : $perftoko;
+    $judulcetak = $cetakperkant
+        ? "Laporan Kantin ke-{$cetaknomor}"
+        : "Laporan Semua Kantin";
+?>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title><?= htmlspecialchars($judulcetak) ?> — jajankita</title>
+<link rel="stylesheet" href="../../3. komponen/admin.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+@media print { @page { size: A4; margin: 15mm; } }
+.seksi-cetak { break-inside: avoid; border: 1px solid var(--garis); border-radius: 10px; padding: 18px; margin-bottom: 16px; }
+</style>
+</head>
+<body style="padding: 24px; max-width: 700px; margin: 0 auto;">
+
+<!-- kop laporan cetak -->
+<div style="text-align:center; margin-bottom:24px; padding-bottom:14px; border-bottom:2px solid var(--utama);">
+  <div style="font-size:22px; font-weight:900; color:var(--utama); letter-spacing:-0.5px;">jajankita</div>
+  <div style="font-size:15px; font-weight:700; color:var(--teks); margin-top:4px;"><?= htmlspecialchars($judulcetak) ?></div>
+  <div style="font-size:12px; color:var(--tekssamar); margin-top:4px;">
+    Periode: <?= $labelterpilih ?> &nbsp;&middot;&nbsp; Dicetak: <?= date('d M Y H:i') ?>
+  </div>
+</div>
+
+<!-- tombol aksi: hanya tampil di layar, hilang saat print -->
+<div class="takprint" style="display:flex; gap:10px; justify-content:center; margin-bottom:24px;">
+  <button onclick="window.print()" class="tombolutama" style="font-size:13px;">
+    <i class="fa-solid fa-print"></i> Cetak
+  </button>
+  <button onclick="window.close()" class="tombolringan" style="font-size:13px;">
+    <i class="fa-solid fa-xmark"></i> Tutup Jendela
+  </button>
+</div>
+
+<!-- data kantin yang dicetak -->
+<?php foreach ($kantincetak as $t): ?>
+<div class="seksi-cetak">
+  <div style="display:flex; align-items:center; gap:14px; margin-bottom:14px;">
+    <!-- nomor kantin besar sebagai identitas fisik -->
+    <div style="font-size:36px; font-weight:900; color:var(--utama); line-height:1; min-width:44px; text-align:center;">
+      <?= (int)($t['nomor_kantin'] ?? '?') ?>
+    </div>
+    <div style="flex:1;">
+      <div style="font-size:16px; font-weight:800; color:var(--teks);">
+        <?= !empty($t['nama_toko']) ? htmlspecialchars($t['nama_toko']) : '— Kosong —' ?>
+      </div>
+      <div style="font-size:12px; color:var(--tekssamar); margin-top:2px;">
+        Kantin ke-<?= (int)($t['nomor_kantin'] ?? '?') ?>
+        <?php if (!empty($t['nama_penjual'])): ?>
+        &nbsp;&middot;&nbsp; Penjual: <?= htmlspecialchars($t['nama_penjual']) ?>
+        <?php endif; ?>
+        &nbsp;&middot;&nbsp;
+        <span style="font-weight:700; color:<?= $t['id_user'] ? ($t['status_toko']==='buka' ? 'var(--sukses)' : 'var(--gagal)') : 'var(--tekssamar)' ?>;">
+          <?= $t['id_user'] ? ($t['status_toko']==='buka' ? 'Buka' : 'Tutup') : 'Kosong' ?>
+        </span>
+      </div>
+    </div>
+  </div>
+  <!-- statistik kantin dalam periode -->
+  <table style="width:100%; border-collapse:collapse; font-size:13px;">
+    <tr style="border-bottom:1px solid var(--latar);">
+      <td style="padding:7px 0; color:var(--tekssamar);">Total Pesanan</td>
+      <td style="padding:7px 0; font-weight:700; text-align:right;"><?= (int)$t['total_order'] ?></td>
+    </tr>
+    <tr style="border-bottom:1px solid var(--latar);">
+      <td style="padding:7px 0; color:var(--tekssamar);">Pesanan Dibatalkan</td>
+      <td style="padding:7px 0; font-weight:700; text-align:right; color:var(--gagal);"><?= (int)$t['jml_dibatalkan'] ?></td>
+    </tr>
+    <tr style="border-bottom:1px solid var(--latar);">
+      <td style="padding:7px 0; color:var(--tekssamar);">Rating</td>
+      <td style="padding:7px 0; font-weight:700; text-align:right;"><?= $t['rating'] > 0 ? $t['rating'].' ★' : '—' ?></td>
+    </tr>
+    <tr>
+      <td style="padding:7px 0; font-weight:700;">Total Omset</td>
+      <td style="padding:7px 0; font-weight:900; text-align:right; font-size:16px; color:var(--sukses);"><?= rp($t['pendapatan']) ?></td>
+    </tr>
+  </table>
+</div>
+<?php endforeach; ?>
+
+<?php if (empty($kantincetak)): ?>
+<div style="text-align:center; padding:40px; color:var(--tekssamar);">
+  <i class="fa-solid fa-circle-xmark" style="font-size:32px; margin-bottom:12px; display:block;"></i>
+  Data kantin tidak ditemukan.
+</div>
+<?php endif; ?>
+
+<!-- total baris (hanya mode cetak semua) -->
+<?php if (!$cetakperkant && !empty($perftoko)): ?>
+<div style="text-align:right; padding:14px 0; border-top:2px solid var(--utama); margin-top:8px;">
+  <span style="font-size:13px; font-weight:600; color:var(--tekssamar);">TOTAL SELURUH KANTIN</span>
+  <span style="font-size:20px; font-weight:900; color:var(--sukses); margin-left:14px;">
+    <?= rp(array_sum(array_column($perftoko,'pendapatan'))) ?>
+  </span>
+</div>
+<?php endif; ?>
+
+<!-- auto-print dijalankan saat halaman ini selesai dimuat -->
+<script>window.onload = function() { window.print(); };</script>
+</body>
+</html>
+<?php
+    exit; // hentikan eksekusi — tidak perlu render halaman laporan penuh
+endif; // akhir blok $sedangcetak
+
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -199,33 +319,12 @@ $urlparams = http_build_query(array_filter([
 }
 .btn-cetak-satu:hover { background:var(--utama);color:white;border-color:var(--utama); }
 
-/* kotak cetak per kantin — dipakai oleh halaman cetak satu kantin */
-.seksi-kantin-cetak {
-    border: 1px solid var(--garis);
-    border-radius: 10px;
-    padding: 16px;
-    margin-bottom: 18px;
-    break-inside: avoid;
-}
-
-/* judul yang hanya muncul saat dicetak */
-.judulcetak {
-    display: none;
-    text-align: center;
-    margin-bottom: 20px;
-}
-@media print {
-    .judulcetak { display: block !important; }
-    .takprint   { display: none !important; }
-    .seksi-kantin-cetak { break-inside: avoid; border: 1px solid #ccc; }
-}
+@media print { .takprint { display: none !important; } }
 </style>
 </head>
 <body>
 
-<?php if (!$sedangcetak): ?>
 <?php include '../../3. komponen/navbaradmin.php'; ?>
-<?php endif; ?>
 
 <main class="konten">
 
@@ -276,12 +375,6 @@ $urlparams = http_build_query(array_filter([
       <i class="fa-solid fa-store"></i> Cetak Kantin Ini
     </button>
 
-  </div>
-
-  <!-- judul yang muncul di versi cetak -->
-  <div class="judulcetak">
-    <h2>Laporan Platform jajankita</h2>
-    <p>Periode: <?= $labelterpilih ?> | Dicetak: <?= date('d M Y H:i') ?></p>
   </div>
 
   <!-- filter periode: chip untuk memilih 7/14/30 hari atau custom -->
@@ -535,122 +628,16 @@ $urlparams = http_build_query(array_filter([
     </div>
   </div>
 
-  <?php
-  /* ================================================================
-     SEKSI CETAK PER KANTIN
-     Ditampilkan hanya jika mode cetak = 'kantin' (buka di jendela baru)
-     Setiap kantin ditampilkan dalam kotak terpisah yang bisa di-print
-  ================================================================ */
-  if ($cetakperkant || $cetakglobal):
-  ?>
-  <!-- judul cetak -->
-  <div class="judulcetak" style="display:block;margin-top:30px;padding-top:20px;border-top:2px solid var(--garis);">
-    <h2>Laporan Per Kantin</h2>
-    <p>Periode: <?= $labelterpilih ?> | Dicetak: <?= date('d M Y H:i') ?></p>
-  </div>
-
-  <?php foreach ($perftoko as $t):
-    // jika mode cetak satu kantin, skip yang tidak sesuai
-    if ($cetakperkant && (int)$t['nomor_kantin'] !== $cetaknomor) continue;
-  ?>
-  <!-- kotak data satu kantin — masing-masing bisa di-print terpisah -->
-  <div class="seksi-kantin-cetak">
-    <!-- judul kantin: nomor dan nama -->
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-      <div style="font-size:28px;font-weight:900;color:var(--utama);line-height:1;">
-        <?= (int)$t['nomor_kantin'] ?>
-      </div>
-      <div>
-        <div style="font-size:15px;font-weight:800;">
-          <?= !empty($t['nama_toko']) ? htmlspecialchars($t['nama_toko']) : '— Kosong —' ?>
-        </div>
-        <div style="font-size:12px;color:var(--tekssamar);">
-          Kantin ke-<?= (int)$t['nomor_kantin'] ?>
-          <?php if (!empty($t['nama_penjual'])): ?>
-          · Penjual: <?= htmlspecialchars($t['nama_penjual']) ?>
-          <?php endif; ?>
-        </div>
-      </div>
-      <div style="margin-left:auto;">
-        <?php if (empty($t['id_user'])): ?>
-        <span class="badge" style="background:#f5f5f5;color:#9e9e9e;">Kosong</span>
-        <?php else: ?>
-        <span class="badge <?= $t['status_toko']==='buka'?'buka':'tutup' ?>">
-          <?= $t['status_toko']==='buka'?'Buka':'Tutup' ?>
-        </span>
-        <?php endif; ?>
-      </div>
-    </div>
-
-    <!-- data statistik kantin dalam satu periode -->
-    <table style="width:100%;font-size:13px;border-collapse:collapse;">
-      <tr style="border-bottom:1px solid var(--latar);">
-        <td style="padding:6px 0;color:var(--tekssamar);">Total Pesanan</td>
-        <td style="padding:6px 0;font-weight:700;text-align:right;"><?= (int)$t['total_order'] ?></td>
-      </tr>
-      <tr style="border-bottom:1px solid var(--latar);">
-        <td style="padding:6px 0;color:var(--tekssamar);">Pesanan Dibatalkan</td>
-        <td style="padding:6px 0;font-weight:700;text-align:right;color:var(--gagal);"><?= (int)$t['jml_dibatalkan'] ?></td>
-      </tr>
-      <tr style="border-bottom:1px solid var(--latar);">
-        <td style="padding:6px 0;color:var(--tekssamar);">Rating</td>
-        <td style="padding:6px 0;font-weight:700;text-align:right;">
-          <?= $t['rating'] > 0 ? $t['rating'] . ' ★' : '—' ?>
-        </td>
-      </tr>
-      <tr>
-        <td style="padding:6px 0;color:var(--tekssamar);">Total Omset</td>
-        <td style="padding:6px 0;font-weight:800;text-align:right;color:var(--sukses);font-size:15px;">
-          <?= rp($t['pendapatan']) ?>
-        </td>
-      </tr>
-    </table>
-
-    <!-- tombol cetak kantin ini saja (hanya tampil di layar, tidak saat print) -->
-    <div class="takprint" style="margin-top:12px;text-align:right;">
-      <button onclick="window.print()" class="tombolringan" style="font-size:12px;">
-        <i class="fa-solid fa-print"></i> Cetak Kantin ke-<?= (int)$t['nomor_kantin'] ?>
-      </button>
-    </div>
-  </div>
-  <?php endforeach; ?>
-
-  <?php if ($cetakglobal): ?>
-  <!-- total semua kantin — hanya di mode cetak global -->
-  <div class="seksi-kantin-cetak" style="border-color:var(--utama);">
-    <strong style="font-size:14px;">TOTAL SELURUH KANTIN</strong>
-    <div style="font-size:18px;font-weight:900;color:var(--sukses);margin-top:8px;">
-      <?= rp(array_sum(array_column($perftoko,'pendapatan'))) ?>
-    </div>
-  </div>
-  <?php endif; ?>
-
-  <!-- tombol cetak halaman ini (hanya di mode cetak) -->
-  <div class="takprint" style="text-align:center;margin-top:20px;">
-    <button onclick="window.print()" class="tombolutama">
-      <i class="fa-solid fa-print"></i>
-      <?= $cetakperkant ? "Cetak Kantin ke-{$cetaknomor}" : 'Cetak Semua Kantin' ?>
-    </button>
-  </div>
-  <?php endif; ?>
 
 </main>
 
-<!-- JS untuk dropdown cetak per-kantin dan auto-print — diizinkan untuk keperluan print -->
+<!-- JS untuk dropdown pilih kantin dan buka halaman cetak — diizinkan untuk print -->
 <script>
-// buka halaman cetak satu kantin berdasarkan pilihan dropdown
 function bukaCetakKantin() {
     var n = document.getElementById('pilih-kantin-print').value;
     if (!n) { alert('Pilih kantin terlebih dahulu.'); return; }
-    window.open(
-        'laporan.php?cetak=kantin&nomor=' + n + '&<?= addslashes($urlparams) ?>',
-        '_blank', 'width=820,height=700'
-    );
+    window.open('laporan.php?cetak=kantin&nomor=' + n + '&<?= addslashes($urlparams) ?>', '_blank', 'width=760,height=640');
 }
-<?php if ($sedangcetak): ?>
-// halaman ini dibuka sebagai halaman cetak — langsung print otomatis
-window.onload = function() { window.print(); };
-<?php endif; ?>
 </script>
 </body>
 </html>
