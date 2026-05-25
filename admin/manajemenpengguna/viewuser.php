@@ -188,9 +188,9 @@ $namatoko    = !empty($toko) ? ($toko['nama_toko'] ?? '') : (!empty($riwayat) ? 
 $statustoko  = !empty($toko) ? ($toko['status_toko'] ?? 'tutup') : 'tutup';
 $idtoko      = (int)($tokosumber['id_toko'] ?? 0);
 
-// dimensi SVG chart (sama persis dengan laporan platform)
+// dimensi SVG chart — identik laporan.php
 $svgn    = count($charthari);
-$svgw    = max(400, $svgn * 30);
+$svgw    = max(700, $svgn * 30);
 $svgbarw = max(8, min(40, (int)(($svgw - 80) / max(1, $svgn)) - 4));
 $svggap  = max(4, (int)(($svgw - 80 - $svgn * $svgbarw) / max(1, $svgn - 1)));
 
@@ -418,16 +418,16 @@ function bintanghtml(float $r): string {
       <button type="submit" class="tombolutama" style="padding:8px 14px;font-size:13px;align-self:flex-end;"><i class="fa-solid fa-filter"></i> Terapkan</button>
     </form>
     <?php endif; ?>
-    <div style="overflow-x:auto;">
-      <svg viewBox="0 0 <?= $svgw ?> 160" xmlns="http://www.w3.org/2000/svg" style="min-width:<?= min(400,$svgw) ?>px;">
-        <?php for ($g = 0; $g <= 4; $g++): $gy = 10 + ($g * 26); ?>
+    <div class="area-chart">
+      <svg viewBox="0 0 <?= $svgw ?> 210" xmlns="http://www.w3.org/2000/svg" style="min-width:<?= min(700,$svgw) ?>px;">
+        <?php for ($g = 0; $g <= 4; $g++): $gy = 20 + ($g * 40); ?>
         <line x1="60" y1="<?= $gy ?>" x2="<?= $svgw-10 ?>" y2="<?= $gy ?>" stroke="#E7CBCB" stroke-width="1" stroke-dasharray="4,4"/>
         <text x="55" y="<?= $gy+4 ?>" text-anchor="end" fill="#99627A" font-size="9"><?= singkat(($maxomsethari/4)*(4-$g)) ?></text>
         <?php endfor; ?>
         <?php foreach ($charthari as $ci => $ch):
           $cx  = 70 + $ci * ($svgbarw + $svggap);
-          $bh  = $ch['nilai'] > 0 ? max(2, ($ch['nilai'] / $maxomsethari) * 100) : 2;
-          $by  = 114 - $bh;
+          $bh  = $ch['nilai'] > 0 ? ($ch['nilai'] / $maxomsethari) * 160 : 2;
+          $by  = 180 - $bh;
           $isT = $ch['tgl'] === date('Y-m-d');
           $fc  = $isT ? '#643843' : '#99627A';
           $lbl = $svgn <= 14 ? date('d/m', strtotime($ch['tgl'])) : date('d', strtotime($ch['tgl']));
@@ -435,10 +435,10 @@ function bintanghtml(float $r): string {
         <rect x="<?= $cx ?>" y="<?= $by ?>" width="<?= $svgbarw ?>" height="<?= $bh ?>" rx="3" fill="<?= $fc ?>">
           <title><?= date('d M Y', strtotime($ch['tgl'])) ?> — <?= rp($ch['nilai']) ?></title>
         </rect>
-        <text x="<?= $cx + $svgbarw/2 ?>" y="132" text-anchor="middle" fill="<?= $fc ?>"
+        <text x="<?= $cx + $svgbarw/2 ?>" y="200" text-anchor="middle" fill="<?= $fc ?>"
               font-size="<?= $svgn > 20 ? '7' : '9' ?>" font-weight="<?= $isT ? '700' : '400' ?>"><?= $lbl ?></text>
         <?php if ($ch['nilai'] > 0 && $svgbarw >= 20): ?>
-        <text x="<?= $cx + $svgbarw/2 ?>" y="<?= max($by-3, 10) ?>" text-anchor="middle"
+        <text x="<?= $cx + $svgbarw/2 ?>" y="<?= max($by-4, 14) ?>" text-anchor="middle"
               fill="#643843" font-size="8" font-weight="600"><?= number_format($ch['nilai']/1000, 0) ?>k</text>
         <?php endif; ?>
         <?php endforeach; ?>
