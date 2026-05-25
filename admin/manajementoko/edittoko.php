@@ -55,7 +55,7 @@ if (!empty($_SESSION['flash'])) {
       </h1>
       <p>Ubah informasi <?= htmlspecialchars($toko['nama_toko'] ?? '(Kosong)') ?></p>
     </div>
-    <a href="viewtoko.php?id=<?= $id ?>" class="tombolringan">
+    <a href="<?= $toko['id_user'] ? "../manajemenpengguna/viewuser.php?id={$toko['id_user']}" : "kantin.php" ?>" class="tombolringan">
       <i class="fa-solid fa-arrow-left"></i> Kembali
     </a>
   </div>
@@ -99,7 +99,7 @@ if (!empty($_SESSION['flash'])) {
         </select>
       </div>
       <div style="display:flex;gap:10px;margin-top:6px;">
-        <a href="viewtoko.php?id=<?= $id ?>" class="tombolringan">Batal</a>
+        <a href="<?= $toko['id_user'] ? "../manajemenpengguna/viewuser.php?id={$toko['id_user']}" : "kantin.php" ?>" class="tombolringan">Batal</a>
         <button type="submit" class="tombolutama" style="flex:1;">
           <i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan
         </button>

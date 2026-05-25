@@ -1,73 +1,75 @@
 <?php
-/* halaman daftar semua pengguna platform — hanya admin yang bisa akses.
-   menampilkan tabel pengguna dengan fitur filter role (penjual/pembeli/admin)
-   dan pencarian berdasarkan username, email, atau nama toko.
-   penjual memiliki kolom tambahan: info toko dan tombol toggle status toko. */
+/* halaman daftar pengguna — admin only.
+   filter: semua | penjual | pembeli | admin | terhapus
+   terhapus = soft-deleted (deleted=1); kantin slot sudah dikosongkan.
+   print: Cetak Semua (window.print) + per-user card (JS inject). */
 
-// sambungkan ke database dan pastikan yang mengakses adalah admin
 include '../../1. koneksi/koneksi.php';
 include '../../3. komponen/guardadmin.php';
 
-// tandai menu "user" sebagai aktif di navbar
 $halamansaatini = 'user';
 
-// baca filter role dari url, default semua; validasi agar hanya nilai yang diizinkan diterima
 $rolefilter = $_GET['role'] ?? 'semua';
 $cari       = trim($_GET['cari'] ?? '');
-if (!in_array($rolefilter, ['semua','admin','penjual','pembeli'])) $rolefilter = 'semua';
+if (!in_array($rolefilter, ['semua','admin','penjual','pembeli','terhapus'])) $rolefilter = 'semua';
 
-// cek apakah migrasi nomor_kantin sudah dijalankan
-$cekkolom = $conn->query("SHOW COLUMNS FROM tb_toko LIKE 'nomor_kantin'");
+// cek migrasi kolom nomor_kantin dan deleted_at
+$cekkolom  = $conn->query("SHOW COLUMNS FROM tb_toko LIKE 'nomor_kantin'");
 $migrasiSudah = ($cekkolom && $cekkolom->num_rows > 0);
 
-// hitung jumlah pengguna per role untuk ditampilkan di badge tab filter
+$cekdel   = $conn->query("SHOW COLUMNS FROM tb_user LIKE 'deleted_at'");
+$adaDelAt = ($cekdel && $cekdel->num_rows > 0);
+
+// hitung jumlah per role (aktif) untuk badge tab
 $qhitung = $conn->query("SELECT role, COUNT(*) AS jml FROM tb_user WHERE deleted=0 GROUP BY role");
 $jmlrole = ['admin'=>0,'penjual'=>0,'pembeli'=>0];
 while ($r = $qhitung->fetch_assoc()) $jmlrole[$r['role']] = (int)$r['jml'];
-$jmlsemua = array_sum($jmlrole); // total semua pengguna dari semua role
+$jmlsemua = array_sum($jmlrole);
 
-/* bangun query utama secara dinamis berdasarkan filter yang aktif.
-   menggunakan subquery untuk menghitung pesanan toko dan pesanan user
-   agar tidak terjadi penggandaan baris akibat join berganda.
-   urut_role: penjual di atas, pembeli di tengah, admin di bawah. */
+$qterhapus   = $conn->query("SELECT COUNT(*) AS jml FROM tb_user WHERE deleted=1");
+$jmlTerhapus = (int)$qterhapus->fetch_assoc()['jml'];
 
-// kolom nomor_kantin hanya tersedia setelah migrasi dijalankan; fallback ke NULL agar query tetap jalan
-$kolomNomor = $migrasiSudah ? "t.nomor_kantin," : "NULL AS nomor_kantin,";
+$kolomNomor  = $migrasiSudah ? "t.nomor_kantin," : "NULL AS nomor_kantin,";
+$delAtSelect = $adaDelAt ? "u.deleted_at," : "NULL AS deleted_at,";
+$delAtOrder  = $adaDelAt ? "u.deleted_at DESC" : "u.id_user DESC";
 
-/* query utama: ambil semua pengguna beserta info kantin yang ditempati (jika penjual).
-   left join ke tb_toko agar pengguna tanpa toko (pembeli/admin) tetap muncul.
-   kantin sekarang bisa punya id_user=NULL (kosong), tapi join di sini ke tb_user jadi aman. */
-$sql = "SELECT u.id_user, u.username, u.email, u.role, u.created,
-               t.id_toko, $kolomNomor t.nama_toko, t.status_toko,
-               CASE u.role WHEN 'penjual' THEN 0 WHEN 'pembeli' THEN 1 ELSE 2 END AS urut_role,
-               (SELECT COUNT(*) FROM tb_order o  WHERE o.id_toko=t.id_toko  AND o.deleted=0) AS pesanan_toko,
-               (SELECT COUNT(*) FROM tb_order o2 WHERE o2.id_user=u.id_user AND o2.deleted=0) AS pesanan_user
-        FROM tb_user u
-        LEFT JOIN tb_toko t ON u.id_user=t.id_user AND t.deleted=0
-        WHERE u.deleted=0";
-
-// array untuk menampung parameter dan tipe data yang akan di-bind ke prepared statement
-$params = []; $types = '';
-
-// tambahkan kondisi filter role jika bukan "semua"
-if ($rolefilter !== 'semua') { $sql .= " AND u.role=?"; $params[] = $rolefilter; $types .= 's'; }
-
-// tambahkan kondisi pencarian jika ada kata kunci
-if ($cari !== '') {
-    $sql .= " AND (u.username LIKE ? OR u.email LIKE ? OR t.nama_toko LIKE ?)";
-    $likcari = "%$cari%"; // karakter % artinya cocok dengan apa saja di posisi itu
-    $params[] = $likcari; $params[] = $likcari; $params[] = $likcari; $types .= 'sss';
+// bangun query sesuai tab aktif
+if ($rolefilter === 'terhapus') {
+    $sql = "SELECT u.id_user, u.username, u.email, u.role, u.created, {$delAtSelect}
+                   (SELECT COUNT(*) FROM tb_order o WHERE o.id_user=u.id_user AND o.deleted=0) AS pesanan_user
+            FROM tb_user u WHERE u.deleted=1";
+    $params = []; $types = '';
+    if ($cari !== '') {
+        $sql .= " AND (u.username LIKE ? OR u.email LIKE ?)";
+        $likcari = "%$cari%";
+        $params[] = $likcari; $params[] = $likcari; $types .= 'ss';
+    }
+    $sql .= " ORDER BY {$delAtOrder}";
+} else {
+    $sql = "SELECT u.id_user, u.username, u.email, u.role, u.created,
+                   t.id_toko, {$kolomNomor} t.nama_toko, t.status_toko,
+                   CASE u.role WHEN 'penjual' THEN 0 WHEN 'pembeli' THEN 1 ELSE 2 END AS urut_role,
+                   (SELECT COUNT(*) FROM tb_order o  WHERE o.id_toko=t.id_toko  AND o.deleted=0) AS pesanan_toko,
+                   (SELECT COUNT(*) FROM tb_order o2 WHERE o2.id_user=u.id_user AND o2.deleted=0) AS pesanan_user
+            FROM tb_user u
+            LEFT JOIN tb_toko t ON u.id_user=t.id_user AND t.deleted=0
+            WHERE u.deleted=0";
+    $params = []; $types = '';
+    if ($rolefilter !== 'semua') { $sql .= " AND u.role=?"; $params[] = $rolefilter; $types .= 's'; }
+    if ($cari !== '') {
+        $sql .= " AND (u.username LIKE ? OR u.email LIKE ? OR t.nama_toko LIKE ?)";
+        $likcari = "%$cari%";
+        $params[] = $likcari; $params[] = $likcari; $params[] = $likcari; $types .= 'sss';
+    }
+    $sql .= " ORDER BY urut_role ASC, u.username ASC";
 }
-$sql .= " ORDER BY urut_role ASC, u.username ASC";
 
-// jalankan query dengan prepared statement agar aman dari sql injection
 $st = $conn->prepare($sql);
-if ($params) { $st->bind_param($types, ...$params); } // spread operator: unpack array jadi argumen
+if ($params) { $st->bind_param($types, ...$params); }
 $st->execute();
 $daftaruser = $st->get_result()->fetch_all(MYSQLI_ASSOC);
 $st->close();
 
-// ambil flash message dari session (pesan hasil operasi sebelumnya), lalu hapus agar tidak muncul lagi
 $flashpesan = ''; $flashjenis = '';
 if (!empty($_SESSION['flash'])) {
     $flashpesan = $_SESSION['flash']['pesan'];
@@ -83,26 +85,56 @@ if (!empty($_SESSION['flash'])) {
 <title>Manajemen Pengguna - jajankita</title>
 <link rel="stylesheet" href="../../3. komponen/admin.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+#kartu-cetak-user { display:none; }
+.cetakjudul { display:none; }
+
+@media print {
+  .takprint { display:none !important; }
+  .cetakjudul { display:block !important; margin-bottom:16px; font-family:sans-serif; }
+  .cetakjudul h3 { margin:0 0 2px; font-size:16px; }
+  .cetakjudul p  { margin:0; font-size:11px; color:#666; }
+  @page { size:A4; margin:12mm; }
+  .kartu { box-shadow:none !important; border:1px solid #ddd !important; }
+  table  { font-size:11px; width:100%; }
+
+  /* mode cetak per-user: sembunyikan konten utama, tampilkan kartu */
+  body.mode-cetak-user .konten { display:none !important; }
+  body.mode-cetak-user .cetakjudul { display:none !important; }
+  body.mode-cetak-user #kartu-cetak-user { display:block !important; }
+}
+</style>
 </head>
 <body>
 
-<?php include '../../3. komponen/navbaradmin.php'; ?>
+<div class="takprint"><?php include '../../3. komponen/navbaradmin.php'; ?></div>
 
 <main class="konten">
+
+  <!-- judul hanya muncul saat print semua (bukan cetak per-user) -->
+  <div class="cetakjudul">
+    <h3><i class="fa-solid fa-users"></i> Manajemen Pengguna — jajankita</h3>
+    <p>Dicetak: <?= date('d M Y H:i') ?> &nbsp;|&nbsp; Filter: <?= ucfirst($rolefilter) ?><?= $cari ? " &nbsp;| Cari: {$cari}" : '' ?></p>
+    <hr style="margin:8px 0;">
+  </div>
 
   <div class="header-halaman">
     <div class="kiri">
       <h1><i class="fa-solid fa-users"></i> Manajemen Pengguna</h1>
       <p>Kelola semua akun pengguna platform jajankita</p>
     </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <!-- tombol ekspor csv: meneruskan filter yang sedang aktif ke halaman ekspor -->
+    <div class="takprint" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
       <a href="eksporuser.php?role=<?= htmlspecialchars($rolefilter) ?>&cari=<?= urlencode($cari) ?>" class="tombolringan">
         <i class="fa-solid fa-file-csv"></i> Ekspor CSV
       </a>
+      <?php if ($rolefilter !== 'terhapus'): ?>
       <a href="tambahuser.php" class="tombolutama">
         <i class="fa-solid fa-user-plus"></i> Tambah Pengguna
       </a>
+      <?php endif; ?>
+      <button onclick="window.print()" class="tombolringan">
+        <i class="fa-solid fa-print"></i> Cetak Semua
+      </button>
     </div>
   </div>
 
@@ -113,84 +145,140 @@ if (!empty($_SESSION['flash'])) {
   </div>
   <?php endif; ?>
 
-  <!-- ringkasan jumlah pengguna per role dalam bentuk kartu statistik -->
-  <div class="grid-stat" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px;">
+  <!-- stat kartu -->
+  <div class="grid-stat takprint" style="grid-template-columns:repeat(5,1fr);margin-bottom:20px;">
     <div class="kartu-stat">
       <div class="ikon-stat"><i class="fa-solid fa-users"></i></div>
-      <div class="isi-stat">
-        <div class="nilai"><?= $jmlsemua ?></div>
-        <div class="label">Total Pengguna</div>
-      </div>
+      <div class="isi-stat"><div class="nilai"><?= $jmlsemua ?></div><div class="label">Total Aktif</div></div>
     </div>
     <div class="kartu-stat">
-      <div class="ikon-stat" style="background:var(--tunggubg);color:#B45309;">
-        <i class="fa-solid fa-store"></i>
-      </div>
-      <div class="isi-stat">
-        <div class="nilai"><?= $jmlrole['penjual'] ?></div>
-        <div class="label">Penjual</div>
-        <div class="sub">Pemilik toko</div>
-      </div>
+      <div class="ikon-stat" style="background:var(--tunggubg);color:#B45309;"><i class="fa-solid fa-store"></i></div>
+      <div class="isi-stat"><div class="nilai"><?= $jmlrole['penjual'] ?></div><div class="label">Penjual</div><div class="sub">Pemilik kantin</div></div>
     </div>
     <div class="kartu-stat">
       <div class="ikon-stat"><i class="fa-solid fa-bag-shopping"></i></div>
-      <div class="isi-stat">
-        <div class="nilai"><?= $jmlrole['pembeli'] ?></div>
-        <div class="label">Pembeli</div>
-        <div class="sub">Pelanggan</div>
-      </div>
+      <div class="isi-stat"><div class="nilai"><?= $jmlrole['pembeli'] ?></div><div class="label">Pembeli</div><div class="sub">Pelanggan</div></div>
     </div>
     <div class="kartu-stat">
-      <div class="ikon-stat" style="background:var(--infobg);color:var(--info);">
-        <i class="fa-solid fa-user-shield"></i>
-      </div>
-      <div class="isi-stat">
-        <div class="nilai"><?= $jmlrole['admin'] ?></div>
-        <div class="label">Admin</div>
-        <div class="sub">Pengelola platform</div>
-      </div>
+      <div class="ikon-stat" style="background:var(--infobg);color:var(--info);"><i class="fa-solid fa-user-shield"></i></div>
+      <div class="isi-stat"><div class="nilai"><?= $jmlrole['admin'] ?></div><div class="label">Admin</div><div class="sub">Pengelola platform</div></div>
+    </div>
+    <div class="kartu-stat">
+      <div class="ikon-stat" style="background:#fee2e2;color:#dc2626;"><i class="fa-solid fa-user-slash"></i></div>
+      <div class="isi-stat"><div class="nilai"><?= $jmlTerhapus ?></div><div class="label">Terhapus</div><div class="sub">Akun nonaktif</div></div>
     </div>
   </div>
 
-  <!-- tab filter berdasarkan role, menampilkan jumlah di setiap tab -->
-  <div class="filter-bar">
-    <a href="user.php" class="chip-filter <?= $rolefilter === 'semua' ? 'aktif' : '' ?>">
-      Semua (<?= $jmlsemua ?>)
-    </a>
-    <a href="user.php?role=penjual" class="chip-filter <?= $rolefilter === 'penjual' ? 'aktif' : '' ?>">
-      <i class="fa-solid fa-store"></i> Penjual (<?= $jmlrole['penjual'] ?>)
-    </a>
-    <a href="user.php?role=pembeli" class="chip-filter <?= $rolefilter === 'pembeli' ? 'aktif' : '' ?>">
-      <i class="fa-solid fa-bag-shopping"></i> Pembeli (<?= $jmlrole['pembeli'] ?>)
-    </a>
-    <a href="user.php?role=admin" class="chip-filter <?= $rolefilter === 'admin' ? 'aktif' : '' ?>">
-      <i class="fa-solid fa-user-shield"></i> Admin (<?= $jmlrole['admin'] ?>)
+  <!-- tab filter -->
+  <div class="filter-bar takprint">
+    <a href="user.php" class="chip-filter <?= $rolefilter==='semua'     ? 'aktif':'' ?>">Semua (<?= $jmlsemua ?>)</a>
+    <a href="user.php?role=penjual"  class="chip-filter <?= $rolefilter==='penjual'  ? 'aktif':'' ?>"><i class="fa-solid fa-store"></i> Penjual (<?= $jmlrole['penjual'] ?>)</a>
+    <a href="user.php?role=pembeli"  class="chip-filter <?= $rolefilter==='pembeli'  ? 'aktif':'' ?>"><i class="fa-solid fa-bag-shopping"></i> Pembeli (<?= $jmlrole['pembeli'] ?>)</a>
+    <a href="user.php?role=admin"    class="chip-filter <?= $rolefilter==='admin'    ? 'aktif':'' ?>"><i class="fa-solid fa-user-shield"></i> Admin (<?= $jmlrole['admin'] ?>)</a>
+    <a href="user.php?role=terhapus" class="chip-filter <?= $rolefilter==='terhapus' ? 'aktif':'' ?>" style="<?= $rolefilter!=='terhapus' ? 'color:#dc2626;' : '' ?>">
+      <i class="fa-solid fa-user-slash"></i> Terhapus (<?= $jmlTerhapus ?>)
     </a>
   </div>
 
-  <!-- form pencarian: input teks dikiri, tombol kirim di kanan -->
-  <form method="GET" action="user.php" style="margin-bottom:16px;">
+  <!-- form pencarian -->
+  <form method="GET" action="user.php" class="takprint" style="margin-bottom:16px;">
     <?php if ($rolefilter !== 'semua'): ?>
-    <!-- simpan filter role yang sedang aktif agar tidak hilang saat submit pencarian -->
     <input type="hidden" name="role" value="<?= htmlspecialchars($rolefilter) ?>">
     <?php endif; ?>
     <div class="kotakcari">
       <i class="fa-solid fa-magnifying-glass"></i>
-      <input type="text" name="cari" placeholder="Cari username, email, atau nama toko..."
+      <input type="text" name="cari"
+             placeholder="Cari username, email<?= $rolefilter !== 'terhapus' ? ', atau nama toko' : '' ?>..."
              value="<?= htmlspecialchars($cari) ?>">
       <button type="submit" class="tombolcari"><i class="fa-solid fa-arrow-right"></i></button>
     </div>
   </form>
 
-  <!-- tips toggle status toko hanya ditampilkan jika filter menampilkan penjual -->
+  <?php if ($rolefilter === 'terhapus'): ?>
+  <!-- ======================== TAB TERHAPUS ======================== -->
+
+  <div class="peringatan peringataninfo takprint" style="margin-bottom:16px;">
+    <i class="fa-solid fa-info-circle"></i>
+    Akun terhapus tidak dapat login. Kantin yang ditempati penjual terhapus telah dikosongkan dan tersedia untuk penjual baru. Data pesanan lama tetap tersimpan.
+    <?php if (!$adaDelAt): ?>
+    <br><strong>Catatan:</strong> Kolom <code>deleted_at</code> belum ada — jalankan <code>migrasi_deletedat.sql</code> agar tanggal berhenti tercatat.
+    <?php endif; ?>
+  </div>
+
+  <div class="kartu" style="padding:0;overflow:hidden;">
+    <div class="tabel-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Pengguna</th>
+            <th class="tengah">Peran Terakhir</th>
+            <th class="tengah">Pesanan Dibuat</th>
+            <th>Bergabung</th>
+            <th>Berhenti</th>
+            <th class="tengah takprint">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php if (empty($daftaruser)): ?>
+          <tr>
+            <td colspan="6">
+              <div class="kosong">
+                <div class="ikon-kosong"><i class="fa-solid fa-user-check"></i></div>
+                <h3>Tidak ada akun terhapus</h3>
+                <p>Semua akun masih aktif.</p>
+              </div>
+            </td>
+          </tr>
+          <?php else: foreach ($daftaruser as $u):
+            $tglDaftar   = !empty($u['created'])    ? date('d M Y', strtotime($u['created']))            : '—';
+            $tglBerhenti = !empty($u['deleted_at']) ? date('d M Y H:i', strtotime($u['deleted_at']))     : '—';
+            $tglBprint   = !empty($u['deleted_at']) ? date('d M Y', strtotime($u['deleted_at']))         : '—';
+            $ud = json_encode([
+                'username'   => $u['username'],
+                'email'      => $u['email'],
+                'role'       => $u['role'],
+                'pesanan'    => (int)$u['pesanan_user'],
+                'created'    => $tglDaftar,
+                'deleted_at' => $tglBprint,
+            ], JSON_HEX_APOS | JSON_HEX_TAG | JSON_UNESCAPED_UNICODE);
+          ?>
+          <tr>
+            <td>
+              <div class="user-baris">
+                <div class="avatar-tabel" style="background:#fee2e2;color:#dc2626;"><?= strtoupper(mb_substr($u['username'],0,2)) ?></div>
+                <div>
+                  <div class="nama" style="text-decoration:line-through;color:var(--tekssamar);"><?= htmlspecialchars($u['username']) ?></div>
+                  <small style="color:var(--tekssamar);"><?= htmlspecialchars($u['email']) ?></small>
+                </div>
+              </div>
+            </td>
+            <td class="tengah"><span class="badge <?= $u['role'] ?>"><?= ucfirst($u['role']) ?></span></td>
+            <td class="tengah" style="font-weight:700;"><?= (int)$u['pesanan_user'] ?></td>
+            <td style="font-size:12px;white-space:nowrap;"><?= $tglDaftar ?></td>
+            <td style="font-size:12px;white-space:nowrap;color:<?= !empty($u['deleted_at']) ? '#dc2626' : 'var(--tekssamar)' ?>;"><?= $tglBerhenti ?></td>
+            <td class="tengah takprint">
+              <div class="aksi-grup">
+                <a href="viewuser.php?id=<?= $u['id_user'] ?>" class="tombolkecil"><i class="fa-solid fa-eye"></i> Detail</a>
+                <button onclick='cetakUser(<?= $ud ?>)' class="tombolkecil"><i class="fa-solid fa-print"></i> Cetak</button>
+              </div>
+            </td>
+          </tr>
+          <?php endforeach; endif; ?>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <?php else: ?>
+  <!-- ======================== TAB AKTIF ======================== -->
+
   <?php if (in_array($rolefilter, ['semua','penjual'])): ?>
-  <div class="peringatan peringataninfo" style="margin-bottom:16px;">
+  <div class="peringatan peringataninfo takprint" style="margin-bottom:16px;">
     <i class="fa-solid fa-lightbulb"></i>
-    Klik badge <strong>Buka</strong> atau <strong>Tutup</strong> di kolom Status Toko untuk mengubah status toko langsung tanpa perlu masuk ke halaman toko.
+    Klik badge <strong>Buka</strong> atau <strong>Tutup</strong> di kolom Status Toko untuk mengubah status toko langsung.
   </div>
   <?php endif; ?>
 
-  <!-- tabel daftar pengguna -->
   <div class="kartu" style="padding:0;overflow:hidden;">
     <div class="tabel-wrapper">
       <table>
@@ -198,11 +286,11 @@ if (!empty($_SESSION['flash'])) {
           <tr>
             <th>Pengguna</th>
             <th class="tengah">Peran</th>
-            <th>Info Toko</th>
-            <th class="tengah">Status Toko</th>
+            <th>Info Kantin &amp; Toko</th>
+            <th class="tengah takprint">Status Toko</th>
             <th class="tengah">Pesanan</th>
             <th>Bergabung</th>
-            <th>Aksi</th>
+            <th class="tengah takprint">Aksi</th>
           </tr>
         </thead>
         <tbody>
@@ -216,20 +304,16 @@ if (!empty($_SESSION['flash'])) {
               </div>
             </td>
           </tr>
-          <?php else: ?>
-          <?php
-          // label pemisah seksi per role (hanya ditampilkan di mode "semua")
+          <?php else:
           $labelseksi = [
-              'penjual' => '<i class="fa-solid fa-store"></i>&nbsp; Penjual — Pemilik Toko',
-              'pembeli'  => '<i class="fa-solid fa-bag-shopping"></i>&nbsp; Pembeli',
-              'admin'    => '<i class="fa-solid fa-user-shield"></i>&nbsp; Admin Platform',
+              'penjual' => '<i class="fa-solid fa-store"></i>&nbsp; Penjual — Pemilik Kantin',
+              'pembeli' => '<i class="fa-solid fa-bag-shopping"></i>&nbsp; Pembeli',
+              'admin'   => '<i class="fa-solid fa-user-shield"></i>&nbsp; Admin Platform',
           ];
-          $seksiaktif = ''; // melacak role terakhir untuk tahu kapan harus menampilkan baris pemisah
+          $seksiaktif = '';
           foreach ($daftaruser as $u):
-              // tampilkan baris pemisah seksi setiap kali role berubah (di mode semua)
               if ($rolefilter === 'semua' && $u['role'] !== $seksiaktif):
-                  $seksiaktif = $u['role'];
-          ?>
+                  $seksiaktif = $u['role']; ?>
           <tr>
             <td colspan="7" style="background:var(--latar);padding:9px 18px;border-bottom:1px solid var(--garis);">
               <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--utama);">
@@ -237,11 +321,23 @@ if (!empty($_SESSION['flash'])) {
               </span>
             </td>
           </tr>
-          <?php endif; ?>
+          <?php endif;
+            $pesanan   = $u['role']==='penjual' ? (int)$u['pesanan_toko'] : (int)$u['pesanan_user'];
+            $tglDaftar = !empty($u['created']) ? date('d M Y', strtotime($u['created'])) : '—';
+            $ud = json_encode([
+                'username'    => $u['username'],
+                'email'       => $u['email'],
+                'role'        => $u['role'],
+                'nomor_kantin'=> isset($u['nomor_kantin']) ? $u['nomor_kantin'] : null,
+                'nama_toko'   => $u['nama_toko'] ?? null,
+                'pesanan'     => $pesanan,
+                'created'     => $tglDaftar,
+                'deleted_at'  => null,
+            ], JSON_HEX_APOS | JSON_HEX_TAG | JSON_UNESCAPED_UNICODE);
+          ?>
           <tr>
             <td>
               <div class="user-baris">
-                <!-- avatar berupa 2 huruf pertama username, huruf kapital -->
                 <div class="avatar-tabel"><?= strtoupper(mb_substr($u['username'],0,2)) ?></div>
                 <div>
                   <div class="nama"><?= htmlspecialchars($u['username']) ?></div>
@@ -249,13 +345,9 @@ if (!empty($_SESSION['flash'])) {
                 </div>
               </div>
             </td>
-            <td class="tengah">
-              <span class="badge <?= $u['role'] ?>"><?= ucfirst($u['role']) ?></span>
-            </td>
+            <td class="tengah"><span class="badge <?= $u['role'] ?>"><?= ucfirst($u['role']) ?></span></td>
             <td>
-              <!-- info kantin hanya ditampilkan untuk penjual yang punya kantin -->
               <?php if ($u['role'] === 'penjual' && $u['id_toko']): ?>
-              <!-- tampilkan nomor kantin sebagai identitas utama (hanya setelah migrasi) -->
               <?php if ($u['nomor_kantin'] !== null): ?>
               <div style="font-size:11px;font-weight:700;color:var(--tekssamar);text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px;">
                 Kantin ke-<?= (int)$u['nomor_kantin'] ?>
@@ -264,24 +356,19 @@ if (!empty($_SESSION['flash'])) {
               <div style="font-size:13px;font-weight:700;color:var(--teks);margin-bottom:3px;">
                 <?= htmlspecialchars($u['nama_toko'] ?? '—') ?>
               </div>
-              <a href="../manajementoko/viewtoko.php?id=<?= $u['id_toko'] ?>"
-                 style="font-size:11px;color:var(--info);">
-                Lihat detail kantin →
-              </a>
+              <a href="viewuser.php?id=<?= $u['id_user'] ?>" class="takprint"
+                 style="font-size:11px;color:var(--info);">Lihat detail kantin →</a>
               <?php else: ?>
               <span style="color:var(--tekssamar);font-size:12px;">—</span>
               <?php endif; ?>
             </td>
-            <td class="tengah">
+            <td class="tengah takprint">
               <?php if ($u['role'] === 'penjual' && $u['id_toko']): ?>
-              <!-- tombol toggle status toko: klik langsung ubah buka/tutup tanpa halaman baru -->
               <form method="POST" action="../manajementoko/prosestoggletoko.php" style="display:inline;">
                 <input type="hidden" name="id_toko" value="<?= $u['id_toko'] ?>">
-                <button type="submit"
-                        class="badge <?= $u['status_toko']==='buka' ? 'buka' : 'tutup' ?>"
-                        style="border:none;cursor:pointer;font-family:inherit;"
-                        title="Klik untuk ubah status toko">
-                  <?= $u['status_toko']==='buka' ? 'Buka' : 'Tutup' ?>
+                <button type="submit" class="badge <?= $u['status_toko']==='buka'?'buka':'tutup' ?>"
+                        style="border:none;cursor:pointer;font-family:inherit;" title="Klik untuk ubah status toko">
+                  <?= $u['status_toko']==='buka'?'Buka':'Tutup' ?>
                   <i class="fa-solid fa-arrows-rotate" style="font-size:9px;"></i>
                 </button>
               </form>
@@ -289,40 +376,62 @@ if (!empty($_SESSION['flash'])) {
               <span style="color:var(--tekssamar);font-size:12px;">—</span>
               <?php endif; ?>
             </td>
-            <td class="tengah" style="font-weight:700;">
-              <!-- tampilkan jumlah pesanan sesuai role: penjual pakai pesanan_toko, pembeli pakai pesanan_user -->
-              <?php if ($u['role'] === 'penjual'): ?>
-                <?= (int)$u['pesanan_toko'] ?>
-              <?php elseif ($u['role'] === 'pembeli'): ?>
-                <?= (int)$u['pesanan_user'] ?>
-              <?php else: ?>
-                <span style="color:var(--tekssamar);">—</span>
-              <?php endif; ?>
-            </td>
-            <td style="font-size:12px;white-space:nowrap;">
-              <?= !empty($u['created']) ? date('d M Y', strtotime($u['created'])) : '-' ?>
-            </td>
-            <td>
+            <td class="tengah" style="font-weight:700;"><?= $pesanan ?></td>
+            <td style="font-size:12px;white-space:nowrap;"><?= $tglDaftar ?></td>
+            <td class="tengah takprint">
               <div class="aksi-grup">
-                <a href="viewuser.php?id=<?= $u['id_user'] ?>" class="tombolkecil">
-                  <i class="fa-solid fa-eye"></i> Detail
-                </a>
-                <a href="edituser.php?id=<?= $u['id_user'] ?>" class="tombolkecil">
-                  <i class="fa-solid fa-pen"></i> Edit
-                </a>
-                <a href="hapususer.php?id=<?= $u['id_user'] ?>" class="tombolkecil merah">
-                  <i class="fa-solid fa-trash"></i> Hapus
-                </a>
+                <a href="viewuser.php?id=<?= $u['id_user'] ?>" class="tombolkecil"><i class="fa-solid fa-eye"></i> Detail</a>
+                <a href="edituser.php?id=<?= $u['id_user'] ?>" class="tombolkecil"><i class="fa-solid fa-pen"></i> Edit</a>
+                <a href="hapususer.php?id=<?= $u['id_user'] ?>" class="tombolkecil merah"><i class="fa-solid fa-trash"></i> Hapus</a>
+                <button onclick='cetakUser(<?= $ud ?>)' class="tombolkecil"><i class="fa-solid fa-print"></i> Cetak</button>
               </div>
             </td>
           </tr>
-          <?php endforeach; ?>
-          <?php endif; ?>
+          <?php endforeach; endif; ?>
         </tbody>
       </table>
     </div>
   </div>
+  <?php endif; ?>
 
 </main>
+
+<!-- kartu cetak per-pengguna (diisi via JS, muncul hanya saat print per-user) -->
+<div id="kartu-cetak-user"></div>
+
+<script>
+function cetakUser(u) {
+  var peran = u.role ? (u.role.charAt(0).toUpperCase() + u.role.slice(1)) : '—';
+  var html  = '<div style="font-family:Arial,sans-serif;padding:24px;max-width:600px;margin:0 auto;">';
+  html += '<h2 style="margin:0 0 4px;font-size:18px;">Detail Pengguna</h2>';
+  html += '<p style="margin:0 0 14px;color:#888;font-size:11px;">Dicetak: ' + new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'}) + '</p>';
+  html += '<hr style="margin-bottom:16px;border:none;border-top:2px solid #eee;">';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
+  var baris = function(label, nilai, warna) {
+    return '<tr style="border-bottom:1px solid #f5f5f5;">'
+      + '<td style="padding:8px 4px;font-weight:700;width:160px;color:' + (warna||'#555') + ';">' + label + '</td>'
+      + '<td style="padding:8px 4px;color:' + (warna||'#222') + ';">' + (nilai||'—') + '</td>'
+      + '</tr>';
+  };
+  html += baris('Username', u.username);
+  html += baris('Email', u.email);
+  html += baris('Peran', peran);
+  if (u.nomor_kantin) html += baris('Kantin', 'Kantin ke-' + u.nomor_kantin);
+  if (u.nama_toko)    html += baris('Nama Toko', u.nama_toko);
+  html += baris('Total Pesanan', u.pesanan !== undefined ? String(u.pesanan) : '—');
+  html += baris('Bergabung', u.created);
+  if (u.deleted_at)   html += baris('Berhenti', u.deleted_at, '#dc2626');
+  html += '</table></div>';
+
+  document.getElementById('kartu-cetak-user').innerHTML = html;
+  document.body.classList.add('mode-cetak-user');
+  window.print();
+  window.onafterprint = function() {
+    document.body.classList.remove('mode-cetak-user');
+    document.getElementById('kartu-cetak-user').innerHTML = '';
+  };
+}
+</script>
+
 </body>
 </html>

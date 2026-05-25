@@ -40,7 +40,8 @@ $terisi       = 0; // kantin yang punya penjual
 $kosong       = 0; // kantin tanpa penjual
 $buka         = 0; // kantin yang statusnya buka
 foreach ($daftarkantin as $k) {
-    if ($k['id_user']) { $terisi++; } else { $kosong++; }
+    // username NULL jika id_user ada tapi penjualnya sudah dihapus (soft delete)
+    if (!empty($k['username'])) { $terisi++; } else { $kosong++; }
     if ($k['status_toko'] === 'buka') $buka++;
 }
 
@@ -249,7 +250,7 @@ if (!empty($_SESSION['flash'])) {
   <!-- grid semua kartu kantin -->
   <div class="grid-kantin">
     <?php foreach ($daftarkantin as $k): ?>
-    <?php $adaPemilik = !empty($k['id_user']); ?>
+    <?php $adaPemilik = !empty($k['username']); ?>
     <div class="kartu-kantin <?= $adaPemilik ? 'terisi' : 'kosong' ?>">
 
       <!-- strip warna di atas kartu -->
@@ -291,11 +292,8 @@ if (!empty($_SESSION['flash'])) {
       <div class="aksi-kantin takprint">
         <?php if ($adaPemilik): ?>
         <!-- jika terisi: tampilkan link ke detail toko dan toggle status -->
-        <a href="viewtoko.php?id=<?= (int)$k['id_toko'] ?>" class="tombolkecil">
-          <i class="fa-solid fa-eye"></i> Detail
-        </a>
         <a href="../manajemenpengguna/viewuser.php?id=<?= (int)$k['id_user'] ?>" class="tombolkecil">
-          <i class="fa-solid fa-user"></i> Penjual
+          <i class="fa-solid fa-eye"></i> Detail
         </a>
         <!-- form toggle status toko (buka/tutup) tanpa halaman baru -->
         <form method="POST" action="prosestoggletoko.php" style="display:inline;">

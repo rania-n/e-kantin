@@ -30,9 +30,13 @@ $upd->bind_param("ssi", $namatoko, $status, $id); // "ssi" = string, string, int
 if (!$upd->execute()) { $upd->close(); flash('gagal','Gagal menyimpan perubahan.'); redirect("edittoko.php?id=$id"); }
 $upd->close();
 
-// simpan flash message sukses dan arahkan ke halaman detail toko
+// cari id_user toko ini untuk redirect ke detail penjual
+$qu = $conn->prepare("SELECT id_user FROM tb_toko WHERE id_toko=? AND deleted=0");
+$qu->bind_param("i", $id); $qu->execute();
+$iduser = (int)($qu->get_result()->fetch_row()[0] ?? 0); $qu->close();
+
 flash('sukses','Toko berhasil diperbarui.');
-redirect("viewtoko.php?id=$id");
+redirect($iduser ? "../manajemenpengguna/viewuser.php?id=$iduser" : "kantin.php");
 
 // fungsi pembantu: simpan flash message ke session
 function flash(string $j, string $p): void { $_SESSION['flash'] = ['jenis'=>$j,'pesan'=>$p]; }

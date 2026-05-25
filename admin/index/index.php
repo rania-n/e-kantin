@@ -119,7 +119,7 @@ $terlaris = $qtl->fetch_all(MYSQLI_ASSOC);
    jika belum: gunakan query lama tanpa nomor_kantin agar tidak crash. */
 if ($migrasiSudah) {
     // query baru: nomor_kantin ada, filter id_user IS NOT NULL, urut nomor_kantin
-    $qtoko2 = $conn->query("SELECT t.id_toko, t.nomor_kantin, t.nama_toko, t.status_toko,
+    $qtoko2 = $conn->query("SELECT t.id_toko, t.id_user, t.nomor_kantin, t.nama_toko, t.status_toko,
                                     (SELECT COUNT(*) FROM tb_order o WHERE o.id_toko=t.id_toko AND o.deleted=0) AS total_order,
                                     (SELECT COUNT(*) FROM tb_order o WHERE o.id_toko=t.id_toko AND o.status_order='Dibatalkan' AND o.deleted=0) AS jml_dibatalkan,
                                     (SELECT COALESCE(SUM(o2.total_harga),0) FROM tb_order o2 WHERE o2.id_toko=t.id_toko AND o2.status_order IN ('Selesai','Dibatalkan') AND o2.deleted=0) AS omset,
@@ -449,7 +449,7 @@ $startx = 70; $chartH = 160;           // titik mulai bar dan tinggi area chart
             <td class="tengah"><?= $t['rating'] > 0 ? $t['rating'] . ' ★' : '—' ?></td>
             <td class="kanan" style="font-weight:700;color:var(--sukses);"><?= rp($t['omset']) ?></td>
             <td class="tengah">
-              <a href="../manajementoko/viewtoko.php?id=<?= $t['id_toko'] ?>" class="tombol-aksi" title="Lihat">
+              <a href="../manajemenpengguna/viewuser.php?id=<?= (int)$t['id_user'] ?>" class="tombol-aksi" title="Detail">
                 <i class="fa-solid fa-eye"></i>
               </a>
             </td>

@@ -78,7 +78,7 @@ if (!$toko['id_user']) {
       <input type="hidden" name="id_toko" value="<?= $id ?>">
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
         <!-- tombol batal: kembali ke detail toko tanpa mengosongkan -->
-        <a href="viewtoko.php?id=<?= $id ?>" class="tombolringan">
+        <a href="../manajemenpengguna/viewuser.php?id=<?= (int)$toko['id_user'] ?>" class="tombolringan">
           <i class="fa-solid fa-xmark"></i> Batal
         </a>
         <!-- tombol kosongkan: mengirim form POST ke proseshapustoko.php -->
