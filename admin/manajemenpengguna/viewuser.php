@@ -31,7 +31,17 @@ $distribusirating = []; $ulasanterbaru = []; $terlaris = [];
 $daftarmenu = []; $toppelanggan = []; $statuspesanan = [];
 $totalorder_pembeli = $totalbelanja = 0; $tokofavorit = [];
 $charthari = []; $maxomsethari = 1; $topmahal = [];
-$nhari = in_array((int)($_GET['hari'] ?? 7), [7,14,30]) ? (int)($_GET['hari'] ?? 7) : 7;
+$modecustom = ($_GET['hari'] ?? '') === 'custom';
+if ($modecustom) {
+    $dari   = (!empty($_GET['dari']))   ? date('Y-m-d', strtotime($_GET['dari']))   : date('Y-m-d', strtotime('-7 days'));
+    $sampai = (!empty($_GET['sampai'])) ? date('Y-m-d', strtotime($_GET['sampai'])) : date('Y-m-d');
+    if ($sampai < $dari) $sampai = $dari;
+    $nhari  = (int)ceil((strtotime($sampai) - strtotime($dari)) / 86400) + 1;
+} else {
+    $nhari  = in_array((int)($_GET['hari'] ?? 7), [7,14,30]) ? (int)($_GET['hari'] ?? 7) : 7;
+    $dari   = date('Y-m-d', strtotime('-' . ($nhari - 1) . ' days'));
+    $sampai = date('Y-m-d');
+}
 
 // ── PENJUAL ────────────────────────────────────────────────────────────────────
 if ($user['role'] === 'penjual') {
@@ -128,20 +138,20 @@ if ($user['role'] === 'penjual') {
         while ($r=$res->fetch_assoc()) $statuspesanan[$r['status_order']]=(int)$r['jml'];
         $s->close();
 
-        // tren omset N hari terakhir — CSS vertical bar, tanpa JS
-        $nharidb = $nhari - 1;
+        // tren omset — tanpa JS
         $sqchart = $conn->prepare(
             "SELECT DATE(tanggal_order) AS tgl, COALESCE(SUM(total_harga),0) AS nilai
              FROM tb_order WHERE id_toko=? AND deleted=0
-               AND DATE(tanggal_order) BETWEEN DATE_SUB(CURDATE(), INTERVAL ? DAY) AND CURDATE()
+               AND DATE(tanggal_order) BETWEEN ? AND ?
              GROUP BY DATE(tanggal_order)"
         );
-        $sqchart->bind_param("ii",$it,$nharidb); $sqchart->execute();
+        $sqchart->bind_param("iss",$it,$dari,$sampai); $sqchart->execute();
         $reschart = $sqchart->get_result(); $tmpmap = [];
         while ($rc = $reschart->fetch_assoc()) $tmpmap[$rc['tgl']] = (float)$rc['nilai'];
         $sqchart->close();
-        for ($hari = $nhari - 1; $hari >= 0; $hari--) {
-            $tglhari = date('Y-m-d', strtotime("-{$hari} days"));
+        $selisih = (int)ceil((strtotime($sampai) - strtotime($dari)) / 86400) + 1;
+        for ($i = 0; $i < $selisih; $i++) {
+            $tglhari = date('Y-m-d', strtotime($dari) + $i * 86400);
             $charthari[] = ['tgl' => $tglhari, 'nilai' => $tmpmap[$tglhari] ?? 0];
         }
         $vals = array_column($charthari, 'nilai');
@@ -384,44 +394,58 @@ function bintanghtml(float $r): string {
     </div>
   </div>
 
-  <!-- Tren Omset N Hari Terakhir (SVG) -->
+  <!-- Tren Omset (SVG) -->
   <div class="kartu" style="margin-bottom:18px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
-      <h3 style="margin:0;"><i class="fa-solid fa-chart-bar"></i> Tren Omset <?= $nhari ?> Hari Terakhir</h3>
-      <div style="display:flex;gap:4px;" class="takprint">
-        <a href="?id=<?= $id ?>&hari=7"  class="chip-filter <?= $nhari===7 ?'aktif':'' ?>" style="font-size:11px;padding:4px 10px;">7 Hari</a>
-        <a href="?id=<?= $id ?>&hari=14" class="chip-filter <?= $nhari===14?'aktif':'' ?>" style="font-size:11px;padding:4px 10px;">14 Hari</a>
-        <a href="?id=<?= $id ?>&hari=30" class="chip-filter <?= $nhari===30?'aktif':'' ?>" style="font-size:11px;padding:4px 10px;">30 Hari</a>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+      <h3 style="margin:0;"><i class="fa-solid fa-chart-bar"></i> Tren Omset
+        <?= $modecustom ? date('d M',strtotime($dari)).'–'.date('d M Y',strtotime($sampai)) : $nhari.' Hari Terakhir' ?>
+      </h3>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;" class="takprint">
+        <a href="?id=<?= $id ?>&hari=7"      class="chip-filter <?= !$modecustom&&$nhari===7 ?'aktif':'' ?>" style="font-size:11px;padding:4px 10px;">7 Hari</a>
+        <a href="?id=<?= $id ?>&hari=14"     class="chip-filter <?= !$modecustom&&$nhari===14?'aktif':'' ?>" style="font-size:11px;padding:4px 10px;">14 Hari</a>
+        <a href="?id=<?= $id ?>&hari=30"     class="chip-filter <?= !$modecustom&&$nhari===30?'aktif':'' ?>" style="font-size:11px;padding:4px 10px;">30 Hari</a>
+        <a href="?id=<?= $id ?>&hari=custom" class="chip-filter <?= $modecustom?'aktif':'' ?>" style="font-size:11px;padding:4px 10px;">Custom</a>
       </div>
     </div>
+    <?php if ($modecustom): ?>
+    <form method="GET" action="viewuser.php" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;" class="takprint">
+      <input type="hidden" name="id"   value="<?= $id ?>">
+      <input type="hidden" name="hari" value="custom">
+      <div><label style="font-size:11px;font-weight:700;color:var(--tekssamar);display:block;margin-bottom:3px;">DARI</label>
+        <input type="date" name="dari"   value="<?= $dari ?>"   style="padding:7px 10px;border:1.5px solid var(--garis);border-radius:8px;font-size:13px;font-family:inherit;"></div>
+      <div><label style="font-size:11px;font-weight:700;color:var(--tekssamar);display:block;margin-bottom:3px;">SAMPAI</label>
+        <input type="date" name="sampai" value="<?= $sampai ?>" style="padding:7px 10px;border:1.5px solid var(--garis);border-radius:8px;font-size:13px;font-family:inherit;"></div>
+      <button type="submit" class="tombolutama" style="padding:8px 14px;font-size:13px;align-self:flex-end;"><i class="fa-solid fa-filter"></i> Terapkan</button>
+    </form>
+    <?php endif; ?>
     <div style="overflow-x:auto;">
-      <svg viewBox="0 0 <?= $svgw ?> 210" xmlns="http://www.w3.org/2000/svg" style="min-width:<?= min(400,$svgw) ?>px;">
-        <?php for ($g = 0; $g <= 4; $g++): $gy = 20 + ($g * 40); ?>
+      <svg viewBox="0 0 <?= $svgw ?> 160" xmlns="http://www.w3.org/2000/svg" style="min-width:<?= min(400,$svgw) ?>px;">
+        <?php for ($g = 0; $g <= 4; $g++): $gy = 10 + ($g * 26); ?>
         <line x1="60" y1="<?= $gy ?>" x2="<?= $svgw-10 ?>" y2="<?= $gy ?>" stroke="#E7CBCB" stroke-width="1" stroke-dasharray="4,4"/>
         <text x="55" y="<?= $gy+4 ?>" text-anchor="end" fill="#99627A" font-size="9"><?= singkat(($maxomsethari/4)*(4-$g)) ?></text>
         <?php endfor; ?>
         <?php foreach ($charthari as $ci => $ch):
           $cx  = 70 + $ci * ($svgbarw + $svggap);
-          $bh  = $ch['nilai'] > 0 ? max(2, ($ch['nilai'] / $maxomsethari) * 160) : 2;
-          $by  = 180 - $bh;
+          $bh  = $ch['nilai'] > 0 ? max(2, ($ch['nilai'] / $maxomsethari) * 100) : 2;
+          $by  = 114 - $bh;
           $isT = $ch['tgl'] === date('Y-m-d');
           $fc  = $isT ? '#643843' : '#99627A';
-          $lbl = $nhari <= 14 ? date('d/m', strtotime($ch['tgl'])) : date('d', strtotime($ch['tgl']));
+          $lbl = $svgn <= 14 ? date('d/m', strtotime($ch['tgl'])) : date('d', strtotime($ch['tgl']));
         ?>
         <rect x="<?= $cx ?>" y="<?= $by ?>" width="<?= $svgbarw ?>" height="<?= $bh ?>" rx="3" fill="<?= $fc ?>">
           <title><?= date('d M Y', strtotime($ch['tgl'])) ?> — <?= rp($ch['nilai']) ?></title>
         </rect>
-        <text x="<?= $cx + $svgbarw/2 ?>" y="200" text-anchor="middle" fill="<?= $fc ?>"
+        <text x="<?= $cx + $svgbarw/2 ?>" y="132" text-anchor="middle" fill="<?= $fc ?>"
               font-size="<?= $svgn > 20 ? '7' : '9' ?>" font-weight="<?= $isT ? '700' : '400' ?>"><?= $lbl ?></text>
         <?php if ($ch['nilai'] > 0 && $svgbarw >= 20): ?>
-        <text x="<?= $cx + $svgbarw/2 ?>" y="<?= max($by-4, 14) ?>" text-anchor="middle"
+        <text x="<?= $cx + $svgbarw/2 ?>" y="<?= max($by-3, 10) ?>" text-anchor="middle"
               fill="#643843" font-size="8" font-weight="600"><?= number_format($ch['nilai']/1000, 0) ?>k</text>
         <?php endif; ?>
         <?php endforeach; ?>
       </svg>
     </div>
     <?php if (array_sum(array_column($charthari,'nilai')) === 0): ?>
-    <p style="color:var(--tekssamar);font-size:13px;padding:8px 0;">Belum ada transaksi dalam <?= $nhari ?> hari terakhir.</p>
+    <p style="color:var(--tekssamar);font-size:13px;padding:8px 0;">Belum ada transaksi dalam periode ini.</p>
     <?php endif; ?>
   </div>
 
