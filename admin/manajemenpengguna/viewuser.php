@@ -51,7 +51,7 @@ if ($user['role'] === 'penjual') {
     $toko = $qt->get_result()->fetch_assoc(); $qt->close();
 
     // fallback: cari di riwayat jika slot sudah dikosongkan (migrasi riwayat sudah jalan)
-    if (!$toko && $isDihapus) {
+    if (!$toko) {
         $cektbr = $conn->query("SHOW TABLES LIKE 'tb_riwayat_toko'");
         if ($cektbr && $cektbr->num_rows > 0) {
             $qrw = $conn->prepare("SELECT * FROM tb_riwayat_toko WHERE id_user=? ORDER BY id_riwayat DESC LIMIT 1");
@@ -188,6 +188,18 @@ $namatoko    = !empty($toko) ? ($toko['nama_toko'] ?? '') : (!empty($riwayat) ? 
 $statustoko  = !empty($toko) ? ($toko['status_toko'] ?? 'tutup') : 'tutup';
 $idtoko      = (int)($tokosumber['id_toko'] ?? 0);
 
+$fotoProfile = '';
+if (!empty($tokosumber['foto_toko'])) {
+    $fotoProfile = $tokosumber['foto_toko'];
+} elseif (!empty($user['foto'])) {
+    $fotoProfile = $user['foto'];
+}
+if ($fotoProfile && file_exists(__DIR__ . '/../../2. aset/profil/' . $fotoProfile)) {
+    $avatarHtml = '<img src="../../2. aset/profil/' . htmlspecialchars($fotoProfile) . '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="Foto">';
+} else {
+    $avatarHtml = $inisial;
+}
+
 // dimensi SVG chart — identik laporan.php
 $svgn    = count($charthari);
 $svgw    = max(700, $svgn * 30);
@@ -297,7 +309,7 @@ function bintanghtml(float $r): string {
       <div style="display:flex;align-items:center;gap:14px;flex:1;min-width:220px;padding-right:20px;">
         <div style="width:68px;height:68px;border-radius:50%;background:var(--latar);color:var(--utama);
                     display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;
-                    flex-shrink:0;"><?= $inisial ?></div>
+                    flex-shrink:0;overflow:hidden;"><?= $avatarHtml ?></div>
         <div>
           <div style="font-size:18px;font-weight:800;color:var(--teks);"><?= htmlspecialchars($user['username']) ?></div>
           <div style="font-size:13px;color:var(--tekssamar);"><?= htmlspecialchars($user['email']) ?></div>
@@ -618,7 +630,7 @@ function bintanghtml(float $r): string {
 <!-- ════════════════ PENJUAL TANPA TOKO ════════════════ -->
 
   <div class="kartu" style="margin-bottom:18px;text-align:center;padding:32px;">
-    <div style="width:68px;height:68px;border-radius:50%;background:var(--latar);color:var(--utama);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;margin:0 auto 12px;"><?= $inisial ?></div>
+    <div style="width:68px;height:68px;border-radius:50%;background:var(--latar);color:var(--utama);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;margin:0 auto 12px;overflow:hidden;"><?= $avatarHtml ?></div>
     <div style="font-size:18px;font-weight:800;"><?= htmlspecialchars($user['username']) ?></div>
     <div style="font-size:13px;color:var(--tekssamar);margin:4px 0 8px;"><?= htmlspecialchars($user['email']) ?></div>
     <span class="badge penjual">Penjual</span>
@@ -640,7 +652,7 @@ function bintanghtml(float $r): string {
 <!-- ════════════════ PEMBELI ════════════════ -->
 
   <div class="kartu" style="margin-bottom:18px;text-align:center;padding:32px;">
-    <div style="width:68px;height:68px;border-radius:50%;background:var(--latar);color:var(--utama);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;margin:0 auto 12px;"><?= $inisial ?></div>
+    <div style="width:68px;height:68px;border-radius:50%;background:var(--latar);color:var(--utama);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;margin:0 auto 12px;overflow:hidden;"><?= $avatarHtml ?></div>
     <div style="font-size:18px;font-weight:800;"><?= htmlspecialchars($user['username']) ?></div>
     <div style="font-size:13px;color:var(--tekssamar);margin:4px 0 8px;"><?= htmlspecialchars($user['email']) ?></div>
     <span class="badge pembeli">Pembeli</span>
@@ -688,7 +700,7 @@ function bintanghtml(float $r): string {
 <!-- ════════════════ ADMIN ════════════════ -->
 
   <div class="kartu" style="margin-bottom:18px;text-align:center;padding:32px;">
-    <div style="width:68px;height:68px;border-radius:50%;background:var(--infobg);color:var(--info);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;margin:0 auto 12px;"><?= $inisial ?></div>
+    <div style="width:68px;height:68px;border-radius:50%;background:var(--infobg);color:var(--info);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;margin:0 auto 12px;overflow:hidden;"><?= $avatarHtml ?></div>
     <div style="font-size:18px;font-weight:800;"><?= htmlspecialchars($user['username']) ?></div>
     <div style="font-size:13px;color:var(--tekssamar);margin:4px 0 8px;"><?= htmlspecialchars($user['email']) ?></div>
     <span class="badge admin">Admin Platform</span>

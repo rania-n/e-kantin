@@ -35,7 +35,7 @@ $delAtOrder  = $adaDelAt ? "u.deleted_at DESC" : "u.id_user DESC";
 
 // bangun query sesuai tab aktif
 if ($rolefilter === 'terhapus') {
-    $sql = "SELECT u.id_user, u.username, u.email, u.role, u.created, {$delAtSelect}
+    $sql = "SELECT u.id_user, u.username, u.email, u.role, u.created, {$delAtSelect} u.foto,
                    (SELECT COUNT(*) FROM tb_order o WHERE o.id_user=u.id_user AND o.deleted=0) AS pesanan_user
             FROM tb_user u WHERE u.deleted=1";
     $params = []; $types = '';
@@ -46,8 +46,8 @@ if ($rolefilter === 'terhapus') {
     }
     $sql .= " ORDER BY {$delAtOrder}";
 } else {
-    $sql = "SELECT u.id_user, u.username, u.email, u.role, u.created,
-                   t.id_toko, {$kolomNomor} t.nama_toko, t.status_toko,
+    $sql = "SELECT u.id_user, u.username, u.email, u.role, u.created, u.foto,
+                   t.id_toko, {$kolomNomor} t.nama_toko, t.status_toko, t.foto_toko,
                    CASE u.role WHEN 'penjual' THEN 0 WHEN 'pembeli' THEN 1 ELSE 2 END AS urut_role,
                    (SELECT COUNT(*) FROM tb_order o  WHERE o.id_toko=t.id_toko  AND o.deleted=0) AS pesanan_toko,
                    (SELECT COUNT(*) FROM tb_order o2 WHERE o2.id_user=u.id_user AND o2.deleted=0) AS pesanan_user
@@ -245,7 +245,15 @@ if (!empty($_SESSION['flash'])) {
           <tr>
             <td>
               <div class="user-baris">
-                <div class="avatar-tabel" style="background:#fee2e2;color:#dc2626;"><?= strtoupper(mb_substr($u['username'],0,2)) ?></div>
+                <?php
+                $fotoFile = !empty($u['foto']) ? $u['foto'] : '';
+                if ($fotoFile && file_exists(__DIR__ . '/../../2. aset/profil/' . $fotoFile)) {
+                    $fotoHtml = '<img src="../../2. aset/profil/' . htmlspecialchars($fotoFile) . '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="Foto">';
+                } else {
+                    $fotoHtml = strtoupper(mb_substr($u['username'], 0, 2));
+                }
+                ?>
+                <div class="avatar-tabel" style="background:#fee2e2;color:#dc2626;"><?= $fotoHtml ?></div>
                 <div>
                   <div class="nama" style="text-decoration:line-through;color:var(--tekssamar);"><?= htmlspecialchars($u['username']) ?></div>
                   <small style="color:var(--tekssamar);"><?= htmlspecialchars($u['email']) ?></small>
@@ -338,7 +346,20 @@ if (!empty($_SESSION['flash'])) {
           <tr>
             <td>
               <div class="user-baris">
-                <div class="avatar-tabel"><?= strtoupper(mb_substr($u['username'],0,2)) ?></div>
+                <?php
+                $fotoFile = '';
+                if (!empty($u['foto_toko'])) {
+                    $fotoFile = $u['foto_toko'];
+                } elseif (!empty($u['foto'])) {
+                    $fotoFile = $u['foto'];
+                }
+                if ($fotoFile && file_exists(__DIR__ . '/../../2. aset/profil/' . $fotoFile)) {
+                    $fotoHtml = '<img src="../../2. aset/profil/' . htmlspecialchars($fotoFile) . '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="Foto">';
+                } else {
+                    $fotoHtml = strtoupper(mb_substr($u['username'], 0, 2));
+                }
+                ?>
+                <div class="avatar-tabel"><?= $fotoHtml ?></div>
                 <div>
                   <div class="nama"><?= htmlspecialchars($u['username']) ?></div>
                   <small style="color:var(--tekssamar);"><?= htmlspecialchars($u['email']) ?></small>
