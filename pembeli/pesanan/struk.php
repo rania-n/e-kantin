@@ -65,31 +65,7 @@ $namatoko     = $pesanan['nama_toko'] ?? 'Kantin';
 // format nomor pesanan: EK-000001 (6 digit dengan nol di depan)
 $nomerpesanan = 'EK-' . str_pad($idpesanan, 6, '0', STR_PAD_LEFT);
 
-// fungsi bantu: kembalikan nama kelas CSS berdasarkan status pesanan
-function kelasstatus(string $status): string {
-    return match($status) {
-        'Menunggu'    => 'menunggu',
-        'Diproses'    => 'diproses',
-        'Siap Diambil'=> 'siap',
-        'Selesai'     => 'selesai',
-        default       => 'dibatalkan',
-    };
-}
-
-// fungsi bantu: kembalikan nama kelas ikon Font Awesome berdasarkan status
-function ikonststatus(string $status): string {
-    return match($status) {
-        'Menunggu'     => 'fa-clock',
-        'Diproses'     => 'fa-fire-burner',
-        'Siap Diambil' => 'fa-bell',
-        'Selesai'      => 'fa-circle-check',
-        default        => 'fa-circle-xmark',
-    };
-}
-
 $pathbase = '..';
-// $cetak = true jika ada parameter ?cetak di URL — digunakan untuk menyembunyikan elemen saat cetak
-$cetak = isset($_GET['cetak']);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -99,16 +75,6 @@ $cetak = isset($_GET['cetak']);
 <title>Struk <?= $nomerpesanan ?> - jajankita</title>
 <link rel="stylesheet" href="../../3. komponen/pembeli.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<?php if ($cetak): ?>
-<!-- style khusus cetak: sembunyikan navbar dan elemen non-struk -->
-<style>
-  .takprint { display: none !important; }
-  .navbarpembeli { display: none !important; }
-  body { padding-left: 0 !important; padding-bottom: 0 !important; background: white !important; }
-  /* ukuran kertas kasir 80mm untuk cetak struk termal -->
-  @page { size: 80mm auto; margin: 2mm 4mm; }
-</style>
-<?php endif; ?>
 </head>
 <body>
 
@@ -178,14 +144,6 @@ $cetak = isset($_GET['cetak']);
         <span class="labelstruk">Metode Bayar</span>
         <span class="nilaistruk"><i class="fa-solid fa-wallet"></i> <?= htmlspecialchars($pesanan['metode_pembayaran']) ?></span>
       </div>
-      <div class="barisstruk">
-        <span class="labelstruk">Status</span>
-        <!-- badge berwarna sesuai status pesanan -->
-        <span class="badge <?= kelasstatus($pesanan['status_order']) ?>">
-          <i class="fa-solid <?= ikonststatus($pesanan['status_order']) ?>"></i>
-          <?= htmlspecialchars($pesanan['status_order']) ?>
-        </span>
-      </div>
       <!-- tampilkan catatan jika ada -->
       <?php if (!empty($pesanan['catatan'])): ?>
       <div class="barisstruk">
@@ -235,17 +193,6 @@ $cetak = isset($_GET['cetak']);
     </div>
 
   </div>
-
-  <!-- tombol cetak struk — hanya muncul jika pesanan sudah selesai -->
-  <?php if ($pesanan['status_order'] === 'Selesai'): ?>
-  <!-- takprint: disembunyikan saat mode cetak agar tidak ikut tercetak -->
-  <div class="takprint" style="margin-bottom:10px;">
-    <!-- window.print() memicu dialog cetak browser -->
-    <button onclick="window.print()" class="tombolutama blok">
-      <i class="fa-solid fa-print"></i> Cetak Struk
-    </button>
-  </div>
-  <?php endif; ?>
 
   <!-- tombol beri rating — hanya muncul jika selesai dan belum pernah memberi rating -->
   <?php if ($pesanan['status_order'] === 'Selesai' && !$sudahrating): ?>

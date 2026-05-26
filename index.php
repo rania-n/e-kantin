@@ -221,11 +221,16 @@ a { text-decoration: none; color: inherit; }
 <!-- footer -->
 <footer class="footer">
   <p>
-    &copy; 2025 <a href="index.php">jajankita</a> &mdash; jajankita.my.id &nbsp;|&nbsp;
-    <a href="4. autentifikasi/login.php">Masuk</a> &nbsp;&middot;&nbsp;
-    <a href="4. autentifikasi/register.php">Daftar</a> &nbsp;&middot;&nbsp;
-    <!-- link ke login admin di footer agar mudah ditemukan oleh admin sekolah -->
-    <a href="admin/login/loginadmin.php"><i class="fa-solid fa-shield-halved"></i> Admin</a>
+    &copy; 2025 <a href="index.php">jajankita</a> &mdash; jajankita.my.id
+  </p>
+  <p>
+    Butuh bantuan? Hubungi Admin &nbsp;
+    <a href="https://wa.me/6285648830046" target="_blank">
+      <i class="fa-brands fa-whatsapp"></i> WhatsApp
+    </a> &nbsp;&middot;&nbsp;
+    <a href="mailto:ranianuril210@gmail.com">
+      <i class="fa-solid fa-envelope"></i> Email
+    </a>
   </p>
 </footer>
 

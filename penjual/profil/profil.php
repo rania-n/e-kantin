@@ -236,7 +236,7 @@ function bintang(float $r): string {
                value="<?= htmlspecialchars($toko['nama_toko'] ?? '') ?>"
                required maxlength="100" placeholder="Nama tokomu...">
       </div>
-      <div class="kelompokform">
+      <div class="kelompokform" style="margin-bottom:9px;">
         <label>Foto Toko</label>
         <?php if ($fotoprofil && file_exists("../../2. aset/profil/" . $fotoprofil)): ?>
         <!-- tampilkan foto toko saat ini sebagai preview -->
@@ -244,6 +244,12 @@ function bintang(float $r): string {
           <img src="../../2. aset/profil/<?= htmlspecialchars($fotoprofil) ?>"
                alt="foto toko saat ini"
                style="width:80px;height:80px;object-fit:cover;border-radius:14px;border:2px solid var(--garis);">
+        </div>
+        <!-- hapus foto toko saat ini -->
+        <label style="display:inline-flex; align-items:center; gap:6px; font-family:inherit; font-size:12px; text-transform:none; color:var(--gagal); padding:4px 10px; margin-bottom:-6px; border-radius:6px; cursor:pointer; background:var(--gagalbg); border:1px solid #FCA5A5;">
+        <input type="checkbox" name="hapus_foto" value="1" style="margin:0; cursor:pointer;"> 
+        <i class="fa-solid fa-trash-can"></i> Hapus
+        </label>
         </div>
         <?php endif; ?>
         <!-- input foto opsional: jika dikosongkan, foto lama tetap digunakan -->

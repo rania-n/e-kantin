@@ -48,25 +48,6 @@ $nomerpesanan = 'EK-' . str_pad($idpesanan, 6, '0', STR_PAD_LEFT);
 // nama toko dari session, dengan fallback "jajankita" jika session kosong
 $namatoko     = htmlspecialchars($_SESSION['nama_toko'] ?? 'jajankita');
 
-// kembalikan nama kelas css berdasarkan status (untuk pewarnaan badge)
-function kelasstatus(string $s): string {
-    return match($s) {
-        'Menunggu' => 'menunggu', 'Diproses' => 'diproses',
-        'Siap Diambil' => 'siap', 'Selesai' => 'selesai',
-        default => 'dibatalkan',
-    };
-}
-
-// kembalikan nama ikon font awesome berdasarkan status pesanan
-function ikonStatus(string $s): string {
-    return match($s) {
-        'Menunggu'     => 'fa-clock',
-        'Diproses'     => 'fa-fire-burner',
-        'Siap Diambil' => 'fa-bell',
-        'Selesai'      => 'fa-circle-check',
-        default        => 'fa-circle-xmark',
-    };
-}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -138,13 +119,6 @@ function ikonStatus(string $s): string {
       <div class="barisstruk">
         <span class="labelstruk">Metode Bayar</span>
         <span class="nilaistruk"><i class="fa-solid fa-wallet"></i> <?= htmlspecialchars($pesanan['metode_pembayaran']) ?></span>
-      </div>
-      <div class="barisstruk">
-        <span class="labelstruk">Status</span>
-        <span class="badge <?= kelasstatus($pesanan['status_order']) ?>">
-          <i class="fa-solid <?= ikonStatus($pesanan['status_order']) ?>"></i>
-          <?= htmlspecialchars($pesanan['status_order']) ?>
-        </span>
       </div>
       <!-- catatan pesanan hanya ditampilkan jika ada -->
       <?php if (!empty($pesanan['catatan'])): ?>

@@ -47,6 +47,10 @@ $qu->execute(); $qu->close();
 // simpan flash message yang menyebutkan status baru toko
 $_SESSION['flash'] = ['pesan'=>"Status toko berhasil diubah menjadi \"$statusbaru\".", 'jenis'=>'sukses'];
 
-// selalu kembali ke daftar pengguna penjual
-header("Location: ../../admin/manajemenpengguna/user.php?role=penjual");
+// kembali ke viewuser.php jika dipanggil dari halaman detail pengguna
+if (!empty($_POST['id_user_ref']) && (int)$_POST['id_user_ref'] > 0) {
+    header("Location: ../../admin/manajemenpengguna/viewuser.php?id=" . (int)$_POST['id_user_ref']);
+} else {
+    header("Location: ../../admin/manajemenpengguna/user.php?role=penjual");
+}
 exit;

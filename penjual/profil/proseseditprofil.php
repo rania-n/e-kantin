@@ -57,6 +57,25 @@ if (empty($err)) {
 }
 
 if (empty($err)) {
+    // jika pengguna memilih untuk menghapus foto lama, hapus file dan set kolom foto_toko ke NULL
+    if (isset($_POST['hapus_foto']) && $_POST['hapus_foto'] == '1') {
+        $qfoto = $conn->prepare("SELECT foto_toko FROM tb_toko WHERE id_toko = ?");
+        $qfoto->bind_param("i", $idtoko);
+        $qfoto->execute();
+        $datatoko = $qfoto->get_result()->fetch_assoc();
+        $fotolama = $datatoko['foto_toko'];
+        $qfoto->close();
+
+        if (!empty($fotolama) && file_exists("../../2. aset/profil/" . $fotolama)) {
+            unlink("../../2. aset/profil/" . $fotolama);
+        }
+
+        $qupdatefoto = $conn->prepare("UPDATE tb_toko SET foto_toko = NULL WHERE id_toko = ?");
+        $qupdatefoto->bind_param("i", $idtoko);
+        $qupdatefoto->execute();
+        $qupdatefoto->close();
+    }
+
     // jika ada foto baru, pindahkan dari folder sementara ke folder aset profil
     if ($namafotobaru) {
         $targetdir = __DIR__ . '/../../2. aset/profil/';

@@ -205,9 +205,8 @@ function kelasstatus(string $s): string {
              class="tombolkecil hijau">
             <i class="fa-solid fa-bell"></i> Siap Diambil
           </a>
-          <a href="prosesmanajemenpesanan.php?aksi=batal&id=<?= $pesanan['id_order'] ?>&filter=<?= urlencode($filter) ?>"
-             class="tombolkecil merah">
-            <i class="fa-solid fa-xmark"></i> Batalkan
+          <a href="struk.php?id=<?= $pesanan['id_order'] ?>" class="tombolkecil hijau">
+            <i class="fa-solid fa-print"></i> Cetak Struk
           </a>
 
         <?php elseif ($pesanan['status_order'] === 'Siap Diambil'): ?>
@@ -215,6 +214,9 @@ function kelasstatus(string $s): string {
           <a href="prosesmanajemenpesanan.php?aksi=selesai&id=<?= $pesanan['id_order'] ?>&filter=<?= urlencode($filter) ?>"
              class="tombolkecil aktif-kecil">
             <i class="fa-solid fa-circle-check"></i> Selesai
+          </a>
+          <a href="struk.php?id=<?= $pesanan['id_order'] ?>" class="tombolkecil hijau">
+            <i class="fa-solid fa-print"></i> Cetak Struk
           </a>
 
         <?php elseif ($pesanan['status_order'] === 'Selesai'): ?>

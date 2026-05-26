@@ -198,10 +198,10 @@ if (!empty($teks_pengumuman_penjual)):
     </div>
     <!-- dua tombol kontak: email dan whatsapp -->
     <div style="display:flex;flex-direction:column;gap:10px;">
-      <a href="mailto:admin@ekantin.sch.id" class="tombolutama blok">
+      <a href="mailto:ranianuril210@gmail.com" class="tombolutama blok">
         <i class="fa-solid fa-envelope"></i> Email Admin
       </a>
-      <a href="https://wa.me/6281234567890" target="_blank" class="tombolkedua blok">
+      <a href="https://wa.me/6285648830046" target="_blank" class="tombolkedua blok">
         <i class="fa-brands fa-whatsapp"></i> WhatsApp Admin
       </a>
       <!-- tombol tutup — mengarahkan ke '#' untuk menghapus :target dari url -->

@@ -91,6 +91,14 @@ $usernameemail = $_GET['usernameemail'] ?? '';
     </div>
   </div>
 
+  <div class="link" style="margin-bottom: 10px;">
+    Lupa password? 
+    <a href="https://wa.me/6285648830046?text=Halo%20Admin%20jajankita,%20saya%20lupa%20password%20akun%20saya.%20Mohon%20bantuannya." 
+       target="_blank">
+       Hubungi Admin <i class="fa-brands fa-whatsapp"></i>
+    </a>
+  </div>
+
   <!-- tombol submit — mengirim form ke proseslogin.php -->
   <button type="submit"><i class="fa-solid fa-right-to-bracket"></i> Login</button>
 

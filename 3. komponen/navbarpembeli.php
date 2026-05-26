@@ -154,11 +154,11 @@ $profilaktif    = in_array($halamansaatini, ['profil','editprofil','gantipasswor
       Butuh bantuan? Hubungi admin jajankita melalui:
     </div>
     <!-- tombol kontak email — target="_blank" tidak perlu di sini karena href mailto akan membuka aplikasi email -->
-    <a href="mailto:admin@jajankita.my.id" class="tombolutama blok" style="margin-bottom:10px;">
-      <i class="fa-solid fa-envelope"></i> admin@jajankita.my.id
+    <a href="mailto:ranianuril210@gmail.com" class="tombolutama blok" style="margin-bottom:10px;">
+      <i class="fa-solid fa-envelope"></i> ranianuril210@gmail.com
     </a>
     <!-- tombol whatsapp — target="_blank" membuka di tab baru agar tidak keluar dari aplikasi -->
-    <a href="https://wa.me/6281234567890" target="_blank" class="tombolkedua blok" style="margin-bottom:14px;">
+    <a href="https://wa.me/6285648830046" target="_blank" class="tombolkedua blok" style="margin-bottom:14px;">
       <i class="fa-brands fa-whatsapp"></i> WhatsApp Admin
     </a>
     <!-- tombol tutup modal — href="#" menghapus fragment dari url sehingga :target tidak berlaku lagi -->

@@ -138,7 +138,7 @@ if ($user['role'] === 'penjual') {
         while ($r=$res->fetch_assoc()) $statuspesanan[$r['status_order']]=(int)$r['jml'];
         $s->close();
 
-        // tren omset — tanpa JS
+        // tren omset per hari dalam rentang tanggal (7/14/30 hari terakhir, atau custom)
         $sqchart = $conn->prepare(
             "SELECT DATE(tanggal_order) AS tgl, COALESCE(SUM(total_harga),0) AS nilai
              FROM tb_order WHERE id_toko=? AND deleted=0
@@ -430,7 +430,7 @@ function bintanghtml(float $r): string {
           $by  = 180 - $bh;
           $isT = $ch['tgl'] === date('Y-m-d');
           $fc  = $isT ? '#643843' : '#99627A';
-          $lbl = $svgn <= 14 ? date('d/m', strtotime($ch['tgl'])) : date('d', strtotime($ch['tgl']));
+          $lbl = date('d/m', strtotime($ch['tgl']));
         ?>
         <rect x="<?= $cx ?>" y="<?= $by ?>" width="<?= $svgbarw ?>" height="<?= $bh ?>" rx="3" fill="<?= $fc ?>">
           <title><?= date('d M Y', strtotime($ch['tgl'])) ?> — <?= rp($ch['nilai']) ?></title>

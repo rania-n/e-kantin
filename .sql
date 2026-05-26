@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 20, 2026 at 05:17 PM
+-- Generation Time: May 26, 2026 at 02:41 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -45,74 +45,24 @@ CREATE TABLE `tb_detail_order` (
 --
 
 INSERT INTO `tb_detail_order` (`id_detail`, `id_order`, `id_menu`, `jumlah`, `harga_satuan`, `subtotal`, `created`, `updated`, `deleted`, `deleted_at`) VALUES
-(1, 1, 8, 1, 13000.00, 13000.00, '2026-05-17 01:40:47', NULL, 0, NULL),
-(2, 1, 9, 1, 3000.00, 3000.00, '2026-05-17 01:40:47', NULL, 0, NULL),
-(3, 1, 7, 1, 18000.00, 18000.00, '2026-05-17 01:40:47', NULL, 0, NULL),
-(4, 2, 8, 2, 13000.00, 26000.00, '2026-05-17 01:42:00', NULL, 0, NULL),
-(5, 3, 2, 6, 5000.00, 30000.00, '2026-05-17 02:04:44', NULL, 0, NULL),
-(6, 4, 1, 1, 15000.00, 15000.00, '2026-05-17 03:31:15', NULL, 0, NULL),
-(7, 4, 2, 1, 5000.00, 5000.00, '2026-05-17 03:31:15', NULL, 0, NULL),
-(8, 5, 8, 1, 13000.00, 13000.00, '2026-05-17 03:32:05', NULL, 0, NULL),
-(9, 6, 7, 1, 18000.00, 18000.00, '2026-05-17 03:34:29', NULL, 0, NULL),
-(10, 7, 8, 1, 13000.00, 13000.00, '2026-05-17 06:19:36', NULL, 0, NULL),
-(11, 8, 2, 11, 5000.00, 55000.00, '2026-05-17 06:24:19', NULL, 0, NULL),
-(12, 8, 4, 1, 12000.00, 12000.00, '2026-05-17 06:24:19', NULL, 0, NULL),
-(13, 8, 1, 1, 15000.00, 15000.00, '2026-05-17 06:24:19', NULL, 0, NULL),
-(14, 9, 9, 1, 3000.00, 3000.00, '2026-05-17 08:44:57', NULL, 0, NULL),
-(15, 10, 1, 7, 15000.00, 105000.00, '2026-05-17 08:46:11', NULL, 0, NULL),
-(16, 10, 2, 1, 5000.00, 5000.00, '2026-05-17 08:46:11', NULL, 0, NULL),
-(17, 11, 1, 1, 15000.00, 15000.00, '2026-05-17 08:56:23', NULL, 0, NULL),
-(18, 12, 2, 3, 5000.00, 15000.00, '2026-05-17 10:23:21', NULL, 0, NULL),
-(19, 13, 7, 1, 18000.00, 18000.00, '2026-05-17 13:06:51', NULL, 0, NULL),
-(20, 13, 10, 60, 8000.00, 480000.00, '2026-05-17 13:06:51', NULL, 0, NULL),
-(21, 14, 9, 1, 3000.00, 3000.00, '2026-05-17 13:09:22', NULL, 0, NULL),
-(22, 15, 2, 1, 5000.00, 5000.00, '2026-05-18 01:22:00', NULL, 0, NULL),
-(23, 16, 8, 1, 13000.00, 13000.00, '2026-05-18 04:28:43', NULL, 0, NULL),
-(24, 17, 1, 1, 15000.00, 15000.00, '2026-05-19 00:17:16', NULL, 0, NULL),
-(25, 17, 2, 1, 5000.00, 5000.00, '2026-05-19 00:17:16', NULL, 0, NULL),
-(26, 18, 8, 1, 13000.00, 13000.00, '2026-05-19 00:41:58', NULL, 0, NULL),
-(27, 19, 8, 2, 13000.00, 26000.00, '2026-05-19 00:55:47', NULL, 0, NULL),
-(28, 20, 1, 1, 15000.00, 15000.00, '2026-05-19 01:13:29', NULL, 0, NULL),
-(29, 20, 3, 1, 7000.00, 7000.00, '2026-05-19 01:13:29', NULL, 0, NULL),
-(30, 20, 6, 1, 10000.00, 10000.00, '2026-05-19 01:13:29', NULL, 0, NULL),
-(31, 20, 2, 1, 5000.00, 5000.00, '2026-05-19 01:13:29', NULL, 0, NULL),
-(32, 21, 1, 1, 15000.00, 15000.00, '2026-05-19 01:21:26', NULL, 0, NULL),
-(33, 22, 3, 1, 7000.00, 7000.00, '2026-05-19 02:10:46', NULL, 0, NULL),
-(34, 23, 1, 2, 15000.00, 30000.00, '2026-05-19 02:26:41', NULL, 0, NULL),
-(35, 24, 8, 1, 13000.00, 13000.00, '2026-05-19 05:30:35', NULL, 0, NULL),
-(36, 24, 7, 1, 18000.00, 18000.00, '2026-05-19 05:30:35', NULL, 0, NULL),
-(37, 25, 13, 1, 0.00, 0.00, '2026-05-19 05:35:34', NULL, 0, NULL),
-(38, 26, 1, 1, 15000.00, 15000.00, '2026-05-19 05:56:52', NULL, 0, NULL),
-(39, 26, 2, 1, 5000.00, 5000.00, '2026-05-19 05:56:52', NULL, 0, NULL),
-(40, 26, 3, 1, 7000.00, 7000.00, '2026-05-19 05:56:52', NULL, 0, NULL),
-(41, 27, 1, 1, 15000.00, 15000.00, '2026-05-19 08:47:33', NULL, 0, NULL),
-(42, 27, 2, 1, 5000.00, 5000.00, '2026-05-19 08:47:33', NULL, 0, NULL),
-(43, 28, 1, 1, 15000.00, 15000.00, '2026-05-19 15:15:45', NULL, 0, NULL),
-(44, 29, 1, 1, 15000.00, 15000.00, '2026-05-19 17:38:22', NULL, 0, NULL),
-(45, 30, 1, 4, 15000.00, 60000.00, '2026-05-20 02:14:08', NULL, 0, NULL),
-(46, 31, 2, 1, 5000.00, 5000.00, '2026-05-20 02:29:50', NULL, 0, NULL),
-(47, 31, 3, 1, 7000.00, 7000.00, '2026-05-20 02:29:50', NULL, 0, NULL),
-(48, 32, 1, 1, 15000.00, 15000.00, '2026-05-20 07:39:01', NULL, 0, NULL),
-(49, 33, 7, 1, 18000.00, 18000.00, '2026-05-20 07:39:17', NULL, 0, NULL),
-(50, 34, 3, 1, 7000.00, 7000.00, '2026-05-20 07:39:22', NULL, 0, NULL),
-(51, 35, 2, 1, 5000.00, 5000.00, '2026-05-20 07:39:29', NULL, 0, NULL),
-(52, 36, 8, 1, 13000.00, 13000.00, '2026-05-20 07:39:52', NULL, 0, NULL),
-(53, 37, 7, 1, 18000.00, 18000.00, '2026-05-20 07:40:01', NULL, 0, NULL),
-(54, 38, 8, 4, 13000.00, 52000.00, '2026-05-20 07:40:16', NULL, 0, NULL),
-(55, 39, 8, 1, 13000.00, 13000.00, '2026-05-20 07:51:55', NULL, 0, NULL),
-(56, 40, 8, 2, 13000.00, 26000.00, '2026-05-20 12:47:51', NULL, 0, NULL),
-(57, 40, 7, 1, 18000.00, 18000.00, '2026-05-20 12:47:51', NULL, 0, NULL),
-(58, 41, 1, 1, 15000.00, 15000.00, '2026-05-20 12:48:15', NULL, 0, NULL),
-(59, 41, 2, 1, 5000.00, 5000.00, '2026-05-20 12:48:15', NULL, 0, NULL),
-(60, 41, 4, 1, 12000.00, 12000.00, '2026-05-20 12:48:15', NULL, 0, NULL),
-(61, 42, 1, 1, 15000.00, 15000.00, '2026-05-20 12:49:24', NULL, 0, NULL),
-(62, 43, 1, 1, 15000.00, 15000.00, '2026-05-20 12:51:36', NULL, 0, NULL),
-(63, 44, 8, 1, 13000.00, 13000.00, '2026-05-20 12:52:52', NULL, 0, NULL),
-(64, 45, 1, 1, 15000.00, 15000.00, '2026-05-20 13:01:05', NULL, 0, NULL),
-(65, 46, 8, 1, 13000.00, 13000.00, '2026-05-20 13:11:30', NULL, 0, NULL),
-(66, 47, 2, 2, 5000.00, 10000.00, '2026-05-20 13:22:02', NULL, 0, NULL),
-(67, 48, 4, 1, 12000.00, 12000.00, '2026-05-20 13:57:18', NULL, 0, NULL),
-(68, 49, 4, 1, 12000.00, 12000.00, '2026-05-20 13:58:13', NULL, 0, NULL);
+(1, 1, 1, 1, 8000.00, 8000.00, '2026-05-21 06:56:44', NULL, 0, NULL),
+(2, 2, 11, 1, 5000.00, 5000.00, '2026-05-21 06:59:10', NULL, 0, NULL),
+(3, 3, 8, 5, 1000.00, 5000.00, '2026-05-22 00:57:51', NULL, 0, NULL),
+(4, 3, 3, 1, 5000.00, 5000.00, '2026-05-22 00:57:51', NULL, 0, NULL),
+(5, 4, 4, 1, 5000.00, 5000.00, '2026-05-22 01:00:14', NULL, 0, NULL),
+(6, 5, 43, 1, 3000.00, 3000.00, '2026-05-22 01:00:23', NULL, 0, NULL),
+(7, 6, 8, 1, 1000.00, 1000.00, '2026-05-22 05:08:31', NULL, 0, NULL),
+(8, 7, 68, 1, 3000.00, 3000.00, '2026-05-25 05:20:59', NULL, 0, NULL),
+(9, 7, 69, 1, 3000.00, 3000.00, '2026-05-25 05:20:59', NULL, 0, NULL),
+(10, 8, 67, 1, 5000.00, 5000.00, '2026-05-26 00:31:35', NULL, 0, NULL),
+(11, 9, 52, 1, 6000.00, 6000.00, '2026-05-26 00:31:58', NULL, 0, NULL),
+(12, 10, 1, 1, 8000.00, 8000.00, '2026-05-26 00:32:17', NULL, 0, NULL),
+(13, 11, 61, 1, 3000.00, 3000.00, '2026-05-26 00:32:44', NULL, 0, NULL),
+(14, 12, 3, 3, 5000.00, 15000.00, '2026-05-26 00:32:57', NULL, 0, NULL),
+(15, 12, 1, 7, 8000.00, 56000.00, '2026-05-26 00:32:57', NULL, 0, NULL),
+(16, 13, 8, 1, 1000.00, 1000.00, '2026-05-26 00:39:52', NULL, 0, NULL),
+(17, 13, 3, 1, 5000.00, 5000.00, '2026-05-26 00:39:52', NULL, 0, NULL),
+(18, 13, 1, 1, 8000.00, 8000.00, '2026-05-26 00:39:52', NULL, 0, NULL);
 
 -- --------------------------------------------------------
 
@@ -132,7 +82,14 @@ CREATE TABLE `tb_keranjang` (
 --
 
 INSERT INTO `tb_keranjang` (`id_keranjang`, `id_user`, `id_menu`, `jumlah`) VALUES
-(1, 13, 1, 1);
+(1, 7, 9, 1),
+(2, 7, 63, 1),
+(3, 7, 56, 1),
+(4, 7, 50, 1),
+(6, 13, 5, 1),
+(31, 17, 67, 1),
+(33, 17, 68, 1),
+(36, 18, 1, 2);
 
 -- --------------------------------------------------------
 
@@ -151,7 +108,7 @@ CREATE TABLE `tb_menu` (
   `status` enum('aktif','nonaktif') DEFAULT 'aktif',
   `deleted` tinyint(4) DEFAULT 0,
   `deleted_at` datetime DEFAULT NULL,
-  `created` timestamp NOT NULL DEFAULT current_timestamp(),
+  `created` datetime NOT NULL DEFAULT current_timestamp(),
   `updated` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `id_toko` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -161,19 +118,89 @@ CREATE TABLE `tb_menu` (
 --
 
 INSERT INTO `tb_menu` (`id_menu`, `nama_menu`, `harga`, `stok`, `kategori`, `deskripsi`, `foto`, `status`, `deleted`, `deleted_at`, `created`, `updated`, `id_toko`) VALUES
-(1, 'Bakso Daging', 15000, 29, 'Makanan Berat', 'Bakso sapi asli dengan urat yang kenyal dan kuah gurih.', '69f989784ff3f.jpeg', 'aktif', 0, NULL, '2026-04-25 06:30:43', '2026-05-20 14:03:19', 1),
-(2, 'Teh Manis', 5000, 74, 'Minuman Sehat', 'Teh seduh segar dengan gula asli (Es/Hangat).', '69f98982dc00c.jpeg', 'aktif', 0, NULL, '2026-04-25 06:30:43', '2026-05-20 13:22:02', 1),
-(3, 'Kopi Hitam', 7000, 76, 'Minuman Sehat', 'Kopi robusta mantap untuk penambah semangat.', '69f9898b92cf9.jpeg', 'aktif', 0, NULL, '2026-04-25 06:30:43', '2026-05-20 07:39:22', 1),
-(4, 'Mie Ayam', 12000, 36, 'Makanan Berat', 'Mie kuning dengan potongan ayam kecap dan sawi segar.', '69f989a245a3f.jpeg', 'aktif', 0, NULL, '2026-04-25 06:30:43', '2026-05-20 13:58:13', 1),
-(5, 'Dimsum Ayam', 15000, 30, 'Makanan Ringan', 'Dimsum lembut isi daging ayam isi 4 per porsi.', '69f989b37462f.jpeg', 'aktif', 0, NULL, '2026-04-25 06:30:43', '2026-05-17 01:28:48', 1),
-(6, 'Nasi Pecel', 10000, 44, 'Makanan Berat', 'Nasi dengan sayuran segar dan bumbu kacang khas.', '69f989c5ec7fb.jpeg', 'aktif', 0, NULL, '2026-04-25 06:30:43', '2026-05-19 01:13:29', 1),
-(7, 'Ayam Geprek', 18000, 18, 'Makanan Berat', 'Ayam goreng tepung renyah dengan sambal korek pedas.', '69f989d48c5cd.jpeg', 'aktif', 0, NULL, '2026-04-25 06:30:43', '2026-05-20 12:47:51', 2),
-(8, 'Soto Ayam', 13000, 15, 'Makanan Berat', 'Soto ayam kuah kuning bening dengan koya gurih.', '69f989f373682.jpeg', 'aktif', 0, NULL, '2026-04-25 06:30:43', '2026-05-20 13:11:30', 2),
-(9, 'Air Putih', 3000, 198, 'Minuman Sehat', 'Air mineral kemasan botol 600ml.', '69f989ea8c265.jpeg', 'nonaktif', 0, NULL, '2026-04-25 06:30:43', '2026-05-18 09:49:31', 2),
-(10, 'Es Jeruk', 8000, 0, 'Minuman Sehat', 'Perasan jeruk asli yang menyegarkan.', '69f989deae9c9.jpeg', 'aktif', 0, NULL, '2026-04-25 06:30:43', '2026-05-18 04:37:22', 2),
-(11, 'coba', 0, 10, 'Makanan Berat', 'kkk', '69f98961aaf4f.png', 'aktif', 1, '2026-05-05 14:03:41', '2026-05-05 04:20:50', '2026-05-17 01:32:51', 2),
-(12, 'Air Putih', 3000000, -10, 'Minuman Sehat', ';,,lm', '69f9937a6974c.jpeg', 'nonaktif', 1, '2026-05-18 11:23:03', '2026-05-05 06:51:38', '2026-05-18 04:23:03', 2),
-(13, 'kucin', 0, 999, 'Minuman Ringan', 'fmf', '6a0a960d6189f.png', 'aktif', 0, NULL, '2026-05-18 04:31:09', '2026-05-20 07:42:04', 2);
+(1, 'Ceker Lava Tanpa Tulang', 8000, 21, 'Makanan Ringan', 'Ceker lava tanpa tulang dengan bumbu pedas gurih yang meresap hingga ke dalam, teksturnya empuk dan praktis dinikmati tanpa ribet. Cocok untuk pecinta pedas yang ingin sensasi “lava” di setiap gigitan.', '6a0e79df33e87.jpg', 'aktif', 0, NULL, '2026-05-21 10:19:59', '2026-05-26 00:39:52', 1),
+(2, 'Soto Ayam Spesial', 8000, 55, 'Makanan Berat', 'Bukan soto biasa, isiannya komplit rasanya nagih.', '6a0e7a389d88a.jpg', 'aktif', 0, NULL, '2026-05-21 10:21:28', '2026-05-21 03:21:28', 1),
+(3, 'Es Gamon', 5000, 45, 'Minuman Ringan', 'Perpaduan Matcha Strawberry Yang Bikin Jantung Dag Dig Dug tapi nagih.', '6a0e7b159d9ff.jpg', 'aktif', 0, NULL, '2026-05-21 10:25:09', '2026-05-26 00:39:52', 1),
+(4, 'Es CLBK', 5000, 49, 'Minuman Ringan', 'Matcha susu bercampur boba boba yang sangat cocok nemenin kamu biar tambah happy.', '6a0e7b9aaf540.jpg', 'aktif', 0, NULL, '2026-05-21 10:27:22', '2026-05-22 01:00:14', 1),
+(5, 'Es Friendzone', 5000, 55, 'Minuman Ringan', 'Perpaduan kopi yang nikmat dicampur es membuat harimu lebih bersemangat.', '6a0e7bfd2b403.jpg', 'aktif', 0, NULL, '2026-05-21 10:29:01', '2026-05-21 03:29:01', 1),
+(6, 'Es Soria', 5000, 50, 'Minuman Ringan', 'Soda manis segar dengan sentuhan susu, ala soda gembira yagn bikin hari jadi warna warni.', '6a0e7c4b2059d.jpg', 'nonaktif', 1, '2026-05-22 07:55:23', '2026-05-21 10:30:19', '2026-05-22 00:55:23', 1),
+(7, 'Sempol Ayam', 1000, 100, 'Makanan Ringan', 'Sempol ayam yang enak dan gurih. Harga di atas untuk sempol perbiji.', '6a0e7d193cee2.jpg', 'nonaktif', 1, '2026-05-21 10:34:13', '2026-05-21 10:33:45', '2026-05-21 03:34:13', 1),
+(8, 'Sempol Ayam', 1000, 94, 'Makanan Ringan', 'Sempol ayam yang enak dan gurih. Harga di atas untuk sempol perbiji.', '6a0e7d1c1209d.jpg', 'aktif', 0, NULL, '2026-05-21 10:33:48', '2026-05-26 00:39:52', 1),
+(9, 'Dimsum Mentai Mini', 5000, 50, 'Makanan Ringan', 'Dimsum mentai mini dengan isian ayam dan wortel. 1 porsi berisi 4 dimsum.', '6a0e7f0bf10f5.jpg', 'aktif', 0, NULL, '2026-05-21 10:42:03', '2026-05-21 03:42:26', 3),
+(10, 'Nasi Ayam Goreng', 8000, 50, 'Makanan Berat', 'Nasi hangat dengan ayam goreng gurih dan renyah, cocok untuk menu makan yang mengenyangkan dan lezat.', '6a0e7fd8cb85c.jpeg', 'aktif', 0, NULL, '2026-05-21 10:45:28', '2026-05-21 03:47:08', 2),
+(11, 'Tahu Bakso', 5000, 54, 'Makanan Ringan', 'Tahu bakso dengan perpaduan tahu lembut dan isian bakso gurih yang kenyal, cocok sebagai camilan atau lauk yang enak dan mengenyangkan. Satu porsi berisi 3 tahu bakso.', '6a0e8066969fd.jpg', 'aktif', 0, NULL, '2026-05-21 10:47:50', '2026-05-21 06:59:10', 3),
+(12, 'Mie Instan', 5000, 65, 'Makanan Ringan', 'Mie instan hangat dengan rasa gurih dan lezat, cocok untuk makan praktis dan mengenyangkan.', '6a0e80b5ad5ad.jpeg', 'aktif', 0, NULL, '2026-05-21 10:49:09', '2026-05-21 03:49:09', 2),
+(13, 'Tahu Kress', 5000, 60, 'Makanan Ringan', 'Tahu kress yang renyah bisa custom rasa bumbu. Bumbu balado, bbq, keju, balado cabe hijau, jagung manis. Rasa bumbu tulis pada notes.', '6a0e80e67078d.jpg', 'aktif', 0, NULL, '2026-05-21 10:49:31', '2026-05-21 03:49:58', 3),
+(14, 'Jamur crispy', 5000, 60, 'Makanan Ringan', 'Jamur goreng tepung crispy yang renyah bisa custom rasa bumbu. Bumbu balado, bbq, keju, balado cabe hijau, jagung manis. Rasa bumbu tulis pada notes.', '6a0e812df3b6e.jpg', 'aktif', 0, NULL, '2026-05-21 10:51:09', '2026-05-21 03:51:09', 3),
+(15, 'Mie Telur', 8000, 50, 'Makanan Ringan', 'ie telur hangat dengan topping pilihan yang menggugah selera dan mengenyangkan.', '6a0e812f276ef.jpeg', 'aktif', 0, NULL, '2026-05-21 10:51:11', '2026-05-21 03:51:35', 2),
+(16, 'Usus Crunchy', 5000, 60, 'Makanan Ringan', 'Usus goreng yang crunchy bisa custom rasa bumbu. Bumbu balado, bbq, keju, balado cabe hijau, jagung manis. Rasa bumbu tulis pada notes.', '6a0e8194c6beb.jpg', 'aktif', 0, NULL, '2026-05-21 10:52:52', '2026-05-21 03:52:52', 3),
+(17, 'Pop Mie', 7000, 23, 'Makanan Ringan', 'Pop Mie adalah mie instan cup yang praktis, disajikan hangat dengan kuah gurih dan rasa yang nikmat.', '6a0e81b3b17e6.jpeg', 'aktif', 0, NULL, '2026-05-21 10:53:23', '2026-05-21 03:53:37', 2),
+(18, 'Pentol cilok pedes', 5000, 55, 'Makanan Ringan', 'Pentol cilok pedas dengan tekstur kenyal yang disiram bumbu pedas gurih, cocok untuk camilan santai yang bikin nagih dan menggoyang lidah.', '6a0e82b21b9de.jpg', 'aktif', 0, NULL, '2026-05-21 10:57:38', '2026-05-21 06:41:24', 3),
+(19, 'Nasi 4T', 7000, 44, 'Makanan Sehat', 'Perpaduan nasi putih dengan lauk telur, timun, tempe, dan tahu yang praktis, enak, dan bikin kenyang.', '6a0e82c36560e.png', 'aktif', 0, NULL, '2026-05-21 10:57:55', '2026-05-21 03:57:55', 2),
+(20, 'Es Teh', 3000, 55, 'Minuman Ringan', 'Teh dingin dengan tambahan gula, menyegarkan dan cocok untuk melepas dahaga.', '6a0e832ca3e72.jpeg', 'aktif', 0, NULL, '2026-05-21 10:59:40', '2026-05-21 03:59:40', 2),
+(21, 'Pop Ice', 3000, 68, 'Minuman Ringan', 'Pop Ice minuman dingin yang praktis, memiliki banyak varian rasa dan cocok untuk melepas dahaga.', '6a0e8399f21bd.jpeg', 'aktif', 0, NULL, '2026-05-21 11:01:29', '2026-05-21 04:01:29', 2),
+(22, 'Nasi Pecel', 6000, 20, 'Makanan Berat', 'Nasi dengan lauk, sayur, dan sambal kacang', '6a0e839a4d21f.jpg', 'aktif', 0, NULL, '2026-05-21 11:01:30', '2026-05-21 04:02:17', 5),
+(23, 'Nasi Ayam Goreng', 8000, 20, 'Makanan Berat', 'Nasi dengan ayam goreng gurih dan renyah', '6a0e8421075b9.jpg', 'aktif', 0, NULL, '2026-05-21 11:03:45', '2026-05-21 04:03:45', 5),
+(24, 'Nasi Ayam Geprek', 8000, 20, 'Makanan Berat', 'Nasi dengan ayam crispy dan sambal pedas', '6a0e846f1ce8f.jpg', 'aktif', 0, NULL, '2026-05-21 11:05:03', '2026-05-21 04:05:03', 5),
+(25, 'Soto', 7000, 20, 'Makanan Berat', 'Sup khas Indonesia dengan kuah gurih dan rempah', '6a0e84e81ec91.jpg', 'aktif', 0, NULL, '2026-05-21 11:07:04', '2026-05-21 04:07:04', 5),
+(26, 'Nasi Ayam Geprek', 8000, 60, 'Makanan Berat', 'Nasi ayam geprek sambal ijo dengan ayam crispy yang digeprek dan dilumuri sambal ijo pedas gurih, disajikan dengan nasi hangat yang bikin nagih di setiap suapan.', '6a0e85553a775.jpg', 'aktif', 0, NULL, '2026-05-21 11:08:53', '2026-05-21 06:37:19', 4),
+(27, 'Es Teh', 3000, 20, 'Minuman Ringan', 'Teh dingin yang segar dan manis', '6a0e85588ecf5.jpg', 'aktif', 0, NULL, '2026-05-21 11:08:56', '2026-05-21 04:10:14', 5),
+(28, 'Nasi Ayam Bakar', 8000, 60, 'Makanan Berat', 'Nasi ayam bakar dengan ayam berbumbu khas yang dibakar hingga harum dan meresap, disajikan bersama nasi hangat dan sambal yang menambah kenikmatan setiap suapan.', '6a0e858c66eed.jpg', 'aktif', 0, NULL, '2026-05-21 11:09:48', '2026-05-21 06:37:05', 4),
+(29, 'Es Jeruk', 3000, 20, 'Minuman Ringan', 'Minuman jeruk dingin yang manis dan menyegarkan', '6a0e859bc6851.jpg', 'aktif', 0, NULL, '2026-05-21 11:10:03', '2026-05-21 04:10:03', 5),
+(30, 'Nasi Campur Telur', 8000, 50, 'Makanan Berat', 'Nasi campur telur dengan nasi hangat, telur lezat, dan pelengkap sederhana yang gurih, praktis, dan mengenyangkan untuk menu sehari-hari.', '6a0e85c16e534.jpg', 'aktif', 0, NULL, '2026-05-21 11:10:41', '2026-05-21 06:37:48', 4),
+(31, 'Kopi', 3000, 20, 'Minuman Ringan', 'Minuman dengan rasa khas dan aroma kuat', '6a0e85efd6ebc.jpg', 'aktif', 0, NULL, '2026-05-21 11:11:27', '2026-05-21 04:11:27', 5),
+(32, 'Nasi Pecel', 6000, 65, 'Makanan Berat', 'Nasi pecel dengan aneka sayuran segar yang disiram bumbu kacang khas, gurih, pedas, dan nikmat, cocok untuk menu sederhana yang mengenyangkan.', '6a0e85f939503.jpg', 'aktif', 0, NULL, '2026-05-21 11:11:37', '2026-05-21 06:38:25', 4),
+(33, 'Es Jeruk /Jeruk Hangat', 3000, 70, 'Minuman Ringan', 'Tulis keterangan di notes saat checkout ingin order es jeruk/jeruk hangat. Es jeruk / jeruk hangat dengan rasa manis dan asam yang segar, bisa dinikmati dingin untuk menyegarkan atau hangat untuk menghangatkan tubuh.', '6a0e866636e1c.jpg', 'aktif', 0, NULL, '2026-05-21 11:13:26', '2026-05-21 06:36:23', 4),
+(34, 'Es Teh / Teh Hangat', 3000, 75, 'Minuman Ringan', 'Tulis keterangan di notes saat checkout ingin order es teh/teh hangat. Es Teh / Teh Hangat dengan rasa teh yang ringan, segar, dan pas di lidah. Bisa dinikmati dingin untuk melepas dahaga atau hangat untuk menemani suasana santai.', '6a0e86ae31fdf.jpg', 'aktif', 0, NULL, '2026-05-21 11:14:38', '2026-05-21 06:35:32', 4),
+(35, 'Kopi Hitam', 3000, 75, 'Minuman Ringan', 'Kopi hitam hangat dengan rasa kuat dan aroma khas kopi yang pekat, cocok untuk menemani waktu santai atau menambah semangat di hari yang sibuk.', '6a0e86d02e018.jpg', 'aktif', 0, NULL, '2026-05-21 11:15:12', '2026-05-21 06:34:28', 4),
+(36, 'Nasi Ayam Geprek', 8000, 50, 'Makanan Berat', 'Nasi ayam geprek dengan ayam crispy yang digeprek bersama sambal pedas khas, disajikan hangat dengan nasi putih pulen yang bikin kenyang dan nagih.', '6a0e8d0a82dad.jpg', 'aktif', 0, NULL, '2026-05-21 11:41:46', '2026-05-21 06:32:02', 8),
+(37, 'Nasi Ayam Geprek', 8000, 50, 'Makanan Berat', '', '6a0e8d2bd7aab.jpg', 'nonaktif', 1, '2026-05-21 11:42:25', '2026-05-21 11:42:19', '2026-05-21 04:42:25', 8),
+(38, 'Nasi Soto Ayam', 7000, 60, 'Makanan Berat', 'Soto ayam hangat dengan kuah gurih beraroma rempah, berisi suwiran ayam lembut dan pelengkap yang membuat rasanya semakin nikmat dan menghangatkan.', '6a0e8d53f024e.jpg', 'aktif', 0, NULL, '2026-05-21 11:42:59', '2026-05-21 06:32:14', 8),
+(39, 'Es Jeruk /Jeruk Hangat', 3000, 70, 'Minuman Ringan', 'Tulis keterangan di notes saat chechkout ingin order es jeruk/jeruk hangat. Es jeruk / jeruk hangat dengan perpaduan rasa manis dan asam yang segar, bisa dinikmati dingin untuk menyegarkan atau hangat untuk menghangatkan tubuh.', '6a0e8d7ddd91b.jpg', 'aktif', 0, NULL, '2026-05-21 11:43:41', '2026-05-21 06:30:44', 8),
+(40, 'Es Teh / Teh Hangat', 3000, 75, 'Minuman Ringan', 'Tulis keterangan di notes saat checkout ingin order es teh/teh hangat. Es teh / teh hangat dengan rasa teh yang segar dan pas, bisa dinikmati dingin untuk melepas dahaga atau hangat untuk menemani suasana santai.', '6a0e8dc02e883.jpg', 'aktif', 0, NULL, '2026-05-21 11:44:48', '2026-05-21 06:29:59', 8),
+(41, 'Jahe Hangat', 3000, 55, 'Minuman Sehat', 'Jahe hangat dengan aroma rempah yang khas dan rasa hangat menyegarkan, cocok dinikmati untuk menemani waktu santai dan menghangatkan badan.', '6a0e8e7473700.jpg', 'aktif', 0, NULL, '2026-05-21 11:47:48', '2026-05-21 06:29:40', 8),
+(42, 'Es Jeruk/Panas', 3000, 41, 'Minuman Ringan', 'Silakan tulis di catatan apakah ingin disajikan es atau panas.', '6a0e9013434ea.jpeg', 'aktif', 0, NULL, '2026-05-21 11:54:43', '2026-05-21 04:54:43', 7),
+(43, 'Es Teh/Panas', 3000, 99, 'Minuman Ringan', 'Mohon cantumkan di catatan apakah ingin es teh atau teh panas.', '6a0e90e263b9c.jpeg', 'aktif', 0, NULL, '2026-05-21 11:56:57', '2026-05-22 01:00:23', 7),
+(44, 'Kopi Hitam', 3000, 66, 'Minuman Ringan', '“Minuman kopi hitam dengan rasa kuat dan pahit yang khas, cocok untuk penikmat kopi sederhana.', '6a0e91379fa34.jpeg', 'aktif', 0, NULL, '2026-05-21 11:59:35', '2026-05-21 04:59:35', 7),
+(45, 'Kopi Susu', 4000, 20, 'Minuman Ringan', 'Minuman kopi dengan campuran susu yang lembut, menghasilkan rasa manis dan creamy yang seimbang.', '6a0e9171d1b27.jpeg', 'aktif', 0, NULL, '2026-05-21 12:00:33', '2026-05-21 05:00:33', 7),
+(46, 'Soto', 7000, 17, 'Makanan Berat', 'Soto berkuah hangat dengan rasa gurih dan rempah yang khas, disajikan dengan isian daging atau ayam serta pelengkap yang lezat.', '6a0e91f48f731.jpeg', 'aktif', 0, NULL, '2026-05-21 12:02:44', '2026-05-21 05:02:44', 7),
+(47, 'Pentol', 500, 100, 'Makanan Ringan', 'Pentol dengan tekstur kenyal dan rasa gurih, tersedia dengan pilihan harga yang fleksibel sesuai porsi.', '6a0e92ca13aa9.jpeg', 'aktif', 0, NULL, '2026-05-21 12:06:18', '2026-05-21 05:10:49', 7),
+(48, 'Nasi Soto Ayam', 7000, 75, 'Makanan Berat', 'Soto ayam hangat dengan kuah gurih yang kaya rempah, disajikan dengan suwiran ayam dan pelengkap yang bikin makan jadi lebih nikmat.', '6a0e930a46b0b.jpg', 'aktif', 0, NULL, '2026-05-21 12:07:22', '2026-05-21 06:28:43', 6),
+(49, 'Nasi Ayam Geprek', 8000, 65, 'Makanan Berat', 'Ayam geprek crispy dengan sambal pedas yang nampol dan bumbu meresap, disajikan hangat cocok untuk pecinta pedas sejati.', '6a0e935b895cc.jpg', 'aktif', 0, NULL, '2026-05-21 12:08:43', '2026-05-21 06:28:17', 6),
+(50, 'Tahu Walik', 1000, 55, 'Makanan Ringan', 'Camilan tahu walik dengan tekstur crispy dan isian gurih yang lezat.', '6a0e93943f02d.jpeg', 'aktif', 0, NULL, '2026-05-21 12:09:40', '2026-05-21 05:09:40', 7),
+(51, 'Tahu Walik', 1000, 55, 'Makanan Ringan', 'Camilan tahu walik dengan tekstur crispy dan isian gurih yang lezat.', '6a0e939ec5e92.jpeg', 'nonaktif', 1, '2026-05-21 12:12:56', '2026-05-21 12:09:50', '2026-05-21 05:12:56', 7),
+(52, 'Nasi Pecel', 6000, 69, 'Makanan Berat', 'Nasi pecel dengan sayuran segar dan siraman bumbu kacang khas yang gurih pedas, disajikan lengkap untuk menu sederhana yang bikin nagih.', '6a0e93ab9ccd9.jpg', 'aktif', 0, NULL, '2026-05-21 12:10:03', '2026-05-26 00:31:58', 6),
+(53, 'Chocolatos', 4000, 55, 'Makanan Berat', 'Chocolatos dengan berbagai varian rasa yang manis, creamy, dan nikmat, cocok dinikmati hangat maupun dingin untuk menemani harimu.', '6a0e93dcb39b0.jpg', 'aktif', 0, NULL, '2026-05-21 12:10:52', '2026-05-21 06:27:34', 6),
+(54, 'Es Jeruk', 3000, 100, 'Makanan Ringan', 'Es jeruk segar dengan perpaduan rasa manis dan asam yang menyegarkan, cocok dinikmati kapan saja untuk melepas dahaga.', '6a0e940cece1e.jpg', 'aktif', 0, NULL, '2026-05-21 12:11:40', '2026-05-21 06:26:28', 6),
+(55, 'Es Teh', 3000, 100, 'Minuman Ringan', 'Es teh manis segar dengan rasa teh yang pas dan menyegarkan, cocok menjadi teman menikmati berbagai menu favoritmu.', '6a0e944d0da3e.jpg', 'aktif', 0, NULL, '2026-05-21 12:12:45', '2026-05-21 06:26:00', 6),
+(56, 'Mie Goreng/Kuah', 5000, 28, 'Makanan Berat', 'Mie goreng lezat dengan perpaduan rasa gurih yang nikmat dan aroma menggugah selera.', '6a0e945431570.jpeg', 'aktif', 0, NULL, '2026-05-21 12:12:52', '2026-05-21 05:12:52', 7),
+(57, 'Es Jomblo', 5000, 55, 'Minuman Ringan', 'Soda warna galaxy yang cantik & seger, cocok buat nemenin kamu yang happy walau single', '6a0ea36d4711e.jpg', 'nonaktif', 1, '2026-05-21 13:17:23', '2026-05-21 13:17:17', '2026-05-21 06:17:23', 1),
+(58, 'Es HTS', 5000, 52, 'Minuman Ringan', 'Perpaduan matcha dan espresso yang bikin jantung dag dig dug tapi nagih.', '6a0ea40196eab.jpg', 'aktif', 0, NULL, '2026-05-21 13:19:45', '2026-05-21 06:19:57', 1),
+(59, 'Kopi Hitam', 3000, 20, 'Minuman Ringan', 'Minuman dengan rasa khas dan aroma kuat', '6a0ea45934813.jpg', 'aktif', 0, NULL, '2026-05-21 13:21:13', '2026-05-21 06:21:13', 10),
+(60, 'Es PHP', 5000, 64, 'Minuman Ringan', 'Perpaduan Americano dicampur dengan susu yang bikin kamu tambah mood menjalani keseharianmu.', '6a0ea48ae8e1c.jpg', 'aktif', 0, NULL, '2026-05-21 13:21:41', '2026-05-21 06:22:02', 1),
+(61, 'Es Jeruk', 3000, 19, 'Minuman Ringan', 'Minuman dingin yang manis dan menyegarkan', '6a0ea4a0f145a.jpg', 'aktif', 0, NULL, '2026-05-21 13:22:24', '2026-05-26 00:32:44', 10),
+(62, 'Es Teh', 3000, 20, 'Minuman Ringan', 'Teh dingin yang segar dan manis', '6a0ea4d34939a.jpg', 'aktif', 0, NULL, '2026-05-21 13:23:15', '2026-05-21 06:23:15', 10),
+(63, 'Es Toxic', 5000, 66, 'Minuman Ringan', 'Perpaduan Nescafe yang pahit dengan Milo yang manis menciptakan rasa unik pahit tapi tetap bikin nagih cocok untuk yang lagi menikamti \"hubungan rasa campur aduk\".', '6a0ea506a8054.jpg', 'aktif', 0, NULL, '2026-05-21 13:24:06', '2026-05-21 06:24:06', 1),
+(64, 'Nasi Pecel', 6000, 20, 'Makanan Berat', 'Nasi dengan lauk, sayur, dan saus kacang', '6a0ea510460f1.jpg', 'aktif', 0, NULL, '2026-05-21 13:24:16', '2026-05-21 06:24:16', 10),
+(65, 'Nasi Soto Ayam', 7000, 20, 'Makanan Berat', 'Nasi dengan soto ayam yang gurih', '6a0ea57aa1061.jpg', 'aktif', 0, NULL, '2026-05-21 13:26:02', '2026-05-21 06:26:02', 10),
+(66, 'Mie Goreng', 5000, 20, 'Makanan Berat', 'Mie dengan bumbu yang gurih dan lezat', '6a0ea5d20b5a8.jpg', 'aktif', 0, NULL, '2026-05-21 13:27:30', '2026-05-21 06:27:30', 10),
+(67, 'Mie Rebus', 5000, 19, 'Makanan Berat', 'Mie berkuah hangat dengan rasa gurih dan nikmat', '6a0ea64f2ea08.jpg', 'aktif', 0, NULL, '2026-05-21 13:29:35', '2026-05-26 00:31:35', 10),
+(68, 'Le Minerale', 3000, 29, 'Minuman Sehat', 'Dingin/Biasa tulis di catatan', '6a0eab45a0148.jpeg', 'aktif', 0, NULL, '2026-05-21 13:50:45', '2026-05-25 05:20:59', 6),
+(69, 'Pure Life', 3000, 29, 'Minuman Sehat', 'Dingin/Biasa tulis di catatan', '6a0eabb6dcb93.jpeg', 'aktif', 0, NULL, '2026-05-21 13:52:38', '2026-05-25 05:20:59', 6),
+(70, 'Floridina', 3500, 23, 'Minuman Ringan', '', '6a0eac1153932.jpeg', 'aktif', 0, NULL, '2026-05-21 13:54:09', '2026-05-21 06:55:23', 6),
+(71, 'Nestle Pure Life', 3000, 23, 'Minuman Sehat', 'Dingin/Biasa tulis di catatan', '6a0ead28e20d0.jpeg', 'nonaktif', 1, '2026-05-21 13:59:25', '2026-05-21 13:58:48', '2026-05-21 06:59:25', 6),
+(72, 'Nestle Pure Life', 3000, 23, 'Minuman Sehat', '', '6a0eada6ec8a2.jpeg', 'aktif', 0, NULL, '2026-05-21 14:00:54', '2026-05-21 07:00:54', 7),
+(73, 'Susu Hilo', 4000, 37, 'Minuman Sehat', 'Hangat/Dingin tulis di catatan', '6a0eae359f6c0.jpeg', 'aktif', 0, NULL, '2026-05-21 14:03:17', '2026-05-21 07:03:17', 7),
+(74, 'Milku', 3500, 10, 'Minuman Sehat', '', '6a0eaf9b246e3.jpeg', 'aktif', 0, NULL, '2026-05-21 14:09:15', '2026-05-21 07:09:15', 2),
+(75, 'Nipis Madu', 5000, 9, 'Minuman Ringan', '', '6a0eafe1b25d0.jpeg', 'aktif', 0, NULL, '2026-05-21 14:10:25', '2026-05-21 07:10:25', 2),
+(76, 'Pure Life', 3000, 27, 'Minuman Sehat', '', '6a0eb00ad7b99.jpeg', 'aktif', 0, NULL, '2026-05-21 14:11:06', '2026-05-21 07:11:06', 2),
+(77, 'Es Jeruk', 3000, 20, 'Minuman Ringan', 'Minuman dingin yang manis  dan menyegarkan', '6a0eb0b20bccb.jpg', 'aktif', 0, NULL, '2026-05-21 14:13:54', '2026-05-21 07:13:54', 9),
+(78, 'Es Teh', 3000, 20, 'Minuman Ringan', 'Teh dingin yang segar dan manis', '6a0eb0db04401.jpg', 'aktif', 0, NULL, '2026-05-21 14:14:35', '2026-05-21 07:14:35', 9),
+(79, 'Pop Mie', 7000, 20, 'Makanan Berat', 'Mie instan dalam cup yang praktis dan cepat disajikan', '6a0eb16eb703b.jpg', 'aktif', 0, NULL, '2026-05-21 14:17:02', '2026-05-21 07:17:21', 9),
+(80, 'Gabin', 2000, 15, 'Makanan Ringan', 'enaq euyyy, tapenya yummy', '6a0eb1b91c030.jpeg', 'aktif', 0, NULL, '2026-05-21 14:18:17', '2026-05-21 07:18:17', 5),
+(81, 'Nasi Ayam Penyet', 8000, 20, 'Makanan Berat', 'Nasi dengan ayam penyet dan sambal pedas gurih', '6a0eb1e0989ff.jpg', 'aktif', 0, NULL, '2026-05-21 14:18:56', '2026-05-21 07:18:56', 9),
+(82, 'Mie Ayam', 8000, 20, 'Makanan Berat', 'Mie dengan potongan ayam berbumbu gurih dan lezat', '6a0eb2273a852.jpg', 'aktif', 0, NULL, '2026-05-21 14:20:07', '2026-05-21 07:20:07', 9),
+(83, 'Ultra Milk strobery', 6500, 20, 'Minuman Sehat', '', '6a0eb2672f6a1.jpeg', 'aktif', 0, NULL, '2026-05-21 14:21:11', '2026-05-21 07:21:11', 4);
 
 -- --------------------------------------------------------
 
@@ -203,55 +230,19 @@ CREATE TABLE `tb_order` (
 --
 
 INSERT INTO `tb_order` (`id_order`, `id_user`, `id_toko`, `tanggal_order`, `total_harga`, `status_order`, `metode_pembayaran`, `catatan`, `created`, `updated`, `deleted`, `deleted_at`, `rating`, `ulasan`) VALUES
-(1, 12, NULL, '2026-05-17 08:40:47', 35000.00, 'Diproses', 'Tunai', NULL, '2026-05-17 01:40:47', '2026-05-17 09:28:53', 0, NULL, NULL, NULL),
-(2, 12, NULL, '2026-05-17 08:42:00', 27000.00, 'Siap Diambil', 'Transfer', NULL, '2026-05-17 01:42:00', '2026-05-17 09:29:10', 0, NULL, NULL, NULL),
-(3, 11, NULL, '2026-05-17 09:04:44', 31000.00, 'Menunggu', 'Tunai', NULL, '2026-05-17 02:04:44', NULL, 0, NULL, NULL, NULL),
-(4, 12, NULL, '2026-05-17 10:31:15', 20000.00, 'Menunggu', 'Transfer', NULL, '2026-05-17 03:31:15', NULL, 0, NULL, NULL, NULL),
-(5, 12, NULL, '2026-05-17 10:32:05', 13000.00, 'Menunggu', 'Tunai', NULL, '2026-05-17 03:32:05', '2026-05-17 03:32:25', 0, NULL, 5, 'bgs'),
-(6, 13, NULL, '2026-05-17 10:34:29', 19000.00, 'Menunggu', 'Tunai', NULL, '2026-05-17 03:34:29', NULL, 0, NULL, NULL, NULL),
-(7, 11, 2, '2026-05-17 13:19:36', 14000.00, 'Selesai', 'Tunai', '', '2026-05-17 06:19:36', '2026-05-18 22:07:39', 0, NULL, NULL, NULL),
-(8, 11, 1, '2026-05-17 13:24:19', 83000.00, 'Selesai', 'Transfer', '', '2026-05-17 06:24:19', NULL, 0, NULL, NULL, NULL),
-(9, 11, 2, '2026-05-17 15:44:57', 4000.00, 'Dibatalkan', 'Transfer', '', '2026-05-17 08:44:57', '2026-05-18 09:49:31', 0, NULL, NULL, NULL),
-(10, 11, 1, '2026-05-17 15:46:11', 111000.00, 'Selesai', 'Tunai', '', '2026-05-17 08:46:11', '2026-05-19 09:12:15', 0, NULL, NULL, NULL),
-(11, 11, 1, '2026-05-17 15:56:23', 16000.00, 'Dibatalkan', 'Tunai', '', '2026-05-17 08:56:23', '2026-05-19 01:49:11', 0, NULL, NULL, NULL),
-(12, 11, 1, '2026-05-17 17:23:21', 16000.00, 'Dibatalkan', 'Tunai', '', '2026-05-17 10:23:21', '2026-05-19 00:23:53', 0, NULL, NULL, NULL),
-(13, 11, 2, '2026-05-17 20:06:51', 499000.00, 'Dibatalkan', 'Transfer', '', '2026-05-17 13:06:51', '2026-05-18 05:22:36', 0, NULL, NULL, NULL),
-(14, 12, 2, '2026-05-17 20:09:22', 4000.00, 'Selesai', 'QRIS', '', '2026-05-17 13:09:22', '2026-05-17 13:19:26', 0, NULL, NULL, NULL),
-(15, 12, 1, '2026-05-18 08:22:00', 6000.00, 'Dibatalkan', 'Tunai', 'dingin yaa..', '2026-05-18 01:22:00', '2026-05-19 00:23:22', 0, NULL, NULL, NULL),
-(16, 11, 2, '2026-05-18 11:28:43', 14000.00, 'Selesai', 'Tunai', '', '2026-05-18 04:28:43', '2026-05-18 05:22:01', 0, NULL, NULL, NULL),
-(17, 12, 1, '2026-05-19 07:17:16', 21000.00, 'Selesai', 'QRIS', 'mau dibungkus 1 1', '2026-05-19 00:17:16', '2026-05-19 09:12:14', 0, NULL, NULL, NULL),
-(18, 14, 2, '2026-05-19 07:41:58', 14000.00, 'Selesai', 'Transfer', 'hjhjgh', '2026-05-19 00:41:58', '2026-05-19 00:52:46', 0, NULL, NULL, NULL),
-(19, 14, 2, '2026-05-19 07:55:47', 27000.00, 'Selesai', 'Tunai', 'gaenak gaenak', '2026-05-19 00:55:47', '2026-05-19 05:16:46', 0, NULL, NULL, NULL),
-(20, 14, 1, '2026-05-19 08:13:29', 38000.00, 'Selesai', 'Tunai', 'CATATAN CHECKOUT', '2026-05-19 01:13:29', '2026-05-19 01:15:08', 0, NULL, NULL, NULL),
-(21, 14, 1, '2026-05-19 08:21:26', 16000.00, 'Selesai', 'Tunai', 'cekot', '2026-05-19 01:21:26', '2026-05-19 01:49:03', 0, NULL, NULL, NULL),
-(22, 14, 1, '2026-05-19 09:10:46', 8000.00, 'Selesai', 'Transfer', '', '2026-05-19 02:10:46', '2026-05-19 09:12:13', 0, NULL, NULL, NULL),
-(23, 14, 1, '2026-05-19 09:26:41', 31000.00, 'Selesai', 'Tunai', '', '2026-05-19 02:26:41', '2026-05-19 09:12:11', 0, NULL, NULL, NULL),
-(24, 12, 2, '2026-05-19 12:30:35', 32000.00, 'Selesai', 'QRIS', '', '2026-05-19 05:30:35', '2026-05-19 05:33:06', 0, NULL, NULL, NULL),
-(25, 12, 2, '2026-05-19 12:35:34', 1000.00, 'Selesai', 'Tunai', '', '2026-05-19 05:35:34', '2026-05-19 05:42:35', 0, NULL, NULL, NULL),
-(26, 12, 1, '2026-05-19 12:56:52', 28000.00, 'Dibatalkan', 'Tunai', '', '2026-05-19 05:56:52', '2026-05-19 08:49:20', 0, NULL, NULL, NULL),
-(27, 12, 1, '2026-05-19 15:47:33', 21000.00, 'Dibatalkan', 'QRIS', '', '2026-05-19 08:47:33', '2026-05-19 08:48:58', 0, NULL, NULL, NULL),
-(28, 12, 1, '2026-05-19 22:15:45', 16000.00, 'Dibatalkan', 'Tunai', 'nnx', '2026-05-19 15:15:45', '2026-05-19 15:16:13', 0, NULL, NULL, NULL),
-(29, 12, 1, '2026-05-20 00:38:22', 16000.00, 'Dibatalkan', 'Tunai', '', '2026-05-19 17:38:22', '2026-05-19 17:39:41', 0, NULL, NULL, NULL),
-(30, 12, 1, '2026-05-20 09:14:08', 61000.00, 'Selesai', 'Tunai', '', '2026-05-20 02:14:08', '2026-05-20 02:17:13', 0, NULL, NULL, NULL),
-(31, 12, 1, '2026-05-20 09:29:50', 13000.00, 'Selesai', 'Tunai', '', '2026-05-20 02:29:50', '2026-05-20 03:16:49', 0, NULL, NULL, NULL),
-(32, 4, 1, '2026-05-20 14:39:01', 16000.00, 'Selesai', 'Tunai', '', '2026-05-20 07:39:01', '2026-05-20 12:57:46', 0, NULL, NULL, NULL),
-(33, 4, 2, '2026-05-20 14:39:17', 19000.00, 'Selesai', 'Tunai', '', '2026-05-20 07:39:17', '2026-05-20 07:41:13', 0, NULL, NULL, NULL),
-(34, 4, 1, '2026-05-20 14:39:22', 8000.00, 'Selesai', 'Tunai', '', '2026-05-20 07:39:22', '2026-05-20 12:57:45', 0, NULL, NULL, NULL),
-(35, 4, 1, '2026-05-20 14:39:29', 6000.00, 'Selesai', 'Tunai', '', '2026-05-20 07:39:29', '2026-05-20 12:57:44', 0, NULL, NULL, NULL),
-(36, 4, 2, '2026-05-20 14:39:52', 14000.00, 'Selesai', 'Tunai', '', '2026-05-20 07:39:52', '2026-05-20 13:02:48', 0, NULL, NULL, NULL),
-(37, 4, 2, '2026-05-20 14:40:01', 19000.00, 'Selesai', 'Tunai', '', '2026-05-20 07:40:01', '2026-05-20 13:02:47', 0, NULL, NULL, NULL),
-(38, 4, 2, '2026-05-20 14:40:16', 53000.00, 'Selesai', 'Tunai', '', '2026-05-20 07:40:16', '2026-05-20 13:02:47', 0, NULL, NULL, NULL),
-(39, 4, 2, '2026-05-20 14:51:55', 14000.00, 'Selesai', 'Tunai', 'less sugarP', '2026-05-20 07:51:55', '2026-05-20 13:02:45', 0, NULL, NULL, NULL),
-(40, 17, 2, '2026-05-20 19:47:51', 45000.00, 'Selesai', 'QRIS', 'yo ngunu pokok', '2026-05-20 12:47:51', '2026-05-20 13:02:44', 0, NULL, NULL, NULL),
-(41, 17, 1, '2026-05-20 19:48:15', 33000.00, 'Selesai', 'Transfer', 'heleh padakne', '2026-05-20 12:48:15', '2026-05-20 12:57:43', 0, NULL, NULL, NULL),
-(42, 17, 1, '2026-05-20 19:49:24', 16000.00, 'Dibatalkan', 'Tunai', 'larang ndes', '2026-05-20 12:49:24', '2026-05-20 12:54:18', 0, NULL, NULL, NULL),
-(43, 18, 1, '2026-05-20 19:51:36', 16000.00, 'Selesai', 'Tunai', 'jangan kasar', '2026-05-20 12:51:36', '2026-05-20 12:57:48', 0, NULL, NULL, NULL),
-(44, 16, 2, '2026-05-20 19:52:52', 14000.00, 'Selesai', 'Tunai', 'bakso tanpa tepung', '2026-05-20 12:52:52', '2026-05-20 13:02:43', 0, NULL, NULL, NULL),
-(45, 18, 1, '2026-05-20 20:01:05', 16000.00, 'Dibatalkan', 'Tunai', '', '2026-05-20 13:01:05', '2026-05-20 14:03:19', 0, NULL, NULL, NULL),
-(46, 16, 2, '2026-05-20 20:11:30', 14000.00, 'Menunggu', 'Tunai', 'iyadah', '2026-05-20 13:11:30', NULL, 0, NULL, NULL, NULL),
-(47, 16, 1, '2026-05-20 20:22:02', 11000.00, 'Selesai', 'QRIS', '', '2026-05-20 13:22:02', '2026-05-20 13:23:48', 0, NULL, NULL, NULL),
-(48, 16, 1, '2026-05-20 20:57:18', 13000.00, 'Selesai', 'Transfer', 'ga es', '2026-05-20 13:57:18', '2026-05-20 13:59:35', 0, NULL, NULL, NULL),
-(49, 16, 1, '2026-05-20 20:58:13', 13000.00, 'Selesai', 'Tunai', '', '2026-05-20 13:58:13', '2026-05-20 14:01:20', 0, NULL, NULL, NULL);
+(1, 13, 1, '2026-05-21 13:56:44', 8000.00, 'Selesai', 'Tunai', '', '2026-05-21 06:56:44', '2026-05-21 07:13:53', 0, NULL, NULL, NULL),
+(2, 13, 3, '2026-05-21 13:59:10', 5000.00, 'Menunggu', 'Tunai', '', '2026-05-21 06:59:10', NULL, 0, NULL, NULL, NULL),
+(3, 15, 1, '2026-05-22 07:57:51', 10000.00, 'Selesai', 'Tunai', 'saus dipisah', '2026-05-22 00:57:51', '2026-05-22 00:58:58', 0, NULL, NULL, NULL),
+(4, 15, 1, '2026-05-22 08:00:14', 5000.00, 'Selesai', 'Tunai', '', '2026-05-22 01:00:14', '2026-05-22 01:00:43', 0, NULL, NULL, NULL),
+(5, 15, 7, '2026-05-22 08:00:23', 3000.00, 'Menunggu', 'Tunai', '', '2026-05-22 01:00:23', NULL, 0, NULL, NULL, NULL),
+(6, 15, 1, '2026-05-22 12:08:31', 1000.00, 'Dibatalkan', 'Tunai', '', '2026-05-22 05:08:31', '2026-05-26 00:29:50', 0, NULL, NULL, NULL),
+(7, 15, 6, '2026-05-25 12:20:59', 6000.00, 'Selesai', 'Tunai', 'xs', '2026-05-25 05:20:59', '2026-05-25 05:21:16', 0, NULL, NULL, NULL),
+(8, 19, 10, '2026-05-26 07:31:35', 5000.00, 'Menunggu', 'Tunai', 'kuahnya dikit aja', '2026-05-26 00:31:35', NULL, 0, NULL, NULL, NULL),
+(9, 17, 6, '2026-05-26 07:31:58', 6000.00, 'Menunggu', 'Tunai', 'pakai daging kucing ya', '2026-05-26 00:31:58', NULL, 0, NULL, NULL, NULL),
+(10, 19, 1, '2026-05-26 07:32:17', 8000.00, 'Dibatalkan', 'Tunai', 'kasih tulang', '2026-05-26 00:32:17', '2026-05-26 00:32:42', 0, NULL, NULL, NULL),
+(11, 15, 10, '2026-05-26 07:32:44', 3000.00, 'Menunggu', 'Tunai', 'hangat', '2026-05-26 00:32:44', NULL, 0, NULL, NULL, NULL),
+(12, 15, 1, '2026-05-26 07:32:57', 71000.00, 'Menunggu', 'Tunai', '', '2026-05-26 00:32:57', NULL, 0, NULL, NULL, NULL),
+(13, 17, 1, '2026-05-26 07:39:52', 14000.00, 'Menunggu', 'Tunai', 'gak usah pakai ceker', '2026-05-26 00:39:52', NULL, 0, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -266,7 +257,7 @@ CREATE TABLE `tb_rating` (
   `id_toko` int(11) DEFAULT NULL,
   `rating_toko` tinyint(1) NOT NULL DEFAULT 5,
   `ulasan` text DEFAULT NULL,
-  `created` timestamp NOT NULL DEFAULT current_timestamp(),
+  `created` datetime NOT NULL DEFAULT current_timestamp(),
   `deleted` tinyint(1) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -275,19 +266,8 @@ CREATE TABLE `tb_rating` (
 --
 
 INSERT INTO `tb_rating` (`id_rating`, `id_order`, `id_user`, `id_toko`, `rating_toko`, `ulasan`, `created`, `deleted`) VALUES
-(1, 8, 11, 1, 5, 'ok\n💰 Worth It', '2026-05-17 08:50:17', 1),
-(2, 14, 12, 2, 3, 'baik', '2026-05-17 13:20:02', 0),
-(3, 16, 11, 2, 3, 'bagus aku suka\r\nEnak Banget', '2026-05-18 22:08:34', 0),
-(4, 18, 14, 2, 5, 'mantap\r\nPelayanan Cepat', '2026-05-19 00:53:15', 0),
-(5, 20, 14, 1, 4, 'ramah bintang 1000', '2026-05-19 01:15:33', 0),
-(6, 24, 12, 2, 1, 'j', '2026-05-19 05:33:30', 0),
-(7, 25, 12, 2, 4, 'ok', '2026-05-19 05:55:33', 0),
-(8, 17, 12, 1, 4, 'ok', '2026-05-20 01:17:05', 0),
-(9, 30, 12, 1, 3, 'Penjual Ramah', '2026-05-20 02:30:55', 0),
-(10, 33, 4, 2, 3, 'ok\nWorth It, Penjual Ramah', '2026-05-20 07:53:27', 0),
-(11, 41, 17, 1, 1, 'IUHH RAUENAK NAJIS, JGN BELI DI SINI!!!! 🤬🤬🤬🤬 GA RAMAH SMA SEKALI', '2026-05-20 12:59:01', 0),
-(12, 44, 16, 2, 4, 'Pelayanan Cepat, Penjual Ramah', '2026-05-20 13:03:00', 0),
-(13, 47, 16, 1, 5, 'okelah\nWorth It', '2026-05-20 13:25:48', 0);
+(1, 4, 15, 1, 1, 'ada lalatnya', '2026-05-22 08:03:28', 0),
+(2, 7, 15, 6, 5, 'Pedas Pas', '2026-05-25 12:21:28', 0);
 
 -- --------------------------------------------------------
 
@@ -302,17 +282,27 @@ CREATE TABLE `tb_rating_menu` (
   `rating` tinyint(1) NOT NULL DEFAULT 5
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- --------------------------------------------------------
+
 --
--- Dumping data for table `tb_rating_menu`
+-- Table structure for table `tb_riwayat_toko`
 --
 
-INSERT INTO `tb_rating_menu` (`id_rating_menu`, `id_rating`, `id_menu`, `rating`) VALUES
-(1, 1, 1, 2),
-(2, 1, 2, 3),
-(3, 1, 4, 4),
-(4, 2, 9, 3),
-(5, 3, 8, 5),
-(6, 4, 8, 1);
+CREATE TABLE `tb_riwayat_toko` (
+  `id_riwayat` int(11) NOT NULL,
+  `id_user` int(11) NOT NULL,
+  `id_toko` int(11) NOT NULL,
+  `nomor_kantin` tinyint(3) UNSIGNED DEFAULT NULL,
+  `nama_toko` varchar(100) DEFAULT NULL,
+  `tgl_keluar` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `tb_riwayat_toko`
+--
+
+INSERT INTO `tb_riwayat_toko` (`id_riwayat`, `id_user`, `id_toko`, `nomor_kantin`, `nama_toko`, `tgl_keluar`) VALUES
+(1, 3, 2, 2, 'Kantin Pak Sahudi', '2026-05-24 10:19:32');
 
 -- --------------------------------------------------------
 
@@ -322,8 +312,9 @@ INSERT INTO `tb_rating_menu` (`id_rating_menu`, `id_rating`, `id_menu`, `rating`
 
 CREATE TABLE `tb_toko` (
   `id_toko` int(11) NOT NULL,
-  `id_user` int(11) NOT NULL,
-  `nama_toko` varchar(100) NOT NULL,
+  `nomor_kantin` tinyint(3) UNSIGNED DEFAULT NULL,
+  `id_user` int(11) DEFAULT NULL,
+  `nama_toko` varchar(100) DEFAULT NULL,
   `foto_toko` varchar(255) DEFAULT NULL,
   `created` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
@@ -336,10 +327,17 @@ CREATE TABLE `tb_toko` (
 -- Dumping data for table `tb_toko`
 --
 
-INSERT INTO `tb_toko` (`id_toko`, `id_user`, `nama_toko`, `foto_toko`, `created`, `updated`, `deleted`, `deleted_at`, `status_toko`) VALUES
-(1, 13, 'Toko kantin', 'toko_1_1779213421.png', '2026-05-17 01:17:55', '2026-05-20 13:51:50', 0, NULL, 'buka'),
-(2, 6, 'toko penjual', NULL, '2026-05-17 01:25:55', '2026-05-20 07:00:26', 0, NULL, 'buka'),
-(3, 15, 'tes 3', NULL, '2026-05-19 04:11:47', '2026-05-19 09:07:23', 1, NULL, 'buka');
+INSERT INTO `tb_toko` (`id_toko`, `nomor_kantin`, `id_user`, `nama_toko`, `foto_toko`, `created`, `updated`, `deleted`, `deleted_at`, `status_toko`) VALUES
+(1, 1, 2, 'Kantin Bu Tika', 'toko_1_1779755777.jpg', '2026-05-21 02:52:54', '2026-05-26 00:36:17', 0, NULL, 'buka'),
+(2, 2, NULL, NULL, NULL, '2026-05-21 02:54:56', '2026-05-24 03:19:32', 0, NULL, 'tutup'),
+(3, 3, NULL, NULL, NULL, '2026-05-21 02:58:20', '2026-05-22 05:03:53', 0, NULL, 'tutup'),
+(4, 4, 5, 'Kantin Pak Sukamto', NULL, '2026-05-21 03:00:18', '2026-05-24 01:31:46', 0, NULL, 'tutup'),
+(5, 5, 6, 'Kantin Mar Dika', NULL, '2026-05-21 03:01:46', '2026-05-22 05:03:53', 0, NULL, 'buka'),
+(6, 6, 8, 'Kantin Pak Agus / Bu Erna', NULL, '2026-05-21 04:18:44', '2026-05-22 05:03:53', 0, NULL, 'buka'),
+(7, 7, 9, NULL, NULL, '2026-05-21 04:19:46', '2026-05-24 01:49:50', 0, NULL, 'tutup'),
+(8, 8, 10, 'Kantin Darma Wanita / Bu Kom', NULL, '2026-05-21 04:21:36', '2026-05-22 05:03:53', 0, NULL, 'buka'),
+(9, 9, 11, 'Kantin P. Angga Widhy Wirawan / B. Farah', NULL, '2026-05-21 04:23:29', '2026-05-22 05:03:53', 0, NULL, 'buka'),
+(10, 10, 12, 'Kantin P. Basuni', NULL, '2026-05-21 04:25:04', '2026-05-22 05:03:53', 0, NULL, 'buka');
 
 -- --------------------------------------------------------
 
@@ -355,7 +353,7 @@ CREATE TABLE `tb_user` (
   `foto` varchar(255) DEFAULT NULL,
   `password` varchar(255) NOT NULL,
   `role` enum('admin','penjual','pembeli') NOT NULL,
-  `created` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `created` datetime NOT NULL DEFAULT current_timestamp(),
   `updated` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `deleted` tinyint(4) NOT NULL,
   `deleted_at` datetime DEFAULT NULL
@@ -366,19 +364,25 @@ CREATE TABLE `tb_user` (
 --
 
 INSERT INTO `tb_user` (`id_user`, `username`, `nama_lengkap`, `email`, `foto`, `password`, `role`, `created`, `updated`, `deleted`, `deleted_at`) VALUES
-(4, 'pembeli', NULL, 'pembeli@gmail.com', NULL, '$2y$10$tSpy5ezE1y20J2jKcEooOuuiiwwqT.trpQYqfGtK6mNuUWZCmYi2y', 'pembeli', '2026-05-20 06:58:26', '2026-05-20 06:58:26', 0, NULL),
-(5, 'raniaran', NULL, 'rania@gmail.com', NULL, '$2y$10$AnJx56HImmNjBTBC4uBmueh9tMFl9UvfXeo3gqnLZvnjfC.bm52jG', 'penjual', '2026-05-19 14:48:19', '2026-05-19 14:48:19', 1, NULL),
-(6, 'penjual', NULL, 'penjual@gmail.com', NULL, '$2y$10$/ch1szf61K4QcEBIHr2sne63JfLzGx.XcXbXn9ySjLcXu85TtYGT.', 'penjual', '2026-05-20 07:00:26', '2026-05-20 07:00:26', 0, NULL),
-(7, 'adminjajan', NULL, 'admin@gmail.com', NULL, '$2y$10$zGsxkFvmlqrpBvJQf2/YiuC2YtP.boMNm/LKVQ1LVhLeB.RKCVRNi', 'admin', '2026-05-20 06:55:00', '2026-05-20 06:55:00', 0, NULL),
-(10, 'penjualx', NULL, 'p@gmail.com', NULL, '$2y$10$fl/u0lCYCMBAtN4u.mxOWupWBgt/MMMMt2pKXUjb7cSqPANKojNTK', 'pembeli', '2026-05-20 07:01:17', '2026-05-20 07:01:17', 1, NULL),
-(11, 'raniaii', NULL, 'ranianuril@ail.com', NULL, '$2y$10$/1qCcjI/.oFdcO0aXqhBm.OaZUcLNXdo0go.CU6ueJnd/lO2Vmdo6', 'pembeli', '2026-05-20 07:01:26', '2026-05-20 07:01:26', 1, NULL),
-(12, 'rania', NULL, 'r@gmail.com', NULL, '$2y$10$gZfV6YS4p4gSYIio3XAY7.eebh/V4lKQH52UZPl44h1UHaSxbtU/.', 'pembeli', '2026-05-20 07:01:22', '2026-05-20 07:01:22', 1, NULL),
-(13, 'kantin', NULL, 'kantin@gmail.com', NULL, '$2y$10$zcvbrPyqTY2p7FS05QcVjO2WR/.fIO.D7dBJwkcM4MnOxE5z1X1Ea', 'penjual', '2026-05-17 01:17:55', '2026-05-17 01:17:55', 0, NULL),
-(14, 'belibeli', NULL, 'beli@gmail.com', NULL, '$2y$10$l5GDke.p4lpqylQb2UtQJudBG0GCP.b/w8i1g5p6EWuf3cVL3i27m', 'pembeli', '2026-05-19 00:40:36', '2026-05-19 00:40:36', 0, NULL),
-(15, 'pppppp', NULL, 'jjp@gmail.comhh', NULL, '$2y$10$7EA4hM.qPtKitYBKujd9CehApmpqUKLffSW7AKgzLHniCd/9lf59u', 'penjual', '2026-05-19 09:07:23', '2026-05-19 09:07:23', 1, NULL),
-(16, 'caca mei', NULL, 'caca@gmail.com', NULL, '$2y$10$uaEav.qtcabsopJ7UdmEK.wVGizaD23jIE/X9YPgfbuNH9/WucANq', 'pembeli', '2026-05-20 12:43:33', '2026-05-20 12:43:33', 0, NULL),
-(17, 'nanuna', NULL, 'apacoba@gmail.com', NULL, '$2y$10$KkKzJfflwDufLAiagmSTKuWdKPDsBTMtp4GAX2kyp7miXB7KFOIT6', 'pembeli', '2026-05-20 12:45:07', '2026-05-20 12:45:07', 0, NULL),
-(18, 'skaimutbanget', NULL, 'ska@gmail.com', NULL, '$2y$10$Fyq.uc5WgewPmnaIlxcMEOZ0Lrc.60rt4WSyVVkRKxFjjE342pGem', 'pembeli', '2026-05-20 12:45:41', '2026-05-20 12:45:41', 0, NULL);
+(1, 'jajankita.admin', NULL, 'jajankita@gmail.com', NULL, '$2y$10$grwkJY6wTXFc8lpJ4kFbTeV3KhLzxuqo5oslAvj0ivFoCVPR4kTDu', 'admin', '2026-05-21 09:38:55', '2026-05-21 02:38:55', 0, NULL),
+(2, 'bu tikaa', NULL, 'butikaa@gmail.com', NULL, '$2y$10$RrRkRc3d6FCAzf3uPDRDo.Nq47GZIDCtAig9FavREireJ82qiJsni', 'penjual', '2026-05-21 09:52:54', '2026-05-26 00:34:37', 0, NULL),
+(3, 'sahudi', NULL, 'sahudi@gmail.com', NULL, '$2y$10$fdYC6asbshOvGwtNPaj60.VGZVH9aLwosK3chLPaAr4xQaKU6gmtC', 'penjual', '2026-05-21 09:56:32', '2026-05-24 03:19:32', 1, '2026-05-24 10:19:32'),
+(4, 'bu dian', NULL, 'dian@gmail.com', NULL, '$2y$10$9lTnxAVf8Ii2u7aUn8wK3.oAddnOzmQpdTBnpzTRiyucLBWTcB7Ai', 'penjual', '2026-05-22 07:46:02', '2026-05-22 00:46:02', 1, NULL),
+(5, 'sukamto', NULL, 'sukamto@gmail.com', NULL, '$2y$10$0/PvuV5cM4EF5KGo1r.Fu.WCSWmu9hoQ2I7k/tAtS5HbysJhSzGKW', 'penjual', '2026-05-24 08:31:46', '2026-05-24 01:31:46', 1, '2026-05-24 08:31:46'),
+(6, 'mar dika', NULL, 'mardika@gmail.com', NULL, '$2y$10$ry910HAd7fD4TRqtboHyX.Eb8J2vx9E7xJMu7pTvoj8DpXzFK3ab2', 'penjual', '2026-05-21 10:01:46', '2026-05-21 03:01:46', 0, NULL),
+(7, 'nanuna', NULL, 'apacoba@gmail.com', NULL, '$2y$10$3jMe3Ev3pypE2CYzjaY9ueXVwEBgHHhyWDgWMs3J1AZb5jRy8GAaG', 'pembeli', '2026-05-21 10:22:58', '2026-05-21 03:22:58', 0, NULL),
+(8, 'pak agus', NULL, 'agus@gmail.com', NULL, '$2y$10$sheVeuZVvzAENLFbCJalTumFIfzd2hJd0SY2GRIarq1PwZibmv8Ju', 'penjual', '2026-05-21 11:18:44', '2026-05-25 05:19:24', 0, NULL),
+(9, 'pak fajar', NULL, 'pakfajar@gmail.com', NULL, '$2y$10$K5QfoPBFCs4gGVc5FXuoYuLiicj80teq0tPYEirsFkjDyHy2zY.vG', 'penjual', '2026-05-21 11:19:46', '2026-05-24 01:49:50', 1, '2026-05-24 08:49:50'),
+(10, 'bu kom', NULL, 'darmawanita@gmail.com', NULL, '$2y$10$Cx.p/d1YrPvQ9XpkfEaPB.rEZwC0QSrtyt.08nClvWvf4hQj6Syd2', 'penjual', '2026-05-21 11:21:36', '2026-05-21 04:21:36', 0, NULL),
+(11, 'pak angga', NULL, 'anggafarah@gmail.com', NULL, '$2y$10$jvOzm/701YVwXIqdqLpzxO9O.0EIsPv8f7P96pF9Lx5CmfzfbG31y', 'penjual', '2026-05-21 11:23:29', '2026-05-21 04:23:29', 0, NULL),
+(12, 'pak basuni', NULL, 'basuni@gmail.com', NULL, '$2y$10$eA0zlhB6UAxsPS9mqm3LteB2N1IqPdManPSKO8WCBQpr.5LI/pAMC', 'penjual', '2026-05-21 11:25:04', '2026-05-21 04:25:04', 0, NULL),
+(13, 'ariana grande', NULL, 'grande@gmail.com', NULL, '$2y$10$VvBGYCsZxiK5OG0TwqjryeGp3op7siw8wqORM2AjCJtJpBcT6XER.', 'pembeli', '2026-05-21 13:43:05', '2026-05-21 06:43:05', 0, NULL),
+(14, 'tokokita', NULL, 'kita@gmail.com', NULL, '$2y$10$9jTa1EIdOfjEELYvLULg.esHUv0IHeOf00HSRpz/Ca2wyxWEWpJWm', 'penjual', '2026-05-23 22:22:07', '2026-05-23 15:22:07', 1, '2026-05-23 22:22:07'),
+(15, 'raniaa', NULL, 'r@gmail.com', NULL, '$2y$10$TUFDKJkwdfDXI8qcE8FfV.i/i5CpqzL5HPlswQhxsBMpuO2C0i1DS', 'pembeli', '2026-05-22 07:54:48', '2026-05-22 00:54:48', 0, NULL),
+(16, 'buwina', NULL, 'buwina@gmail.com', NULL, '$2y$10$cQNUHrL4nONbgTosPj7CJu.cc897Q6CK83dKMbIEk5mbvV24lq.gS', 'penjual', '2026-05-24 08:53:12', '2026-05-24 03:19:04', 1, '2026-05-24 10:19:04'),
+(17, 'kerensekali', NULL, 'keren@gmail.com', NULL, '$2y$10$yfPE7X0As7w23a1hjmHe8OMJ5duz8So6D2oJGfcS8SeWrcNsMJr4u', 'pembeli', '2026-05-26 07:29:20', '2026-05-26 00:29:20', 0, NULL),
+(18, 'caca mei', NULL, 'caca@gmail.com', NULL, '$2y$10$fQWpUzbGv8vUoXuaD3DuAuA1v0eYry4tpUEc/dYnib1mQEaxlxFEu', 'pembeli', '2026-05-26 07:29:29', '2026-05-26 00:29:29', 0, NULL),
+(19, 'pitaaa', NULL, 'pita@gmail.com', NULL, '$2y$10$4f5No7ixy7uJ0oHJ4fJMUO8zDSOSUogipGMt8m6sOwShdXGweMp6m', 'pembeli', '2026-05-26 07:29:50', '2026-05-26 00:29:50', 0, NULL);
 
 --
 -- Indexes for dumped tables
@@ -426,10 +430,18 @@ ALTER TABLE `tb_rating_menu`
   ADD PRIMARY KEY (`id_rating_menu`);
 
 --
+-- Indexes for table `tb_riwayat_toko`
+--
+ALTER TABLE `tb_riwayat_toko`
+  ADD PRIMARY KEY (`id_riwayat`),
+  ADD KEY `idx_id_user` (`id_user`);
+
+--
 -- Indexes for table `tb_toko`
 --
 ALTER TABLE `tb_toko`
   ADD PRIMARY KEY (`id_toko`),
+  ADD UNIQUE KEY `uk_nomor_kantin` (`nomor_kantin`),
   ADD KEY `id_user` (`id_user`);
 
 --
@@ -446,49 +458,55 @@ ALTER TABLE `tb_user`
 -- AUTO_INCREMENT for table `tb_detail_order`
 --
 ALTER TABLE `tb_detail_order`
-  MODIFY `id_detail` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=69;
+  MODIFY `id_detail` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `tb_keranjang`
 --
 ALTER TABLE `tb_keranjang`
-  MODIFY `id_keranjang` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id_keranjang` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
 
 --
 -- AUTO_INCREMENT for table `tb_menu`
 --
 ALTER TABLE `tb_menu`
-  MODIFY `id_menu` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id_menu` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=84;
 
 --
 -- AUTO_INCREMENT for table `tb_order`
 --
 ALTER TABLE `tb_order`
-  MODIFY `id_order` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
+  MODIFY `id_order` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `tb_rating`
 --
 ALTER TABLE `tb_rating`
-  MODIFY `id_rating` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id_rating` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `tb_rating_menu`
 --
 ALTER TABLE `tb_rating_menu`
-  MODIFY `id_rating_menu` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id_rating_menu` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tb_riwayat_toko`
+--
+ALTER TABLE `tb_riwayat_toko`
+  MODIFY `id_riwayat` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `tb_toko`
 --
 ALTER TABLE `tb_toko`
-  MODIFY `id_toko` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id_toko` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `tb_user`
 --
 ALTER TABLE `tb_user`
-  MODIFY `id_user` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id_user` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- Constraints for dumped tables
