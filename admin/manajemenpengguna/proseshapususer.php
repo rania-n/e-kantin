@@ -47,12 +47,21 @@ if ($tokopenjual) {
         $ins->execute(); $ins->close();
     }
 
-    // kosongkan slot: id_user dan nama_toko di-NULL agar slot benar-benar tersedia
+    // soft-delete toko lama agar data menu dan order lama tetap terikat di id_toko tersebut (tidak ngikut ke toko baru)
     $upt = $conn->prepare(
-        "UPDATE tb_toko SET id_user=NULL, nama_toko=NULL, status_toko='tutup' WHERE id_toko=?"
+        "UPDATE tb_toko SET deleted=1, deleted_at=NOW(), nomor_kantin=NULL, status_toko='tutup' WHERE id_toko=?"
     );
     $upt->bind_param("i", $tokopenjual['id_toko']);
     $upt->execute(); $upt->close();
+
+    // buat slot kantin kosong baru dengan nomor kantin yang sama (id_toko baru)
+    if ($tokopenjual['nomor_kantin'] !== null) {
+        $ins_baru = $conn->prepare("INSERT INTO tb_toko (nomor_kantin, status_toko) VALUES (?, 'tutup')");
+        $ins_baru->bind_param("i", $tokopenjual['nomor_kantin']);
+        $ins_baru->execute(); $ins_baru->close();
+    } else {
+        $conn->query("INSERT INTO tb_toko (status_toko) VALUES ('tutup')");
+    }
 }
 
 flash('sukses','Pengguna berhasil dihapus. Kantin yang ditempatinya kini tersedia untuk penjual baru.');
