@@ -23,7 +23,7 @@ $migrasiSudah = ($cekkolom && $cekkolom->num_rows > 0);
 $kolomNomor = $migrasiSudah ? "nomor_kantin" : "NULL AS nomor_kantin";
 
 // cek apakah toko ini memang terisi (ada penjualnya)
-$cek = $conn->prepare("SELECT id_user, id_toko, nama_toko, $kolomNomor FROM tb_toko WHERE id_toko=? AND deleted=0");
+$cek = $conn->prepare("SELECT id_user, id_toko, nama_toko, foto_toko, $kolomNomor FROM tb_toko WHERE id_toko=? AND deleted=0");
 $cek->bind_param("i", $id); $cek->execute();
 $toko = $cek->get_result()->fetch_assoc(); $cek->close();
 
@@ -41,32 +41,29 @@ if (!$toko['id_user']) {
 $cektbr = $conn->query("SHOW TABLES LIKE 'tb_riwayat_toko'");
 if ($cektbr && $cektbr->num_rows > 0) {
     $ins = $conn->prepare(
-        "INSERT INTO tb_riwayat_toko (id_user, id_toko, nomor_kantin, nama_toko, tgl_keluar)
-         VALUES (?, ?, ?, ?, NOW())"
+        "INSERT INTO tb_riwayat_toko (id_user, id_toko, nomor_kantin, nama_toko, foto_toko, tgl_keluar)
+         VALUES (?, ?, ?, ?, ?, NOW())"
     );
     $namatoko = $toko['nama_toko'] ?? '';
-    $ins->bind_param("iiis", $toko['id_user'], $id, $toko['nomor_kantin'], $namatoko);
+    $fototoko = $toko['foto_toko'] ?? '';
+    $ins->bind_param("iiiss", $toko['id_user'], $id, $toko['nomor_kantin'], $namatoko, $fototoko);
     $ins->execute(); $ins->close();
 }
 
-// soft-delete toko lama agar data menu dan order lama tetap terikat di id_toko tersebut (tidak ngikut ke toko baru)
+// Kosongkan toko tanpa menghapus id_toko (karena slot paten 10)
 $upd = $conn->prepare(
     "UPDATE tb_toko
-     SET deleted=1, deleted_at=NOW(), nomor_kantin=NULL, status_toko='tutup'
-     WHERE id_toko=? AND deleted=0"
+     SET id_user=NULL, nama_toko=NULL, foto_toko=NULL, status_toko='tutup'
+     WHERE id_toko=?"
 );
 $upd->bind_param("i", $id);
 $upd->execute();
 $upd->close();
 
-// buat slot kantin kosong baru dengan nomor kantin yang sama (id_toko baru)
-if ($toko['nomor_kantin'] !== null) {
-    $ins_baru = $conn->prepare("INSERT INTO tb_toko (nomor_kantin, status_toko) VALUES (?, 'tutup')");
-    $ins_baru->bind_param("i", $toko['nomor_kantin']);
-    $ins_baru->execute(); $ins_baru->close();
-} else {
-    $conn->query("INSERT INTO tb_toko (status_toko) VALUES ('tutup')");
-}
+// Hapus (soft-delete) menu lama agar penjual baru yang menempati slot ini tidak mewarisi menu lama
+$upm = $conn->prepare("UPDATE tb_menu SET deleted=1 WHERE id_toko=?");
+$upm->bind_param("i", $id);
+$upm->execute(); $upm->close();
 
 // label kantin untuk pesan: gunakan nomor jika tersedia, fallback ke id_toko
 $labelKantin = ($toko['nomor_kantin'] !== null)

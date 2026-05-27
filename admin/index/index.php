@@ -27,12 +27,12 @@ while ($r = $q->fetch_assoc()) $statuser[$r['role']] = (int)$r['jml'];
 // jumlahkan semua role menjadi total pengguna
 $totaluser = array_sum($statuser);
 
-// hitung total toko aktif (belum dihapus)
-$qtoko = $conn->query("SELECT COUNT(*) FROM tb_toko WHERE deleted=0");
+// hitung total toko yang terisi penjual (id_user IS NOT NULL) — slot kosong tidak dihitung
+$qtoko = $conn->query("SELECT COUNT(*) FROM tb_toko WHERE deleted=0 AND id_user IS NOT NULL");
 $totaltoko = (int)$qtoko->fetch_row()[0];
 
-// hitung total menu yang statusnya aktif dan belum dihapus
-$qmenu = $conn->query("SELECT COUNT(*) FROM tb_menu WHERE status='aktif' AND deleted=0");
+// hitung total menu aktif hanya dari toko yang saat ini terisi penjual
+$qmenu = $conn->query("SELECT COUNT(*) FROM tb_menu m JOIN tb_toko t ON m.id_toko=t.id_toko WHERE m.status='aktif' AND m.deleted=0 AND t.id_user IS NOT NULL AND t.deleted=0");
 $totalmenu = (int)$qmenu->fetch_row()[0];
 
 // hitung total pesanan dan total nilai uangnya (coalesce: jika null maka 0)

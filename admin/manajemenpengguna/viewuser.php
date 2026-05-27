@@ -2,6 +2,7 @@
 /* detail pengguna untuk admin — penjual: semua data toko + kantin digabung (stat, tren omset,
    produk terlaris, rating, ulasan, daftar menu, pelanggan). pembeli: stat + toko favorit.
    fallback ke tb_riwayat_toko jika slot sudah dikosongkan penuh (migrasi riwayat dijalankan).
+   statistik penjual difilter berdasarkan tanggal_mulai agar data penjual lama tidak ikut terhitung.
    print via window.print(); takprint menyembunyikan nav dan tombol aksi. */
 
 include '../../1. koneksi/koneksi.php';
@@ -31,6 +32,7 @@ $distribusirating = []; $ulasanterbaru = []; $terlaris = [];
 $daftarmenu = []; $toppelanggan = []; $statuspesanan = [];
 $totalorder_pembeli = $totalbelanja = 0; $tokofavorit = [];
 $charthari = []; $maxomsethari = 1; $topmahal = [];
+$pesanandetail = []; // array detail pesanan selesai + dibatalkan
 $modecustom = ($_GET['hari'] ?? '') === 'custom';
 if ($modecustom) {
     $dari   = (!empty($_GET['dari']))   ? date('Y-m-d', strtotime($_GET['dari']))   : date('Y-m-d', strtotime('-7 days'));
@@ -46,7 +48,7 @@ if ($modecustom) {
 // ── PENJUAL ────────────────────────────────────────────────────────────────────
 if ($user['role'] === 'penjual') {
     // cari toko aktif (slot belum dikosongkan penuh — id_user masih ada)
-    $qt = $conn->prepare("SELECT * FROM tb_toko WHERE id_user=? AND deleted=0");
+    $qt = $conn->prepare("SELECT * FROM tb_toko WHERE id_user=? ORDER BY id_toko DESC LIMIT 1");
     $qt->bind_param("i", $id); $qt->execute();
     $toko = $qt->get_result()->fetch_assoc(); $qt->close();
 
@@ -63,26 +65,34 @@ if ($user['role'] === 'penjual') {
     // $it = id_toko untuk semua query statistik (dari toko aktif atau riwayat)
     $it = $toko ? (int)$toko['id_toko'] : ($riwayat ? (int)$riwayat['id_toko'] : 0);
 
+    // tanggal mulai penjual di slot ini — mencegah data penjual sebelumnya ikut dihitung
+    $cekmulai   = $conn->query("SHOW COLUMNS FROM tb_toko LIKE 'tanggal_mulai'");
+    $adatm      = ($cekmulai && $cekmulai->num_rows > 0);
+    $tm         = ($adatm && $toko && !empty($toko['tanggal_mulai'])) ? $toko['tanggal_mulai'] : '';
+    // kondisi sql tambahan: hanya pesanan sejak penjual ini mulai bertugas
+    $filterpesanan = $tm ? " AND o.tanggal_order >= '{$tm}'" : "";
+    $filterrating  = $tm ? " AND r.created >= '{$tm}'" : "";
+
     if ($it) {
-        $s = $conn->prepare("SELECT COUNT(*), COALESCE(SUM(total_harga),0) FROM tb_order WHERE id_toko=? AND deleted=0");
+        $s = $conn->prepare("SELECT COUNT(*), COALESCE(SUM(total_harga),0) FROM tb_order o WHERE o.id_toko=? AND o.deleted=0{$filterpesanan}");
         $s->bind_param("i",$it); $s->execute(); $r=$s->get_result()->fetch_row(); $s->close();
         $totalpesanan=(int)$r[0]; $totalomset=(float)$r[1];
 
-        $s = $conn->prepare("SELECT COUNT(*), COALESCE(SUM(total_harga),0) FROM tb_order WHERE id_toko=? AND status_order='Selesai' AND deleted=0");
+        $s = $conn->prepare("SELECT COUNT(*), COALESCE(SUM(total_harga),0) FROM tb_order o WHERE o.id_toko=? AND o.status_order='Selesai' AND o.deleted=0{$filterpesanan}");
         $s->bind_param("i",$it); $s->execute(); $r=$s->get_result()->fetch_row(); $s->close();
         $jmlselesai=(int)$r[0]; $omsetselesai=(float)$r[1];
 
-        $s = $conn->prepare("SELECT ROUND(AVG(rating_toko),1), COUNT(*) FROM tb_rating WHERE id_toko=? AND deleted=0");
+        $s = $conn->prepare("SELECT ROUND(AVG(rating_toko),1), COUNT(*) FROM tb_rating r WHERE r.id_toko=? AND r.deleted=0{$filterrating}");
         $s->bind_param("i",$it); $s->execute(); $r=$s->get_result()->fetch_row(); $s->close();
         $ratarating=(float)($r[0]??0); $jmlrating=(int)($r[1]??0);
 
         $s = $conn->prepare("SELECT COUNT(*) FROM tb_menu WHERE id_toko=? AND status='aktif' AND deleted=0");
         $s->bind_param("i",$it); $s->execute(); $totalmenu=(int)$s->get_result()->fetch_row()[0]; $s->close();
 
-        $s = $conn->prepare("SELECT COUNT(DISTINCT id_user) FROM tb_order WHERE id_toko=? AND deleted=0");
+        $s = $conn->prepare("SELECT COUNT(DISTINCT o.id_user) FROM tb_order o WHERE o.id_toko=? AND o.deleted=0{$filterpesanan}");
         $s->bind_param("i",$it); $s->execute(); $jmlpelanggan=(int)$s->get_result()->fetch_row()[0]; $s->close();
 
-        $s = $conn->prepare("SELECT rating_toko, COUNT(*) AS jml FROM tb_rating WHERE id_toko=? AND deleted=0 GROUP BY rating_toko ORDER BY rating_toko DESC");
+        $s = $conn->prepare("SELECT rating_toko, COUNT(*) AS jml FROM tb_rating r WHERE r.id_toko=? AND r.deleted=0{$filterrating} GROUP BY rating_toko ORDER BY rating_toko DESC");
         $s->bind_param("i",$it); $s->execute(); $res=$s->get_result();
         while ($r=$res->fetch_assoc()) $distribusirating[(int)$r['rating_toko']]=(int)$r['jml'];
         $s->close();
@@ -90,7 +100,7 @@ if ($user['role'] === 'penjual') {
         $s = $conn->prepare(
             "SELECT r.rating_toko, r.ulasan, r.created, u.username
              FROM tb_rating r JOIN tb_user u ON r.id_user=u.id_user
-             WHERE r.id_toko=? AND r.deleted=0
+             WHERE r.id_toko=? AND r.deleted=0{$filterrating}
              ORDER BY r.created DESC LIMIT 5"
         );
         $s->bind_param("i",$it); $s->execute(); $ulasanterbaru=$s->get_result()->fetch_all(MYSQLI_ASSOC); $s->close();
@@ -100,7 +110,7 @@ if ($user['role'] === 'penjual') {
              FROM tb_detail_order d
              JOIN tb_menu m ON d.id_menu=m.id_menu
              JOIN tb_order o ON d.id_order=o.id_order
-             WHERE m.id_toko=? AND d.deleted=0 AND o.deleted=0 AND o.status_order!='Dibatalkan'
+             WHERE m.id_toko=? AND d.deleted=0 AND o.deleted=0 AND o.status_order!='Dibatalkan'{$filterpesanan}
              GROUP BY m.id_menu, m.nama_menu, m.harga
              ORDER BY terjual DESC LIMIT 5"
         );
@@ -120,7 +130,7 @@ if ($user['role'] === 'penjual') {
         $s = $conn->prepare(
             "SELECT u.username, COUNT(o.id_order) AS jml_order, COALESCE(SUM(o.total_harga),0) AS total_belanja
              FROM tb_order o JOIN tb_user u ON o.id_user=u.id_user
-             WHERE o.id_toko=? AND o.status_order='Selesai' AND o.deleted=0
+             WHERE o.id_toko=? AND o.status_order='Selesai' AND o.deleted=0{$filterpesanan}
              GROUP BY o.id_user, u.username ORDER BY jml_order DESC LIMIT 5"
         );
         $s->bind_param("i",$it); $s->execute(); $toppelanggan=$s->get_result()->fetch_all(MYSQLI_ASSOC); $s->close();
@@ -128,15 +138,10 @@ if ($user['role'] === 'penjual') {
         $s = $conn->prepare(
             "SELECT u.username, COUNT(o.id_order) AS jml_order, COALESCE(SUM(o.total_harga),0) AS total_belanja
              FROM tb_order o JOIN tb_user u ON o.id_user=u.id_user
-             WHERE o.id_toko=? AND o.status_order='Selesai' AND o.deleted=0
+             WHERE o.id_toko=? AND o.status_order='Selesai' AND o.deleted=0{$filterpesanan}
              GROUP BY o.id_user, u.username ORDER BY total_belanja DESC LIMIT 5"
         );
         $s->bind_param("i",$it); $s->execute(); $topmahal=$s->get_result()->fetch_all(MYSQLI_ASSOC); $s->close();
-
-        $s = $conn->prepare("SELECT status_order, COUNT(*) AS jml FROM tb_order WHERE id_toko=? AND deleted=0 GROUP BY status_order");
-        $s->bind_param("i",$it); $s->execute(); $res=$s->get_result();
-        while ($r=$res->fetch_assoc()) $statuspesanan[$r['status_order']]=(int)$r['jml'];
-        $s->close();
 
         // tren omset per hari dalam rentang tanggal (7/14/30 hari terakhir, atau custom)
         $sqchart = $conn->prepare(
@@ -157,6 +162,44 @@ if ($user['role'] === 'penjual') {
         $vals = array_column($charthari, 'nilai');
         $maxomsethari = max($vals ?: [1]);
         if ($maxomsethari <= 0) $maxomsethari = 1;
+
+        // detail pesanan selesai dan dibatalkan — satu baris per item menu
+        $sqdet = $conn->prepare(
+            "SELECT o.id_order, DATE_FORMAT(o.tanggal_order,'%d/%m/%Y %H:%i') AS tgl_format,
+                    u.username AS pembeli, o.status_order, o.total_harga,
+                    m.nama_menu, d.jumlah, d.harga_satuan, d.subtotal
+             FROM tb_order o
+             JOIN tb_user u  ON o.id_user=u.id_user
+             LEFT JOIN tb_detail_order d ON o.id_order=d.id_order AND d.deleted=0
+             LEFT JOIN tb_menu m ON d.id_menu=m.id_menu
+             WHERE o.id_toko=? AND o.status_order IN ('Selesai','Dibatalkan') AND o.deleted=0{$filterpesanan}
+             ORDER BY o.tanggal_order DESC, o.id_order, m.nama_menu
+             LIMIT 500"
+        );
+        $sqdet->bind_param("i",$it); $sqdet->execute();
+        $resdet = $sqdet->get_result();
+        while ($rd = $resdet->fetch_assoc()) {
+            $oid = $rd['id_order'];
+            if (!isset($pesanandetail[$oid])) {
+                $pesanandetail[$oid] = [
+                    'id'      => $oid,
+                    'tanggal' => $rd['tgl_format'],
+                    'pembeli' => $rd['pembeli'],
+                    'status'  => $rd['status_order'],
+                    'total'   => (float)$rd['total_harga'],
+                    'items'   => []
+                ];
+            }
+            if ($rd['nama_menu']) {
+                $pesanandetail[$oid]['items'][] = [
+                    'nama'    => $rd['nama_menu'],
+                    'jumlah'  => (int)$rd['jumlah'],
+                    'harga'   => (float)$rd['harga_satuan'],
+                    'subtotal'=> (float)$rd['subtotal']
+                ];
+            }
+        }
+        $sqdet->close();
     }
 
 // ── PEMBELI ────────────────────────────────────────────────────────────────────
@@ -182,7 +225,7 @@ if (!empty($_SESSION['flash'])) {
 }
 
 // helper vars untuk hero penjual — bisa dari toko aktif atau riwayat
-$tokosumber  = $toko ?? $riwayat ?? [];
+$tokosumber  = $toko ?: ($riwayat ?: []);
 $nomorkantin = (int)($tokosumber['nomor_kantin'] ?? 0);
 $namatoko    = !empty($toko) ? ($toko['nama_toko'] ?? '') : (!empty($riwayat) ? ($riwayat['nama_toko'] ?? '') : '');
 $statustoko  = !empty($toko) ? ($toko['status_toko'] ?? 'tutup') : 'tutup';
@@ -194,8 +237,9 @@ if (!empty($tokosumber['foto_toko'])) {
 } elseif (!empty($user['foto'])) {
     $fotoProfile = $user['foto'];
 }
+// border-radius kotak (8px) bukan bulat agar sinkron dengan desain manajemen pengguna
 if ($fotoProfile && file_exists(__DIR__ . '/../../2. aset/profil/' . $fotoProfile)) {
-    $avatarHtml = '<img src="../../2. aset/profil/' . htmlspecialchars($fotoProfile) . '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="Foto">';
+    $avatarHtml = '<img src="../../2. aset/profil/' . htmlspecialchars($fotoProfile) . '" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" alt="Foto">';
 } else {
     $avatarHtml = $inisial;
 }
@@ -234,9 +278,6 @@ function bintanghtml(float $r): string {
 .cetakjudul { display:none; }
 .bar-dist { height:8px;background:#f0f0f0;border-radius:4px;overflow:hidden;flex:1; }
 .bar-dist-isi { height:100%;background:var(--kedua);border-radius:4px; }
-/* bar status pesanan */
-.bar-status-wrap { flex:1;background:#f0f0f0;border-radius:3px;height:14px;overflow:hidden; }
-.bar-status-isi  { height:100%;background:var(--utama);border-radius:3px; }
 @media print {
   .takprint { display:none !important; }
   .cetakjudul { display:block !important; margin-bottom:14px; }
@@ -305,9 +346,10 @@ function bintanghtml(float $r): string {
   <div class="kartu" style="margin-bottom:18px;">
     <div style="display:flex;align-items:stretch;gap:0;flex-wrap:wrap;">
 
-      <!-- Info Penjual -->
+      <!-- info penjual -->
       <div style="display:flex;align-items:center;gap:14px;flex:1;min-width:220px;padding-right:20px;">
-        <div style="width:68px;height:68px;border-radius:50%;background:var(--latar);color:var(--utama);
+        <!-- avatar kotak (border-radius:8px) agar sinkron dengan halaman daftar pengguna -->
+        <div style="width:68px;height:68px;border-radius:8px;background:var(--latar);color:var(--utama);
                     display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;
                     flex-shrink:0;overflow:hidden;"><?= $avatarHtml ?></div>
         <div>
@@ -324,10 +366,10 @@ function bintanghtml(float $r): string {
         </div>
       </div>
 
-      <!-- Divider -->
+      <!-- divider -->
       <div style="width:1.5px;background:var(--garis);margin:0 20px;align-self:stretch;min-height:60px;"></div>
 
-      <!-- Info Toko/Kantin -->
+      <!-- info toko/kantin -->
       <div style="flex:1;min-width:220px;display:flex;align-items:center;gap:14px;">
         <?php if ($nomorkantin > 0): ?>
         <div style="text-align:center;min-width:64px;">
@@ -365,6 +407,12 @@ function bintanghtml(float $r): string {
             <span style="font-size:12px;color:var(--tekssamar);">(<?= $jmlrating ?> ulasan)</span>
             <?php endif; ?>
           </div>
+          <?php if ($tm): ?>
+          <div style="font-size:10px;color:var(--tekssamar);margin-top:4px;">
+            <i class="fa-solid fa-clock" style="font-size:9px;"></i>
+            Statistik dihitung sejak <?= date('d M Y', strtotime($tm)) ?>
+          </div>
+          <?php endif; ?>
         </div>
       </div>
     </div>
@@ -378,7 +426,7 @@ function bintanghtml(float $r): string {
     </div>
   </div>
 
-  <!-- Stat Cards (6) -->
+  <!-- stat cards (6) -->
   <div class="grid-stat" style="grid-template-columns:repeat(3,1fr);margin-bottom:18px;">
     <div class="kartu-stat">
       <div class="ikon-stat"><i class="fa-solid fa-receipt"></i></div>
@@ -406,7 +454,7 @@ function bintanghtml(float $r): string {
     </div>
   </div>
 
-  <!-- Tren Omset (SVG) -->
+  <!-- tren omset (SVG) -->
   <div class="kartu" style="margin-bottom:18px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
       <h3 style="margin:0;"><i class="fa-solid fa-chart-bar"></i> Tren Omset
@@ -461,7 +509,7 @@ function bintanghtml(float $r): string {
     <?php endif; ?>
   </div>
 
-  <!-- Produk Terlaris + Status Pesanan -->
+  <!-- produk terlaris -->
   <div class="grid-dua" style="margin-bottom:18px;">
     <div class="kartu">
       <h3><i class="fa-solid fa-fire"></i> Produk Terlaris</h3>
@@ -482,32 +530,7 @@ function bintanghtml(float $r): string {
       <?php endif; ?>
     </div>
 
-    <div class="kartu">
-      <h3><i class="fa-solid fa-list-check"></i> Breakdown Status Pesanan</h3>
-      <?php
-      $slist  = ['Menunggu','Diproses','Siap Diambil','Selesai','Dibatalkan'];
-      $sbadge = ['Menunggu'=>'menunggu','Diproses'=>'diproses','Siap Diambil'=>'siap','Selesai'=>'selesai','Dibatalkan'=>'dibatalkan'];
-      $warna  = ['Menunggu'=>'#F59E0B','Diproses'=>'#2563EB','Siap Diambil'=>'#16A34A','Selesai'=>'#99627A','Dibatalkan'=>'#DC2626'];
-      foreach ($slist as $s):
-          $jml = $statuspesanan[$s] ?? 0;
-          $pct = $totalpesanan > 0 ? round($jml / $totalpesanan * 100) : 0;
-      ?>
-      <div style="padding:7px 0;border-bottom:1px solid var(--latar);">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-          <span class="badge <?= $sbadge[$s] ?>"><?= $s ?></span>
-          <strong style="font-size:13px;"><?= $jml ?></strong>
-        </div>
-        <div class="bar-status-wrap">
-          <div class="bar-status-isi" style="width:<?= $pct ?>%;background:<?= $warna[$s] ?>;"></div>
-        </div>
-      </div>
-      <?php endforeach; ?>
-    </div>
-  </div>
-
-  <!-- Rating & Ulasan + Pelanggan Terbanyak -->
-  <div class="grid-dua" style="margin-bottom:18px;">
-
+    <!-- rating & ulasan -->
     <div class="kartu">
       <h3><i class="fa-solid fa-star"></i> Rating &amp; Ulasan</h3>
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--latar);">
@@ -553,7 +576,10 @@ function bintanghtml(float $r): string {
       </div>
       <?php endif; ?>
     </div>
+  </div>
 
+  <!-- pelanggan terbanyak pesan + pengeluaran terbesar -->
+  <div class="grid-dua" style="margin-bottom:18px;">
     <div class="kartu">
       <h3><i class="fa-solid fa-trophy"></i> Pelanggan Terbanyak Pesan</h3>
       <?php if (empty($toppelanggan)): ?>
@@ -593,7 +619,66 @@ function bintanghtml(float $r): string {
     </div>
   </div>
 
-  <!-- Daftar Menu -->
+  <!-- detail pesanan selesai dan dibatalkan -->
+  <div class="kartu" style="margin-bottom:18px;padding:0;overflow:hidden;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--latar);">
+      <h3 style="margin:0;"><i class="fa-solid fa-list-check"></i> Detail Pesanan Selesai &amp; Dibatalkan</h3>
+      <span style="font-size:11px;color:var(--tekssamar);"><?= count($pesanandetail) ?> pesanan</span>
+    </div>
+    <?php if (empty($pesanandetail)): ?>
+    <div class="kosong" style="padding:24px;"><p>Belum ada pesanan selesai atau dibatalkan</p></div>
+    <?php else: ?>
+    <div class="tabel-wrapper">
+      <table style="min-width:680px;">
+        <thead>
+          <tr>
+            <th class="tengah" style="width:40px;">ID</th>
+            <th style="width:120px;">Tanggal</th>
+            <th>Pembeli</th>
+            <th class="tengah" style="width:80px;">Status</th>
+            <th>Rincian Menu</th>
+            <th class="kanan" style="width:110px;">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php foreach ($pesanandetail as $po): ?>
+          <tr>
+            <td class="tengah" style="font-weight:700;color:var(--tekssamar);font-size:11px;">#<?= $po['id'] ?></td>
+            <td style="font-size:11px;color:var(--tekssamar);white-space:nowrap;"><?= $po['tanggal'] ?></td>
+            <td style="font-weight:600;"><?= htmlspecialchars($po['pembeli']) ?></td>
+            <td class="tengah">
+              <span class="badge <?= $po['status']==='Selesai'?'selesai':'dibatalkan' ?>"><?= $po['status'] ?></span>
+            </td>
+            <td style="font-size:12px;">
+              <?php if (empty($po['items'])): ?>
+              <span style="color:var(--tekssamar);font-style:italic;">—</span>
+              <?php else: ?>
+              <?php foreach ($po['items'] as $item): ?>
+              <div style="line-height:1.6;">
+                <strong><?= htmlspecialchars($item['nama']) ?></strong>
+                <span style="color:var(--tekssamar);">×<?= $item['jumlah'] ?></span>
+                <span style="color:var(--tekssamar);">@ <?= rp($item['harga']) ?></span>
+                = <span style="color:var(--utama);font-weight:700;"><?= rp($item['subtotal']) ?></span>
+              </div>
+              <?php endforeach; ?>
+              <?php endif; ?>
+            </td>
+            <td class="kanan" style="font-weight:800;color:var(--sukses);"><?= rp($po['total']) ?></td>
+          </tr>
+          <?php endforeach; ?>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="5"><strong>TOTAL SELESAI</strong></td>
+            <td class="kanan" style="color:var(--sukses);font-weight:800;"><?= rp($omsetselesai) ?></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <?php endif; ?>
+  </div>
+
+  <!-- daftar menu -->
   <?php if (!empty($daftarmenu)): ?>
   <div class="kartu" style="margin-bottom:18px;padding:0;overflow:hidden;">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--latar);">
@@ -630,7 +715,8 @@ function bintanghtml(float $r): string {
 <!-- ════════════════ PENJUAL TANPA TOKO ════════════════ -->
 
   <div class="kartu" style="margin-bottom:18px;text-align:center;padding:32px;">
-    <div style="width:68px;height:68px;border-radius:50%;background:var(--latar);color:var(--utama);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;margin:0 auto 12px;overflow:hidden;"><?= $avatarHtml ?></div>
+    <!-- avatar kotak 8px agar sinkron dengan halaman daftar pengguna -->
+    <div style="width:68px;height:68px;border-radius:8px;background:var(--latar);color:var(--utama);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;margin:0 auto 12px;overflow:hidden;"><?= $avatarHtml ?></div>
     <div style="font-size:18px;font-weight:800;"><?= htmlspecialchars($user['username']) ?></div>
     <div style="font-size:13px;color:var(--tekssamar);margin:4px 0 8px;"><?= htmlspecialchars($user['email']) ?></div>
     <span class="badge penjual">Penjual</span>
@@ -652,7 +738,8 @@ function bintanghtml(float $r): string {
 <!-- ════════════════ PEMBELI ════════════════ -->
 
   <div class="kartu" style="margin-bottom:18px;text-align:center;padding:32px;">
-    <div style="width:68px;height:68px;border-radius:50%;background:var(--latar);color:var(--utama);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;margin:0 auto 12px;overflow:hidden;"><?= $avatarHtml ?></div>
+    <!-- avatar kotak 8px agar sinkron dengan halaman daftar pengguna -->
+    <div style="width:68px;height:68px;border-radius:8px;background:var(--latar);color:var(--utama);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;margin:0 auto 12px;overflow:hidden;"><?= $avatarHtml ?></div>
     <div style="font-size:18px;font-weight:800;"><?= htmlspecialchars($user['username']) ?></div>
     <div style="font-size:13px;color:var(--tekssamar);margin:4px 0 8px;"><?= htmlspecialchars($user['email']) ?></div>
     <span class="badge pembeli">Pembeli</span>
@@ -700,7 +787,8 @@ function bintanghtml(float $r): string {
 <!-- ════════════════ ADMIN ════════════════ -->
 
   <div class="kartu" style="margin-bottom:18px;text-align:center;padding:32px;">
-    <div style="width:68px;height:68px;border-radius:50%;background:var(--infobg);color:var(--info);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;margin:0 auto 12px;overflow:hidden;"><?= $avatarHtml ?></div>
+    <!-- avatar kotak 8px agar sinkron -->
+    <div style="width:68px;height:68px;border-radius:8px;background:var(--infobg);color:var(--info);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;margin:0 auto 12px;overflow:hidden;"><?= $avatarHtml ?></div>
     <div style="font-size:18px;font-weight:800;"><?= htmlspecialchars($user['username']) ?></div>
     <div style="font-size:13px;color:var(--tekssamar);margin:4px 0 8px;"><?= htmlspecialchars($user['email']) ?></div>
     <span class="badge admin">Admin Platform</span>

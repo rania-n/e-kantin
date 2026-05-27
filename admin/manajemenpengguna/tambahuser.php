@@ -19,8 +19,12 @@ if (!empty($_SESSION['flash'])) {
     unset($_SESSION['flash']); // hapus setelah dibaca agar tidak muncul lagi
 }
 
-// baca role default dari url untuk menentukan opsi yang dipilih di dropdown
-$roledefault = $_GET['role'] ?? 'penjual';
+// ambil data lama yang disimpan saat validasi gagal — agar form tidak kosong saat ada error
+$oldinput = $_SESSION['oldinput'] ?? [];
+unset($_SESSION['oldinput']); // hapus setelah dibaca
+
+// baca role default: utamakan dari oldinput (saat error), lalu dari url, lalu default penjual
+$roledefault = $oldinput['role'] ?? ($_GET['role'] ?? 'penjual');
 if (!in_array($roledefault, ['penjual','pembeli','admin'])) $roledefault = 'penjual';
 
 // cek apakah migrasi nomor_kantin sudah dijalankan di phpMyAdmin
@@ -80,17 +84,24 @@ $kantinkosong = $resKantin ? $resKantin->fetch_all(MYSQLI_ASSOC) : [];
   <div class="kartu">
     <h3><i class="fa-solid fa-user-circle"></i> Data Pengguna Baru</h3>
     <!-- form dikirim ke prosestambahuser.php dengan metode POST -->
-    <form method="POST" action="prosestambahuser.php">
+    <!-- autocomplete off mencegah browser mengisi otomatis form tambah pengguna dengan akun tersimpan -->
+    <form method="POST" action="prosestambahuser.php" autocomplete="off">
       <div class="barisform">
         <div class="kelompokform">
           <label>Username <span style="color:var(--gagal);">*</span></label>
+          <!-- nilai dari oldinput dikembalikan jika ada error validasi sebelumnya -->
           <input type="text" name="username" required minlength="6" maxlength="50"
+                 autocomplete="off"
+                 value="<?= htmlspecialchars($oldinput['username'] ?? '') ?>"
                  placeholder="Minimal 6 karakter...">
-          <small>6–50 karakter, harus unik</small>
+          <small>6–50 karakter, hanya huruf/angka/titik/garis bawah, tanpa spasi</small>
         </div>
         <div class="kelompokform">
           <label>Email <span style="color:var(--gagal);">*</span></label>
-          <input type="email" name="email" required placeholder="Email aktif...">
+          <input type="email" name="email" required
+                 autocomplete="off"
+                 value="<?= htmlspecialchars($oldinput['email'] ?? '') ?>"
+                 placeholder="Email aktif...">
         </div>
       </div>
 
@@ -99,8 +110,10 @@ $kantinkosong = $resKantin ? $resKantin->fetch_all(MYSQLI_ASSOC) : [];
           <label>Password <span style="color:var(--gagal);">*</span></label>
           <!-- div pass-wrap memposisikan tombol mata di dalam kotak input -->
           <div style="position:relative;">
+            <!-- autocomplete new-password mencegah browser mengisi dengan password tersimpan -->
             <input type="password" name="password" id="pass_tambah" required
                    minlength="8" maxlength="100"
+                   autocomplete="new-password"
                    placeholder="Minimal 8 karakter..."
                    style="padding-right:44px;">
             <!-- tombol show/hide password — JS diizinkan untuk password -->
@@ -137,8 +150,9 @@ $kantinkosong = $resKantin ? $resKantin->fetch_all(MYSQLI_ASSOC) : [];
             <select name="id_kantin">
               <option value="">— Pilih kantin tersedia —</option>
               <?php foreach ($kantinkosong as $k): ?>
-              <!-- tampilkan nomor kantin agar admin tahu slot mana yang dipilih -->
-              <option value="<?= (int)$k['id_toko'] ?>">
+              <!-- tandai pilihan yang dipilih sebelum error validasi -->
+              <option value="<?= (int)$k['id_toko'] ?>"
+                <?= isset($oldinput['id_kantin']) && (int)$oldinput['id_kantin']===(int)$k['id_toko'] ? 'selected' : '' ?>>
                 <?= $k['nomor_kantin'] !== null ? 'Kantin ke-' . (int)$k['nomor_kantin'] : 'Kantin #' . (int)$k['id_toko'] . ' (belum migrasi)' ?>
               </option>
               <?php endforeach; ?>
@@ -151,6 +165,7 @@ $kantinkosong = $resKantin ? $resKantin->fetch_all(MYSQLI_ASSOC) : [];
           <div class="kelompokform" style="margin-bottom:0;">
             <label>Nama Toko <span style="color:var(--tekssamar);font-size:11px;">(hanya untuk Penjual)</span></label>
             <input type="text" name="nama_toko" maxlength="100"
+                   value="<?= htmlspecialchars($oldinput['nama_toko'] ?? '') ?>"
                    placeholder="Nama toko di kantin ini...">
             <small>Nama toko yang akan muncul di aplikasi pembeli.</small>
           </div>

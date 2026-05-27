@@ -20,6 +20,9 @@ $password  = $_POST['password'] ?? '';
 $role      = $_POST['role'] ?? 'penjual';
 $idkantin  = (int)($_POST['id_kantin'] ?? 0); // id_toko kantin yang dipilih untuk penjual
 
+// siapkan data lama untuk dikembalikan ke form jika validasi gagal
+$oldinput = ['username'=>$username,'email'=>$email,'role'=>$role,'id_kantin'=>$idkantin,'nama_toko'=>$namatoko];
+
 // validasi role agar hanya nilai yang diizinkan diterima
 if (!in_array($role, ['penjual','pembeli','admin'])) {
     flash('gagal','Peran tidak valid.');
@@ -28,18 +31,28 @@ if (!in_array($role, ['penjual','pembeli','admin'])) {
 
 // validasi panjang username: minimal 6, maksimal 50 karakter
 if (strlen($username) < 6 || strlen($username) > 50) {
+    $_SESSION['oldinput'] = $oldinput;
     flash('gagal','Username harus 6–50 karakter.');
+    redirect('tambahuser.php');
+}
+
+// validasi format username: hanya huruf, angka, titik, dan garis bawah — tanpa spasi
+if (!preg_match('/^[a-zA-Z0-9_.]+$/', $username)) {
+    $_SESSION['oldinput'] = $oldinput;
+    flash('gagal','Username hanya boleh berisi huruf, angka, titik (.), dan garis bawah (_). Tanpa spasi.');
     redirect('tambahuser.php');
 }
 
 // validasi format email menggunakan filter bawaan PHP
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    $_SESSION['oldinput'] = $oldinput;
     flash('gagal','Format email tidak valid.');
     redirect('tambahuser.php');
 }
 
 // validasi panjang password: minimal 8 karakter
 if (strlen($password) < 8) {
+    $_SESSION['oldinput'] = $oldinput;
     flash('gagal','Password minimal 8 karakter.');
     redirect('tambahuser.php');
 }
@@ -47,10 +60,12 @@ if (strlen($password) < 8) {
 // validasi khusus penjual: wajib pilih kantin dan isi nama toko
 if ($role === 'penjual') {
     if (!$idkantin) {
+        $_SESSION['oldinput'] = $oldinput;
         flash('gagal','Penjual wajib memilih kantin yang tersedia.');
         redirect('tambahuser.php');
     }
     if (empty($namatoko)) {
+        $_SESSION['oldinput'] = $oldinput;
         flash('gagal','Nama toko wajib diisi untuk Penjual.');
         redirect('tambahuser.php');
     }
@@ -61,6 +76,7 @@ $ck = $conn->prepare("SELECT id_user FROM tb_user WHERE username=? AND deleted=0
 $ck->bind_param("s", $username); $ck->execute();
 if ($ck->get_result()->num_rows > 0) {
     $ck->close();
+    $_SESSION['oldinput'] = $oldinput;
     flash('gagal','Username sudah terdaftar.');
     redirect('tambahuser.php');
 }
@@ -71,6 +87,7 @@ $ce = $conn->prepare("SELECT id_user FROM tb_user WHERE email=? AND deleted=0");
 $ce->bind_param("s", $email); $ce->execute();
 if ($ce->get_result()->num_rows > 0) {
     $ce->close();
+    $_SESSION['oldinput'] = $oldinput;
     flash('gagal','Email sudah digunakan.');
     redirect('tambahuser.php');
 }
@@ -91,6 +108,7 @@ if ($role === 'penjual') {
     $cek->bind_param("i", $idkantin); $cek->execute();
     $kantindata = $cek->get_result()->fetch_assoc(); $cek->close();
     if (!$kantindata) {
+        $_SESSION['oldinput'] = $oldinput;
         flash('gagal','Kantin yang dipilih sudah terisi atau tidak ditemukan. Pilih kantin lain.');
         redirect('tambahuser.php');
     }
@@ -99,6 +117,11 @@ if ($role === 'penjual') {
         ? (int)$kantindata['nomor_kantin']
         : 0; // fallback sebelum migrasi
 }
+
+// cek apakah kolom tanggal_mulai sudah ada (untuk mencatat kapan penjual mulai di slot)
+$cekmulai   = $conn->query("SHOW COLUMNS FROM tb_toko LIKE 'tanggal_mulai'");
+$adamulai   = ($cekmulai && $cekmulai->num_rows > 0);
+$setmulai   = $adamulai ? ", tanggal_mulai=NOW()" : "";
 
 // hash password menggunakan bcrypt — tidak pernah simpan password polos
 $hash = password_hash($password, PASSWORD_DEFAULT);
@@ -118,10 +141,11 @@ $ins->close();
 
 // jika role penjual: isi kantin yang dipilih dengan data penjual ini
 // ini adalah UPDATE bukan INSERT — kantin sudah ada, hanya diisi pemiliknya
+// tanggal_mulai dicatat agar statistik bisa difilter per masa jabatan penjual
 if ($role === 'penjual') {
     $upk = $conn->prepare(
         "UPDATE tb_toko
-         SET id_user=?, nama_toko=?, status_toko='tutup'
+         SET id_user=?, nama_toko=?, status_toko='tutup'{$setmulai}
          WHERE id_toko=? AND id_user IS NULL AND deleted=0"
     );
     // "isi" = int (id_user), string (nama_toko), int (id_toko)

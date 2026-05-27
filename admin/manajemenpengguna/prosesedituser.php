@@ -17,14 +17,32 @@ $email    = trim($_POST['email'] ?? '');
 $password = $_POST['password'] ?? '';
 $namatoko = trim($_POST['nama_toko'] ?? '');
 
+// siapkan data lama untuk dikembalikan ke form jika validasi gagal
+$oldinput = ['username'=>$username,'email'=>$email,'nama_toko'=>$namatoko];
+
 // validasi: id harus ada
 if (!$id) { flash('gagal','Data tidak valid.'); redirect('user.php'); }
 
 // validasi panjang username
-if (strlen($username) < 6) { flash('gagal','Username minimal 6 karakter.'); redirect("edituser.php?id=$id"); }
+if (strlen($username) < 6) {
+    $_SESSION['oldinput'] = $oldinput;
+    flash('gagal','Username minimal 6 karakter.');
+    redirect("edituser.php?id=$id");
+}
+
+// validasi format username: hanya huruf, angka, titik, dan garis bawah — tanpa spasi
+if (!preg_match('/^[a-zA-Z0-9_.]+$/', $username)) {
+    $_SESSION['oldinput'] = $oldinput;
+    flash('gagal','Username hanya boleh berisi huruf, angka, titik (.), dan garis bawah (_). Tanpa spasi.');
+    redirect("edituser.php?id=$id");
+}
 
 // validasi format email
-if (!filter_var($email, FILTER_VALIDATE_EMAIL)) { flash('gagal','Format email tidak valid.'); redirect("edituser.php?id=$id"); }
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    $_SESSION['oldinput'] = $oldinput;
+    flash('gagal','Format email tidak valid.');
+    redirect("edituser.php?id=$id");
+}
 
 // ambil role pengguna saat ini dari database — role tidak boleh berubah lewat form ini
 $qr = $conn->prepare("SELECT role FROM tb_user WHERE id_user=? AND deleted=0");
@@ -38,19 +56,19 @@ $role = $rowrole[0];
 // cek apakah username baru sudah dipakai pengguna lain (kecuali diri sendiri)
 $ck = $conn->prepare("SELECT id_user FROM tb_user WHERE username=? AND id_user!=? AND deleted=0");
 $ck->bind_param("si", $username, $id); $ck->execute();
-if ($ck->get_result()->num_rows > 0) { $ck->close(); flash('gagal','Username sudah digunakan oleh pengguna lain.'); redirect("edituser.php?id=$id"); }
+if ($ck->get_result()->num_rows > 0) { $ck->close(); $_SESSION['oldinput']=$oldinput; flash('gagal','Username sudah digunakan oleh pengguna lain.'); redirect("edituser.php?id=$id"); }
 $ck->close();
 
 // cek apakah email baru sudah dipakai pengguna lain
 $ce = $conn->prepare("SELECT id_user FROM tb_user WHERE email=? AND id_user!=? AND deleted=0");
 $ce->bind_param("si", $email, $id); $ce->execute();
-if ($ce->get_result()->num_rows > 0) { $ce->close(); flash('gagal','Email sudah digunakan oleh pengguna lain.'); redirect("edituser.php?id=$id"); }
+if ($ce->get_result()->num_rows > 0) { $ce->close(); $_SESSION['oldinput']=$oldinput; flash('gagal','Email sudah digunakan oleh pengguna lain.'); redirect("edituser.php?id=$id"); }
 $ce->close();
 
 // jika field password diisi, ikut-sertakan password baru dalam update
 if ($password !== '') {
     // validasi panjang password baru
-    if (strlen($password) < 8) { flash('gagal','Password minimal 8 karakter.'); redirect("edituser.php?id=$id"); }
+    if (strlen($password) < 8) { $_SESSION['oldinput']=$oldinput; flash('gagal','Password minimal 8 karakter.'); redirect("edituser.php?id=$id"); }
 
     // hash password baru sebelum disimpan
     $hash = password_hash($password, PASSWORD_DEFAULT);

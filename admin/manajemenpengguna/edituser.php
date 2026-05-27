@@ -39,6 +39,14 @@ if (!empty($_SESSION['flash'])) {
     $flashjenis = $_SESSION['flash']['jenis'];
     unset($_SESSION['flash']); // hapus agar tidak muncul lagi di refresh berikutnya
 }
+
+// ambil data lama yang disimpan saat validasi gagal — agar form tidak kosong saat ada error
+$oldinput = $_SESSION['oldinput'] ?? [];
+unset($_SESSION['oldinput']);
+// gunakan oldinput jika ada, fallback ke data pengguna dari database
+$valUsername = !empty($oldinput['username']) ? $oldinput['username'] : $user['username'];
+$valEmail    = !empty($oldinput['email'])    ? $oldinput['email']    : $user['email'];
+$valNamaToko = isset($oldinput['nama_toko']) ? $oldinput['nama_toko'] : ($toko['nama_toko'] ?? '');
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -81,14 +89,17 @@ if (!empty($_SESSION['flash'])) {
       <div class="barisform">
         <div class="kelompokform">
           <label>Username <span style="color:var(--gagal);">*</span></label>
-          <!-- nilai diisi dari data pengguna saat ini, htmlspecialchars mencegah xss -->
+          <!-- nilai dari $valUsername: oldinput jika ada error, fallback ke data database -->
           <input type="text" name="username" required minlength="6" maxlength="50"
-                 value="<?= htmlspecialchars($user['username']) ?>">
-          <small>6–50 karakter</small>
+                 autocomplete="off"
+                 value="<?= htmlspecialchars($valUsername) ?>">
+          <small>6–50 karakter, hanya huruf/angka/titik/garis bawah, tanpa spasi</small>
         </div>
         <div class="kelompokform">
           <label>Email <span style="color:var(--gagal);">*</span></label>
-          <input type="email" name="email" required value="<?= htmlspecialchars($user['email']) ?>">
+          <input type="email" name="email" required
+                 autocomplete="off"
+                 value="<?= htmlspecialchars($valEmail) ?>">
         </div>
       </div>
       <?php if ($user['role'] === 'penjual' && $toko): ?>
@@ -96,7 +107,7 @@ if (!empty($_SESSION['flash'])) {
       <div class="kelompokform">
         <label>Nama Toko</label>
         <input type="text" name="nama_toko" maxlength="100"
-               value="<?= htmlspecialchars($toko['nama_toko']) ?>">
+               value="<?= htmlspecialchars($valNamaToko) ?>">
       </div>
       <?php endif; ?>
       <div class="kelompokform">

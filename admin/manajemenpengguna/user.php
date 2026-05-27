@@ -33,16 +33,43 @@ $kolomNomor  = $migrasiSudah ? "t.nomor_kantin," : "NULL AS nomor_kantin,";
 $delAtSelect = $adaDelAt ? "u.deleted_at," : "NULL AS deleted_at,";
 $delAtOrder  = $adaDelAt ? "u.deleted_at DESC" : "u.id_user DESC";
 
+// cek apakah tabel tb_riwayat_toko ada
+$cektbr = $conn->query("SHOW TABLES LIKE 'tb_riwayat_toko'");
+$adaRiwayat = ($cektbr && $cektbr->num_rows > 0);
+
 // bangun query sesuai tab aktif
 if ($rolefilter === 'terhapus') {
-    $sql = "SELECT u.id_user, u.username, u.email, u.role, u.created, {$delAtSelect} u.foto,
-                   (SELECT COUNT(*) FROM tb_order o WHERE o.id_user=u.id_user AND o.deleted=0) AS pesanan_user
-            FROM tb_user u WHERE u.deleted=1";
-    $params = []; $types = '';
-    if ($cari !== '') {
-        $sql .= " AND (u.username LIKE ? OR u.email LIKE ?)";
-        $likcari = "%$cari%";
-        $params[] = $likcari; $params[] = $likcari; $types .= 'ss';
+    if ($adaRiwayat) {
+        $sql = "SELECT u.id_user, u.username, u.email, u.role, u.created, {$delAtSelect} u.foto,
+                       (SELECT COUNT(*) FROM tb_order o WHERE o.id_user=u.id_user AND o.deleted=0) AS pesanan_user,
+                       r.id_toko, r.nomor_kantin, r.nama_toko, r.foto_toko
+                FROM tb_user u 
+                LEFT JOIN (
+                    SELECT r1.* FROM tb_riwayat_toko r1
+                    INNER JOIN (
+                        SELECT id_user, MAX(id_riwayat) as max_id
+                        FROM tb_riwayat_toko
+                        GROUP BY id_user
+                    ) r2 ON r1.id_user = r2.id_user AND r1.id_riwayat = r2.max_id
+                ) r ON u.id_user = r.id_user
+                WHERE u.deleted=1";
+        $params = []; $types = '';
+        if ($cari !== '') {
+            $sql .= " AND (u.username LIKE ? OR u.email LIKE ? OR r.nama_toko LIKE ?)";
+            $likcari = "%$cari%";
+            $params[] = $likcari; $params[] = $likcari; $params[] = $likcari; $types .= 'sss';
+        }
+    } else {
+        $sql = "SELECT u.id_user, u.username, u.email, u.role, u.created, {$delAtSelect} u.foto,
+                       (SELECT COUNT(*) FROM tb_order o WHERE o.id_user=u.id_user AND o.deleted=0) AS pesanan_user,
+                       NULL AS id_toko, NULL AS nomor_kantin, NULL AS nama_toko, NULL AS foto_toko
+                FROM tb_user u WHERE u.deleted=1";
+        $params = []; $types = '';
+        if ($cari !== '') {
+            $sql .= " AND (u.username LIKE ? OR u.email LIKE ?)";
+            $likcari = "%$cari%";
+            $params[] = $likcari; $params[] = $likcari; $types .= 'ss';
+        }
     }
     $sql .= " ORDER BY {$delAtOrder}";
 } else {
