@@ -85,9 +85,34 @@ if ($rolefilter === 'terhapus') {
     }
     $sql .= " ORDER BY {$delAtOrder}";
 } else {
-    // pesanan_toko = pesanan yang dilayani penjual ini (filter by id_penjual=u.id_user).
-    // PENTING: filter pakai id_penjual, bukan id_toko, supaya penjual baru
-    // di slot bekas penjual lain tidak mewarisi hitungan pesanan penjual sebelumnya.
+    /* ======== QUERY TAB AKTIF (semua / penjual / pembeli / admin) ========
+       ambil daftar user yang masih aktif (deleted=0) plus info toko-nya
+       (kalau dia penjual). dipakai untuk semua tab kecuali "terhapus".
+
+       penjelasan tiap kolom yang di-SELECT:
+       - u.id_user, u.username, u.email, u.role, u.created, u.foto
+           kolom dasar dari tb_user.
+       - t.id_toko, t.nama_toko, t.status_toko, t.foto_toko
+           data toko yang ditempati penjual ini. LEFT JOIN -> NULL kalau
+           user bukan penjual atau belum punya kantin.
+       - {$kolomNomor}
+           variabel yang sudah disiapkan di atas: kalau migrasi kolom
+           nomor_kantin sudah jalan, nilainya "t.nomor_kantin,".
+           kalau belum, nilainya "NULL AS nomor_kantin,". jadi kode di
+           bawah aman dipakai tanpa harus cek terus-terusan.
+       - urut_role (CASE WHEN ... THEN ... END)
+           kolom buatan untuk sorting. ekspresi CASE = if-else versi SQL.
+           penjual diberi nilai 0, pembeli 1, admin 2. nanti di ORDER BY
+           diurutkan ASC supaya penjual tampil paling atas, lalu pembeli,
+           terakhir admin.
+       - pesanan_toko (subquery)
+           hitung jumlah pesanan yang DILAYANI user ini sebagai penjual.
+           filter pakai id_penjual=u.id_user (bukan id_toko) — penting!
+           kalau pakai id_toko, penjual baru yang menempati slot bekas
+           penjual lama akan ikut menghitung pesanan penjual sebelumnya.
+       - pesanan_user (subquery)
+           hitung jumlah pesanan yang DIBUAT user ini sebagai pembeli.
+           dipakai untuk kolom "Pesanan" di tab pembeli/admin. */
     $sql = "SELECT u.id_user, u.username, u.email, u.role, u.created, u.foto,
                    t.id_toko, {$kolomNomor} t.nama_toko, t.status_toko, t.foto_toko,
                    CASE u.role WHEN 'penjual' THEN 0 WHEN 'pembeli' THEN 1 ELSE 2 END AS urut_role,
@@ -96,14 +121,62 @@ if ($rolefilter === 'terhapus') {
             FROM tb_user u
             LEFT JOIN tb_toko t ON u.id_user=t.id_user AND t.deleted=0
             WHERE u.deleted=0";
+
+    /* siapkan array kosong untuk parameter prepared statement.
+       $types = string berisi tipe data tiap parameter ('s'=string, 'i'=int).
+       $params = nilai-nilai yang akan disubstitusi ke "?".
+       keduanya nanti dipakai bersama-sama di $st->bind_param($types, ...$params). */
     $params = []; $types = '';
-    if ($rolefilter !== 'semua') { $sql .= " AND u.role=?"; $params[] = $rolefilter; $types .= 's'; }
+
+    /* filter berdasarkan role kalau bukan "semua".
+       contoh: kalau user klik tab "Penjual", $rolefilter = 'penjual'
+       maka query ditambah: AND u.role='penjual' (lewat prepared statement). */
+    if ($rolefilter !== 'semua') {
+        $sql .= " AND u.role=?";
+        $params[] = $rolefilter;
+        $types .= 's'; // 's' = string
+    }
+
+    /* filter pencarian: cari kata kunci di username / email / nama_toko.
+       operator LIKE dengan wildcard % mencari substring (cocok di tengah teks).
+       contoh: cari "bu" akan match "ibu kantin", "bubur", "warungbu", dst.
+       parameter $likcari dipakai 3x karena ada 3 placeholder "?". */
     if ($cari !== '') {
         $sql .= " AND (u.username LIKE ? OR u.email LIKE ? OR t.nama_toko LIKE ?)";
         $likcari = "%$cari%";
-        $params[] = $likcari; $params[] = $likcari; $params[] = $likcari; $types .= 'sss';
+        $params[] = $likcari; $params[] = $likcari; $params[] = $likcari;
+        $types .= 'sss'; // tiga parameter, semuanya string
     }
-    $sql .= " ORDER BY urut_role ASC, u.username ASC";
+
+    /* ======== URUTAN BARIS DI TABEL (ORDER BY berlapis) ========
+       SQL akan memakai kunci urutan secara berlapis: kalau kunci pertama
+       hasilnya sama untuk dua baris, baru pakai kunci ke-2, lalu ke-3.
+
+       1) urut_role ASC
+            penjual dulu (0), pembeli (1), admin (2). semua penjual akan
+            dikelompokkan bersebelahan di atas, baru disusul pembeli, dst.
+
+       2) COALESCE(t.nomor_kantin, 999) ASC
+            di dalam grup yang sama, sort menurut nomor kantin.
+            -> untuk PENJUAL: kantin ke-1 dulu, lalu 2, 3, ... 10.
+            -> COALESCE(a, b) = ambil a kalau tidak NULL, kalau NULL ambil b.
+               Jadi penjual yang belum punya kantin (nomor_kantin = NULL)
+               dianggap "999" dan diletakkan di paling bawah grup penjual.
+            -> untuk PEMBELI/ADMIN: nomor_kantin selalu NULL karena mereka
+               tidak punya baris di tb_toko. semua dianggap 999 -> nilainya
+               sama -> kunci urutan ini "tidak berpengaruh" dan SQL pakai
+               kunci ke-3 (username) untuk menentukan urutan.
+
+       3) u.username ASC
+            kunci terakhir: urut abjad nama. dipakai sebagai tie-breaker
+            kalau dua baris punya urut_role dan nomor_kantin sama.
+
+       variabel $sortKantin di-build kondisional supaya:
+       - kalau migrasi kolom nomor_kantin SUDAH jalan, kita pakai sortingnya
+       - kalau BELUM jalan, kolomnya belum ada -> jangan disebut di ORDER BY
+         (kalau dipaksa akan error "unknown column 't.nomor_kantin'") */
+    $sortKantin = $migrasiSudah ? "COALESCE(t.nomor_kantin, 999) ASC," : "";
+    $sql .= " ORDER BY urut_role ASC, {$sortKantin} u.username ASC";
 }
 
 // prepared statement: pisahkan query dan data — aman dari SQL injection.
