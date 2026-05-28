@@ -41,8 +41,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'keluar'
     // tutup sesi dan pastikan semua perubahan ditulis sebelum redirect
     session_write_close();
 
-    // arahkan ke halaman login setelah logout berhasil
-    header("Location: login.php");
+    // arahkan ke halaman landing (beranda utama) setelah logout berhasil
+    // semua peran (pembeli/penjual/admin) jatuh ke landing yang sama,
+    // dari sana user bisa pilih mau login lagi atau keluar dari situs
+    header("Location: ../index.php");
     exit;
 }
 

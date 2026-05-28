@@ -113,15 +113,18 @@ function bintang(float $r): string {
   </div>
   <?php endif; ?>
 
-  <!-- hero profil: tampilkan foto toko jika ada, atau inisial nama toko -->
+  <!-- hero profil: tampilkan foto toko jika ada, atau gambar default warung -->
   <div class="hero-profil">
     <div class="avatar">
       <?php if ($fotoprofil && file_exists("../../2. aset/profil/" . $fotoprofil)): ?>
         <!-- tampilkan foto toko jika file benar-benar ada di server -->
         <img src="../../2. aset/profil/<?= htmlspecialchars($fotoprofil) ?>" alt="foto toko">
       <?php else: ?>
-        <!-- fallback: tampilkan 2 huruf inisial nama toko -->
-        <?= $inisial ?>
+        <!-- fallback: gambar default profilwarung.png (silhouette warung putih)
+             filter brightness(0) invert(1) = bikin PNG transparan jadi solid putih
+             di atas background pink/marun avatar. -->
+        <img src="../../2. aset/profil/profilwarung.png" alt="logo warung"
+             style="width:60%;height:60%;object-fit:contain;filter:brightness(0) invert(1);opacity:.85;">
       <?php endif; ?>
     </div>
     <div class="nama"><?= htmlspecialchars($namatoko) ?></div>

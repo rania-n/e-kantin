@@ -35,9 +35,9 @@ $email    = $_GET['email']    ?? '';
 <form action="prosesregister.php" method="POST">
 <div class="container">
 
-  <!-- bagian logo di atas form -->
+  <!-- bagian logo di atas form (lihat penjelasan di login.php) -->
   <div class="logo-auth">
-    <div class="ikon-logo"><i class="fa-solid fa-utensils"></i></div>
+    <div class="ikon-logo"><span class="logo-app"></span></div>
     <div class="nama-logo">jajankita</div>
     <div class="tagline-logo">Pesan &amp; nikmati</div>
   </div>

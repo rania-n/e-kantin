@@ -32,6 +32,9 @@ form button[type="submit"]:hover {
     letter-spacing: 0.5px;
     text-transform: uppercase;
 }
+/* halaman login admin TIDAK diblokir di mobile — form login muat di hp.
+   yang diblokir hanya halaman dashboard/tabel/laporan setelah login (lihat
+   navbaradmin.php yang punya overlay .blokirmobile). */
 </style>
 </head>
 <body>
@@ -65,9 +68,11 @@ if (!empty($_SESSION['id_user']) && ($_SESSION['role'] ?? '') === 'admin') {
 <form action="prosesloginadmin.php" method="POST">
 <div class="container">
 
-  <!-- logo dan identitas panel admin -->
+  <!-- logo dan identitas panel admin.
+       pakai .logo-app (sama dengan login pembeli/penjual) — branding konsisten.
+       background admin tetap biru tua via override .ikon-logo di style atas. -->
   <div class="logo-auth">
-    <div class="ikon-logo"><i class="fa-solid fa-shield-halved"></i></div>
+    <div class="ikon-logo"><span class="logo-app"></span></div>
     <div class="nama-logo">jajankita</div>
     <div class="tagline-logo">Panel Administrasi</div>
     <!-- label ini membedakan secara visual bahwa ini halaman login admin -->

@@ -80,9 +80,11 @@ $profilaktif    = in_array($halamansaatini, ['profil','editprofil','gantipasswor
 <!-- navbar utama pembeli — di desktop menjadi sidebar kiri, di mobile menjadi tab bawah -->
 <nav class="navbarpembeli">
 
-  <!-- bagian logo dan tagline aplikasi — hanya terlihat di sidebar desktop -->
+  <!-- bagian logo dan tagline aplikasi — hanya terlihat di sidebar desktop.
+       <span class="logo-app besar"> = logo PNG via CSS mask, warna ikut color
+       teks parent (var(--putihbg) terang). varian .besar = 24x24 px. -->
   <div class="logosidebar">
-    <div class="namaapp"><i class="fa-solid fa-utensils"></i> jajankita</div>
+    <div class="namaapp"><span class="logo-app besar"></span> jajankita</div>
     <div class="taglineapp">Pesan &amp; nikmati</div>
   </div>
 

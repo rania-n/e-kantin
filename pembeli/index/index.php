@@ -176,9 +176,12 @@ $pathbase = '..';
              style="width:100%;height:100%;object-fit:cover;">
       </div>
       <?php else: ?>
-      <!-- inisial toko berwarna sebagai pengganti foto -->
-      <div class="ikon" style="background:var(--<?= $warnakini ?>);color:var(--putihbg);font-size:14px;font-weight:800;">
-        <?= $inisialkantin ?>
+      <!-- fallback: gambar default profilwarung.png dengan latar warna utama/kedua bergantian.
+           PNG putih + background warna → siluet warung jadi warna kontras (lihat CSS mask). -->
+      <div class="ikon" style="background:var(--<?= $warnakini ?>);color:var(--putihbg);padding:8px;overflow:hidden;">
+        <img src="../../2. aset/profil/profilwarung.png"
+             alt="<?= htmlspecialchars($toko['nama_toko']) ?>"
+             style="width:100%;height:100%;object-fit:contain;filter:brightness(0) invert(1);opacity:.9;">
       </div>
       <?php endif; ?>
       <!-- tampilkan nama toko DAN nomor kantin di bawahnya sebagai identitas fisik -->

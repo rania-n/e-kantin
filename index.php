@@ -58,6 +58,16 @@ a { text-decoration: none; color: inherit; }
   font-size: 30px; color: var(--putihbg);
   border: 2px solid rgba(255,255,255,.25);
 }
+/* logo aplikasi via CSS mask: PNG jadi cetakan bentuk,
+   warna diambil dari background-color: currentColor (ikut warna teks parent).
+   di hero ini parent .ikon punya color: var(--putihbg) → logo jadi putih. */
+.logo-app {
+  display: inline-block;
+  width: 40px; height: 40px;
+  background-color: currentColor;
+  -webkit-mask: url('2. aset/logo/logo.png') center/contain no-repeat;
+          mask: url('2. aset/logo/logo.png') center/contain no-repeat;
+}
 .logo .nama {
   font-size: 40px; font-weight: 800;
   color: var(--putihbg);
@@ -125,10 +135,17 @@ a { text-decoration: none; color: inherit; }
   text-align: center; font-size: 14px; color: var(--kedua);
   margin-bottom: 36px;
 }
+/* grid kartu fitur:
+   - desktop (>=720px lebar): selalu 2 kolom x 2 baris (4 kartu = 2x2 simetris)
+     pakai repeat(2, 1fr) supaya tidak pernah jadi 3-1 walau layar lebar.
+   - mobile (<720px): turun ke 1 kolom (kartu numpuk vertikal). */
 .grid-fitur {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 18px; max-width: 900px; margin: 0 auto;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px; max-width: 720px; margin: 0 auto;
+}
+@media (max-width: 720px) {
+  .grid-fitur { grid-template-columns: 1fr; }
 }
 .kartu-fitur {
   background: var(--putih);
@@ -160,7 +177,9 @@ a { text-decoration: none; color: inherit; }
 <!-- hero section -->
 <section class="hero">
   <div class="logo">
-    <div class="ikon"><i class="fa-solid fa-utensils"></i></div>
+    <!-- logo aplikasi: <span class="logo-app"> = container kosong yang diisi
+         dengan PNG lewat CSS mask. warnanya ikut color: var(--putihbg) dari .ikon -->
+    <div class="ikon"><span class="logo-app"></span></div>
     <div class="nama">jajankita</div>
   </div>
 

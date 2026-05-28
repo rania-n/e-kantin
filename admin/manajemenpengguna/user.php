@@ -359,10 +359,15 @@ if (!empty($_SESSION['flash'])) {
               <div class="user-baris">
                 <?php
                 // tampilkan foto profil yang pernah dipasang user (kalau filenya masih ada).
-                // kalau tidak ada foto/file hilang, fallback ke inisial 2 huruf username.
+                // fallback berbeda menurut role:
+                //   penjual → gambar default warung (profilwarung.png) — siluet putih
+                //   pembeli/admin → inisial 2 huruf username
                 $fotoFile = !empty($u['foto']) ? $u['foto'] : '';
                 if ($fotoFile && file_exists(__DIR__ . '/../../2. aset/profil/' . $fotoFile)) {
                     $fotoHtml = '<img src="../../2. aset/profil/' . htmlspecialchars($fotoFile) . '" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" alt="Foto">';
+                } elseif ($u['role'] === 'penjual') {
+                    // filter brightness(0) invert(1) = PNG transparan jadi solid putih
+                    $fotoHtml = '<img src="../../2. aset/profil/profilwarung.png" alt="Warung" style="width:70%;height:70%;object-fit:contain;filter:brightness(0) invert(1);opacity:.85;">';
                 } else {
                     $fotoHtml = strtoupper(mb_substr($u['username'], 0, 2));
                 }
@@ -460,14 +465,19 @@ if (!empty($_SESSION['flash'])) {
             <td>
               <div class="user-baris">
                 <?php
+                // ambil foto: prioritas foto_toko (kalau penjual punya foto warung),
+                // baru fallback ke foto pribadi user.
                 $fotoFile = '';
                 if (!empty($u['foto_toko'])) {
                     $fotoFile = $u['foto_toko'];
                 } elseif (!empty($u['foto'])) {
                     $fotoFile = $u['foto'];
                 }
+                // fallback per role: penjual → profilwarung.png; pembeli/admin → inisial
                 if ($fotoFile && file_exists(__DIR__ . '/../../2. aset/profil/' . $fotoFile)) {
                     $fotoHtml = '<img src="../../2. aset/profil/' . htmlspecialchars($fotoFile) . '" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" alt="Foto">';
+                } elseif ($u['role'] === 'penjual') {
+                    $fotoHtml = '<img src="../../2. aset/profil/profilwarung.png" alt="Warung" style="width:70%;height:70%;object-fit:contain;filter:brightness(0) invert(1);opacity:.85;">';
                 } else {
                     $fotoHtml = strtoupper(mb_substr($u['username'], 0, 2));
                 }

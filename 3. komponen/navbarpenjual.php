@@ -40,9 +40,10 @@ $inisialpenjual = strtoupper(mb_substr($_SESSION['username'] ?? 'P', 0, 2));
   <label for="togel-sidebar" class="tombolhambur" title="Menu">
     <i class="fa-solid fa-bars"></i>
   </label>
-  <!-- judul di tengah header mobile, menampilkan nama toko penjual -->
+  <!-- judul di tengah header mobile, menampilkan nama toko penjual.
+       logo PNG via mask (lihat .logo-app di penjual.css) -->
   <div class="judul">
-    <i class="fa-solid fa-utensils"></i> jajankita — <?= $namatoko ?>
+    <span class="logo-app"></span> jajankita — <?= $namatoko ?>
   </div>
 </div>
 
@@ -53,10 +54,11 @@ $inisialpenjual = strtoupper(mb_substr($_SESSION['username'] ?? 'P', 0, 2));
 <!-- sidebar utama penjual -->
 <aside class="sidebar" id="sidebar">
 
-  <!-- bagian atas sidebar: nama aplikasi, nama toko, dan status toko -->
+  <!-- bagian atas sidebar: nama aplikasi, nama toko, dan status toko.
+       logo besar (24px) supaya seimbang dengan teks "jajankita" bold 18px -->
   <div class="sidebar-logo">
     <div class="namaapp">
-      <i class="fa-solid fa-utensils"></i> jajankita
+      <span class="logo-app besar"></span> jajankita
     </div>
     <div class="namatoko"><?= $namatoko ?></div>
     <!-- tampilkan status toko dengan warna berbeda: hijau jika buka, merah jika tutup

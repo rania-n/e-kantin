@@ -37,7 +37,8 @@ $_SESSION = [];
 session_destroy();
 // catatan: session_write_close() tidak dipanggil di sini karena langsung redirect setelahnya
 
-// langkah 3: arahkan pengguna ke halaman login setelah semua sesi dihapus
-header("Location: login.php");
+// langkah 3: arahkan pengguna ke halaman landing (beranda) setelah semua sesi dihapus
+// path ../index.php menuju ke file index.php di root project (landing page utama)
+header("Location: ../index.php");
 exit;
 ?>

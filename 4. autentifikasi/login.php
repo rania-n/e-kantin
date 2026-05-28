@@ -34,9 +34,11 @@ $usernameemail = $_GET['usernameemail'] ?? '';
 <form action="proseslogin.php" method="POST">
 <div class="container">
 
-  <!-- bagian logo di atas form -->
+  <!-- bagian logo di atas form.
+       <span class="logo-app"> = container kosong yang dimask dengan logo.png.
+       warna logo otomatis ikut color teks parent .ikon-logo (var(--putihbg)). -->
   <div class="logo-auth">
-    <div class="ikon-logo"><i class="fa-solid fa-utensils"></i></div>
+    <div class="ikon-logo"><span class="logo-app"></span></div>
     <div class="nama-logo">jajankita</div>
     <div class="tagline-logo">Pesan &amp; nikmati</div>
   </div>

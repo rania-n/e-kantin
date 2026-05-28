@@ -16,12 +16,36 @@ if (!isset($halamansaatini)) {
 $namaadmin = htmlspecialchars($_SESSION['username'] ?? 'Admin');
 ?>
 
+<!-- overlay blokir mobile — muncul di layar <900px (lihat admin.css .blokirmobile).
+     panel admin tidak didukung di hp/tablet kecil karena tabel & sidebar tidak
+     muat. overlay ini menutup seluruh halaman supaya admin tidak bisa dipakai
+     dari layar kecil — bukan blokir keamanan, hanya blokir tampilan. -->
+<div class="blokirmobile">
+  <div class="ikon"><i class="fa-solid fa-desktop"></i></div>
+  <h2>Panel Admin Hanya untuk Desktop</h2>
+  <p>
+    Buka halaman ini dari laptop atau komputer dengan layar minimal 900px.
+    Tampilan mobile tidak didukung untuk panel admin.
+  </p>
+  <!-- tombol jalan keluar — kembalikan user mobile ke landing page utama.
+       semua halaman admin berada 2 level di bawah root, jadi ../../index.php
+       selalu menuju ke file landing root (C:/.../E-Kantin/index.php). -->
+  <a href="../../index.php" class="tombol-kembali">
+    <i class="fa-solid fa-arrow-left"></i> Kembali ke Beranda
+  </a>
+  <div class="info">
+    jajankita &mdash; Admin Panel
+  </div>
+</div>
+
 <!-- sidebar utama admin — posisi fixed di kiri layar -->
 <aside class="sidebar">
 
-  <!-- bagian atas sidebar: logo aplikasi dan nama admin yang sedang login -->
+  <!-- bagian atas sidebar: logo aplikasi dan nama admin yang sedang login.
+       pakai logo kantin (.logo-app) supaya konsisten dengan halaman pembeli & penjual.
+       teks "Admin Panel" yang membedakan konteks, bukan ikonnya. -->
   <div class="sidebar-logo">
-    <div class="namaapp"><i class="fa-solid fa-shield-halved"></i> Admin Panel</div>
+    <div class="namaapp"><span class="logo-app besar"></span> Admin Panel</div>
     <div class="namaadmin"><?= $namaadmin ?></div>
     <div class="peranadmin">jajankita</div>
   </div>

@@ -63,6 +63,20 @@ ul { list-style: none; }
   overflow-x: hidden;
 }
 
+/* ===== LOGO APLIKASI (CSS MASK) =====
+   kelas reusable untuk menampilkan logo.png dengan warna yang bisa diatur.
+   PNG cuma jadi "cetakan" bentuk (mask), warnanya dari background-color.
+   currentColor ikut warna teks parent → otomatis nyesuain konteks (gelap/terang). */
+.logo-app {
+  display: inline-block;
+  width: 1em; height: 1em;
+  vertical-align: -2px;
+  background-color: currentColor;
+  -webkit-mask: url('../2. aset/logo/logo.png') center/contain no-repeat;
+          mask: url('../2. aset/logo/logo.png') center/contain no-repeat;
+}
+.logo-app.besar { width: 24px; height: 24px; vertical-align: middle; }
+
 /* area logo dan nama toko di bagian atas sidebar */
 .sidebar-logo {
   padding: 20px 18px 16px;

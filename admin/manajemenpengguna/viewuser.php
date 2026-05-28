@@ -264,9 +264,13 @@ if (!empty($tokosumber['foto_toko'])) {
 } elseif (!empty($user['foto'])) {
     $fotoProfile = $user['foto'];
 }
-// border-radius kotak (8px) bukan bulat agar sinkron dengan desain manajemen pengguna
+// border-radius kotak (8px) bukan bulat agar sinkron dengan desain manajemen pengguna.
+// fallback role-aware: penjual → profilwarung.png; pembeli/admin → inisial 2 huruf.
 if ($fotoProfile && file_exists(__DIR__ . '/../../2. aset/profil/' . $fotoProfile)) {
     $avatarHtml = '<img src="../../2. aset/profil/' . htmlspecialchars($fotoProfile) . '" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" alt="Foto">';
+} elseif (($user['role'] ?? '') === 'penjual') {
+    // gambar silhouette warung — PNG transparan dijadikan putih dengan filter
+    $avatarHtml = '<img src="../../2. aset/profil/profilwarung.png" alt="Warung" style="width:70%;height:70%;object-fit:contain;filter:brightness(0) invert(1);opacity:.85;">';
 } else {
     $avatarHtml = $inisial;
 }
