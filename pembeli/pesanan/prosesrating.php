@@ -39,7 +39,10 @@ if (!$idpesanan || $nilaitoko < 1 || $nilaitoko > 5) {
 
 // verifikasi bahwa pesanan memang milik pembeli yang sedang login
 // dan statusnya sudah Selesai atau Siap Diambil
+// pakai prepared statement — kalau hanya cek id_order saja, pembeli iseng bisa rating
+// pesanan orang lain dengan mengganti id_order di form (tidak aman)
 $q = $conn->prepare("SELECT id_toko,id_penjual,status_order FROM tb_order WHERE id_order=? AND id_user=? AND deleted=0");
+// "ii": dua parameter integer
 $q->bind_param("ii", $idpesanan, $idpengguna);
 $q->execute();
 $pesanan = $q->get_result()->fetch_assoc();

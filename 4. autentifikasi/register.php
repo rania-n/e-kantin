@@ -30,6 +30,8 @@ $email    = $_GET['email']    ?? '';
 
 <!-- form dikirim ke prosesregister.php dengan metode POST -->
 <!-- POST dipakai agar data sensitif seperti password tidak muncul di url browser -->
+<!-- catatan: enctype tidak ditulis di sini karena defaultnya sudah application/x-www-form-urlencoded —
+     cocok untuk teks biasa. enctype="multipart/form-data" hanya dibutuhkan jika form mengunggah file (mis. foto). -->
 <form action="prosesregister.php" method="POST">
 <div class="container">
 

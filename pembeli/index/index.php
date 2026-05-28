@@ -14,7 +14,9 @@ $namapengguna = $_SESSION['username'];
 $idpengguna   = (int)$_SESSION['id_user'];
 
 // ambil parameter filter dari URL (GET)
-// real_escape_string mencegah SQL injection pada input teks
+// real_escape_string: tambahkan backslash pada karakter berbahaya (', ", \, dll)
+// supaya input teks aman digabung ke query SQL (mencegah SQL injection)
+// catatan: lebih aman pakai prepared statement, tapi di sini query memakai $where dinamis
 $kategori = isset($_GET['kategori']) ? $conn->real_escape_string($_GET['kategori']) : '';
 $cari     = isset($_GET['cari'])     ? $conn->real_escape_string($_GET['cari'])     : '';
 // (int) memastikan id_toko hanya berisi angka, bukan teks berbahaya
@@ -79,6 +81,12 @@ $hitungaktif->close();
 
 // ambil 5 produk terlaris berdasarkan jumlah terjual
 // hanya ditampilkan di beranda tanpa filter (supaya tidak membingungkan)
+// query agregasi:
+//   - JOIN 4 tabel: detail_order, menu, toko, order
+//   - SUM(d.jumlah): jumlahkan kuantitas terjual per menu
+//   - GROUP BY: kelompokkan per menu (semua kolom non-agregat harus di GROUP BY)
+//   - WHERE o.status_order='Selesai': hanya order selesai yang dihitung sebagai penjualan
+//   - ORDER BY terjual DESC LIMIT 5: ambil 5 menu dengan penjualan tertinggi
 $produkterlaris = [];
 if (!$kategori && !$cari && !$idtoko) {
     $qtl = $conn->query("SELECT m.id_menu, m.nama_menu, m.harga, m.foto, t.nama_toko, t.id_toko,

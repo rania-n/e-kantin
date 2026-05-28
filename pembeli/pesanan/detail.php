@@ -13,9 +13,12 @@ $idmenu = (int)($_GET['id'] ?? 0);
 if (!$idmenu) { header("Location: ../index/index.php"); exit; }
 
 // ambil data menu beserta nama tokonya dari database
+// LEFT JOIN tb_toko: data menu tetap muncul meski tokonya hilang
+// prepared statement dengan placeholder ? lebih aman daripada gabung $idmenu langsung
 $q = $conn->prepare("SELECT m.*,t.nama_toko FROM tb_menu m LEFT JOIN tb_toko t ON m.id_toko=t.id_toko WHERE m.id_menu=? AND m.deleted=0");
 $q->bind_param("i", $idmenu);
 $q->execute();
+// fetch_assoc: ambil satu baris hasil sebagai array asosiatif (key = nama kolom)
 $menu = $q->get_result()->fetch_assoc();
 $q->close();
 

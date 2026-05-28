@@ -33,6 +33,7 @@ if (!in_array($pesanan['status_order'], ['Selesai','Siap Diambil'])) { header("L
 
 // cek apakah pembeli sudah pernah memberi rating untuk pesanan ini
 // jika sudah, alihkan ke struk — tidak boleh memberi rating dua kali
+// num_rows: hitung berapa baris yang ditemukan; > 0 berarti rating sudah ada
 $cr = $conn->prepare("SELECT id_rating FROM tb_rating WHERE id_order=? AND id_user=?");
 $cr->bind_param("ii", $idpesanan, $idpengguna);
 $cr->execute();

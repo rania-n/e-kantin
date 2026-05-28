@@ -4,13 +4,17 @@
    terhapus = soft-deleted (deleted=1); kantin slot sudah dikosongkan.
    print: Cetak Semua (window.print) + per-user card (JS inject). */
 
+// sambungkan ke database dan pastikan yang mengakses adalah admin
 include '../../1. koneksi/koneksi.php';
 include '../../3. komponen/guardadmin.php';
 
+// tandai menu "user" sebagai aktif di navbar admin
 $halamansaatini = 'user';
 
+// baca filter dari url (parameter GET). operator ?? memberi nilai default jika kosong.
 $rolefilter = $_GET['role'] ?? 'semua';
 $cari       = trim($_GET['cari'] ?? '');
+// validasi role agar query tidak terbuka untuk nilai sembarangan (proteksi SQL injection)
 if (!in_array($rolefilter, ['semua','admin','penjual','pembeli','terhapus'])) $rolefilter = 'semua';
 
 // cek migrasi kolom nomor_kantin dan deleted_at
@@ -20,12 +24,15 @@ $migrasiSudah = ($cekkolom && $cekkolom->num_rows > 0);
 $cekdel   = $conn->query("SHOW COLUMNS FROM tb_user LIKE 'deleted_at'");
 $adaDelAt = ($cekdel && $cekdel->num_rows > 0);
 
-// hitung jumlah per role (aktif) untuk badge tab
+// hitung jumlah per role (aktif) untuk badge tab — GROUP BY role -> kelompokkan per peran
+// deleted=0 berarti soft-delete: baris tidak benar-benar dihapus, hanya ditandai
 $qhitung = $conn->query("SELECT role, COUNT(*) AS jml FROM tb_user WHERE deleted=0 GROUP BY role");
 $jmlrole = ['admin'=>0,'penjual'=>0,'pembeli'=>0];
+// loop hasil query: setiap baris berisi role + jumlah, lalu disimpan ke array $jmlrole
 while ($r = $qhitung->fetch_assoc()) $jmlrole[$r['role']] = (int)$r['jml'];
 $jmlsemua = array_sum($jmlrole);
 
+// hitung berapa akun yang sudah terhapus (deleted=1) — untuk badge tab "Terhapus"
 $qterhapus   = $conn->query("SELECT COUNT(*) AS jml FROM tb_user WHERE deleted=1");
 $jmlTerhapus = (int)$qterhapus->fetch_assoc()['jml'];
 
@@ -99,12 +106,18 @@ if ($rolefilter === 'terhapus') {
     $sql .= " ORDER BY urut_role ASC, u.username ASC";
 }
 
+// prepared statement: pisahkan query dan data — aman dari SQL injection.
+// $types berisi tipe data tiap parameter ('s'=string, 'i'=integer), $params adalah datanya.
+// operator spread (...) memecah array $params menjadi argumen-argumen terpisah ke bind_param.
 $st = $conn->prepare($sql);
 if ($params) { $st->bind_param($types, ...$params); }
 $st->execute();
+// fetch_all(MYSQLI_ASSOC) mengubah semua baris hasil menjadi array asosiatif sekaligus
 $daftaruser = $st->get_result()->fetch_all(MYSQLI_ASSOC);
 $st->close();
 
+// flash message: pesan satu kali dari operasi sebelumnya (misal sehabis tambah/hapus user).
+// dibaca dari session lalu langsung dihapus (unset) agar tidak muncul lagi saat halaman direfresh.
 $flashpesan = ''; $flashjenis = '';
 if (!empty($_SESSION['flash'])) {
     $flashpesan = $_SESSION['flash']['pesan'];
@@ -252,7 +265,7 @@ if (!empty($_SESSION['flash'])) {
               </div>
             </td>
           </tr>
-          <?php else: foreach ($daftaruser as $u):
+          <?php else: foreach ($daftaruser as $u): // loop tiap akun terhapus jadi baris tabel
             $tglDaftar   = !empty($u['created'])    ? date('d M Y', strtotime($u['created']))            : '—';
             $tglBerhenti = !empty($u['deleted_at']) ? date('d M Y H:i', strtotime($u['deleted_at']))     : '—';
             $tglBprint   = !empty($u['deleted_at']) ? date('d M Y', strtotime($u['deleted_at']))         : '—';

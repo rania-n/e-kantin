@@ -43,6 +43,10 @@ if ($nomorkantin > 0) {
    hanya pesanan selesai dan dibatalkan yang diekspor (yang relevan untuk laporan keuangan).
    pakai snapshot nama_toko/nomor_kantin/nama_menu — supaya CSV historis tetap akurat
    meski toko sudah dihapus atau menu sudah diubah. */
+// COALESCE(a, b, c) -> ambil nilai pertama yang TIDAK NULL.
+// JOIN tb_user = inner join: hanya order yang punya user dipakai (otomatis filter).
+// LEFT JOIN tb_detail_order = ambil semua order, walau detail itemnya kosong (NULL).
+// LEFT JOIN tb_menu = ambil nama menu, NULL aman karena pakai COALESCE ke snapshot.
 $sql = "SELECT
     o.id_order,
     DATE_FORMAT(o.tanggal_order,'%d/%m/%Y') AS tanggal,
@@ -67,6 +71,7 @@ WHERE DATE(o.tanggal_order) BETWEEN ? AND ?
   AND o.deleted=0{$tokoW}
 ORDER BY o.tanggal_order DESC, o.id_order, nama_menu";
 
+// prepared statement: "ss" artinya kedua parameter (tglmulai dan tgljin) bertipe string
 $qd = $conn->prepare($sql);
 $qd->bind_param("ss", $tglmulai, $tgljin); $qd->execute();
 $rows = $qd->get_result()->fetch_all(MYSQLI_ASSOC); $qd->close();
@@ -91,10 +96,12 @@ $labelkantin = $nomorkantin > 0 ? 'Kantin ke-' . $nomorkantin : 'Semua Kantin';
 $namafile = 'laporan_detail_ekantin_' . date('Ymd_His') . '.csv';
 
 // kirim header http agar browser mengunduh file csv
+// Content-Disposition: attachment -> paksa browser unduh, bukan menampilkan di tab
 header('Content-Type: text/csv; charset=utf-8');
 header('Content-Disposition: attachment; filename="' . $namafile . '"');
 header('Cache-Control: no-cache, no-store');
 
+// php://output adalah stream khusus yang langsung mengalir ke response browser
 $out = fopen('php://output', 'w');
 
 // tulis BOM utf-8 agar excel membaca karakter indonesia dengan benar

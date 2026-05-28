@@ -10,8 +10,11 @@ include '../../3. komponen/guardpembeli.php';
 include '../../1. koneksi/koneksi.php';
 
 // ambil id pesanan dari URL
+// (int) cast ke integer — kalau bukan angka jadi 0, aman dari SQL injection
+// ?? 0 (null coalescing): default 0 kalau parameter tidak ada di URL
 $idpesanan  = (int)($_GET['id_order'] ?? 0);
 // ambil id pengguna yang sedang login dari session
+// session aktif karena guardpembeli.php sudah memanggil session_start()
 $idpengguna = (int)$_SESSION['id_user'];
 
 // jika id pesanan tidak valid, kembali ke daftar pesanan
@@ -140,7 +143,9 @@ $pathbase = '..';
       </div>
       <div class="barisstruk">
         <span class="labelstruk">Tanggal</span>
-        <!-- format: 05 Jan 2025, 14:30 -->
+        <!-- format tanggal: 'd M Y, H:i' = "05 Jan 2025, 14:30"
+             strtotime: ubah string MySQL DATETIME jadi unix timestamp
+             date: format timestamp jadi string sesuai pola yang diberikan -->
         <span class="nilaistruk"><?= date('d M Y, H:i', strtotime($pesanan['tanggal_order'])) ?></span>
       </div>
       <div class="barisstruk">

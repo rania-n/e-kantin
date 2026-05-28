@@ -11,6 +11,11 @@
   atau saat dibutuhkan logout darurat.
 
   catatan: sesi admin tidak dihapus di sini karena admin menggunakan konfirmasilogout.php.
+
+  tentang session_destroy() vs $_SESSION = []:
+  - $_SESSION = []   → mengosongkan variabel sesi di memori script saat ini
+  - session_destroy() → menghapus FILE sesi di server (data fisik benar-benar hilang)
+  keduanya dipakai bersama agar sesi benar-benar bersih.
 */
 
 // langkah 1: hapus sesi penjual

@@ -48,6 +48,8 @@ $error         = $_GET['error']         ?? '';
 $usernameemail = $_GET['usernameemail'] ?? '';
 
 // jika admin sudah login (session aktif), langsung arahkan ke dashboard
+// session_name('sesi_admin') HARUS dipanggil sebelum session_start() agar php tahu
+// sesi mana yang akan dibuka — ini kunci pemisahan sesi multi-role (admin/penjual/pembeli)
 if (session_status() === PHP_SESSION_NONE) {
     session_name('sesi_admin');
     session_start();

@@ -89,6 +89,12 @@ $cek->close();
 // password TIDAK BOLEH disimpan dalam bentuk teks asli (plain text) di database karena berbahaya.
 // password_hash() mengubah teks password menjadi string acak yang tidak bisa dikembalikan.
 // saat login nanti, password_verify() akan membandingkan teks asli dengan hash ini.
+//
+// catatan penting tentang bcrypt + salt:
+// - bcrypt otomatis menambahkan "salt" (string acak unik) ke setiap password sebelum di-hash.
+// - akibatnya, dua pengguna yang punya password sama akan menghasilkan hash YANG BERBEDA.
+// - ini mencegah serangan rainbow table (tabel hash yang sudah dihitung sebelumnya).
+// - salt ikut disimpan di dalam string hash, jadi tidak perlu disimpan di kolom terpisah.
 $hash = password_hash($password, PASSWORD_DEFAULT);
 
 // semua pengguna yang daftar sendiri otomatis mendapat peran 'pembeli'

@@ -16,9 +16,13 @@ $tab    = in_array($_GET['tab'] ?? '', ['aktif','riwayat']) ? $_GET['tab'] : 'ak
 $filter = $_GET['filter'] ?? 'semua';
 
 // hitung jumlah pesanan aktif untuk ditampilkan sebagai badge angka di tab
+// pakai prepared statement: tanda ? sebagai placeholder, lalu bind_param mengisi nilai
+// keuntungan: aman dari SQL injection karena nilai tidak digabung langsung ke query string
 $ha = $conn->prepare("SELECT COUNT(*) FROM tb_order WHERE id_user=? AND deleted=0 AND status_order IN ('Menunggu','Diproses','Siap Diambil')");
+// "i" artinya tipe integer untuk parameter $idpengguna
 $ha->bind_param("i", $idpengguna);
 $ha->execute();
+// fetch_row()[0] mengambil kolom pertama baris pertama (hasil COUNT)
 $jumlahaktif = (int)$ha->get_result()->fetch_row()[0];
 $ha->close();
 
@@ -53,6 +57,10 @@ $q->close();
 // fungsi bantu: ambil daftar item (menu) dari satu pesanan
 // nama menu pakai snapshot (fallback ke tb_menu kalau snapshot belum di-backfill)
 function ambilItemPesanan($conn, int $idpesanan): array {
+    // COALESCE(a, b) = ambil a jika tidak NULL, kalau NULL ambil b
+    // di sini: pakai nama_menu_snapshot, kalau kosong baru pakai nama_menu dari tb_menu
+    // LEFT JOIN: tetap tampilkan detail meski menu sudah dihapus dari tb_menu
+    // (kalau INNER JOIN, baris akan hilang saat menu dihapus — riwayat jadi rusak)
     $q = $conn->prepare("SELECT d.jumlah,
                                 COALESCE(d.nama_menu_snapshot, m.nama_menu) AS nama_menu
                          FROM tb_detail_order d
@@ -60,6 +68,7 @@ function ambilItemPesanan($conn, int $idpesanan): array {
                          WHERE d.id_order=? AND d.deleted=0");
     $q->bind_param("i", $idpesanan);
     $q->execute();
+    // fetch_all(MYSQLI_ASSOC): ambil semua baris jadi array, key = nama kolom
     return $q->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 
@@ -199,6 +208,8 @@ $pathbase = '..';
         <div class="tanggalpesanan"><?= date('d M Y, H:i', strtotime($p['tanggal_order'])) ?></div>
       </div>
       <!-- badge status berwarna sesuai fungsi kelasStatusPesanan -->
+      <!-- htmlspecialchars: ubah karakter spesial (< > & " ') jadi entitas HTML
+           supaya teks dari database tidak dianggap sebagai tag HTML (cegah XSS) -->
       <span class="badge <?= $kelas ?>">
         <?= htmlspecialchars($p['status_order']) ?>
       </span>
