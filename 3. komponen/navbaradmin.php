@@ -38,7 +38,7 @@ $namaadmin = htmlspecialchars($_SESSION['username'] ?? 'Admin');
 
     <!-- menu manajemen pengguna — aktif di semua halaman terkait user dan toko -->
     <a href="../../admin/manajemenpengguna/user.php"
-       class="sidebar-item <?= in_array($halamansaatini, ['user','viewuser','tambahuser','edituser','hapususer','toko','viewtoko','edittoko','hapustoko','detailtoko']) ? 'aktif' : '' ?>">
+       class="sidebar-item <?= in_array($halamansaatini, ['user','viewuser','tambahuser','edituser','hapususer','toko','viewtoko','edittoko','detailtoko']) ? 'aktif' : '' ?>">
       <i class="fa-solid fa-users"></i>
       <span>Manajemen Pengguna</span>
     </a>

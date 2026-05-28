@@ -22,24 +22,24 @@ $qt = $conn->prepare("SELECT * FROM tb_toko WHERE id_toko=? AND deleted=0");
 $qt->bind_param("i", $idtoko); $qt->execute();
 $toko = $qt->get_result()->fetch_assoc(); $qt->close();
 
-// hitung total semua pesanan yang pernah masuk ke toko ini
-$qs1 = $conn->prepare("SELECT COUNT(*) FROM tb_order WHERE id_toko=? AND deleted=0");
-$qs1->bind_param("i", $idtoko); $qs1->execute();
+// hitung total semua pesanan milik penjual ini
+$qs1 = $conn->prepare("SELECT COUNT(*) FROM tb_order WHERE id_penjual=? AND deleted=0");
+$qs1->bind_param("i", $idpengguna); $qs1->execute();
 $totalpesanan = (int)$qs1->get_result()->fetch_row()[0]; $qs1->close();
 
 // hitung total pendapatan dari pesanan yang sudah selesai
-$qs2 = $conn->prepare("SELECT COALESCE(SUM(total_harga),0) FROM tb_order WHERE id_toko=? AND status_order='Selesai' AND deleted=0");
-$qs2->bind_param("i", $idtoko); $qs2->execute();
+$qs2 = $conn->prepare("SELECT COALESCE(SUM(total_harga),0) FROM tb_order WHERE id_penjual=? AND status_order='Selesai' AND deleted=0");
+$qs2->bind_param("i", $idpengguna); $qs2->execute();
 $totalpendapatan = (float)$qs2->get_result()->fetch_row()[0]; $qs2->close();
 
-// ambil rata-rata rating toko dan jumlah ulasan (ROUND membulatkan 1 angka desimal)
-$qs3 = $conn->prepare("SELECT ROUND(AVG(rating_toko),1), COUNT(*) FROM tb_rating WHERE id_toko=? AND deleted=0");
-$qs3->bind_param("i", $idtoko); $qs3->execute();
+// ambil rata-rata rating dan jumlah ulasan milik penjual ini (ROUND membulatkan 1 angka desimal)
+$qs3 = $conn->prepare("SELECT ROUND(AVG(rating_toko),1), COUNT(*) FROM tb_rating WHERE id_penjual=? AND deleted=0");
+$qs3->bind_param("i", $idpengguna); $qs3->execute();
 $rrow = $qs3->get_result()->fetch_row(); $qs3->close();
 $ratarating = (float)($rrow[0] ?? 0);
 $jmlrating  = (int)($rrow[1] ?? 0);
 
-// hitung menu yang aktif (bisa dipesan pembeli)
+// hitung menu yang aktif (bisa dipesan pembeli) — menu milik slot toko
 $qs4 = $conn->prepare("SELECT COUNT(*) FROM tb_menu WHERE id_toko=? AND status='aktif' AND deleted=0");
 $qs4->bind_param("i", $idtoko); $qs4->execute();
 $totalmenu = (int)$qs4->get_result()->fetch_row()[0]; $qs4->close();
@@ -146,7 +146,7 @@ function bintang(float $r): string {
     </div>
     <div class="kotakstat gelap">
       <div class="angkastat" style="font-size:13px;"><?= singkat($totalpendapatan) ?></div>
-      <div class="labelstat">Pendapatan</div>
+      <div class="labelstat">Omset Selesai</div>
     </div>
   </div>
 

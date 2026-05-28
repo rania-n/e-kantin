@@ -19,37 +19,45 @@ if (empty($_SESSION['id_user']) || ($_SESSION['role'] ?? '') !== 'penjual') {
     exit; // hentikan eksekusi agar kode berikutnya tidak dijalankan
 }
 
-// jika id_toko belum tersimpan di session, ambil data toko dari database
-// ini terjadi misalnya saat baru login atau session belum lengkap
-if (empty($_SESSION['id_toko'])) {
+// SELALU refresh data toko & username dari database setiap kali halaman penjual dibuka.
+// supaya perubahan yang dilakukan admin (edit nama toko, foto, dll) langsung terlihat
+// tanpa perlu logout/login dulu. cost-nya cuma 2 query ringan per request.
+if (!isset($conn)) {
+    // __DIR__ = folder file ini berada → path absolut, tidak bergantung dari mana file dipanggil
+    require_once __DIR__ . '/../1. koneksi/koneksi.php';
+}
+$iduser = (int)$_SESSION['id_user']; // cast ke int sebagai pengaman ekstra
 
-    // pastikan koneksi database tersedia — kalau belum di-include, include sekarang
-    if (!isset($conn)) {
-        require_once __DIR__ . '/../../1. koneksi/koneksi.php';
-    }
+// refresh username/email/foto dari tb_user
+// pakai prepared statement: aman dari sql injection karena parameter dipisah dari query
+$qu = $conn->prepare("SELECT username, email, foto FROM tb_user WHERE id_user=? AND deleted=0");
+$qu->bind_param("i", $iduser); $qu->execute(); // bind parameter integer ke ?
+$datauser = $qu->get_result()->fetch_assoc(); $qu->close(); // ambil 1 baris hasil
+if ($datauser) {
+    // overwrite data session pakai data terbaru dari db
+    $_SESSION['username'] = $datauser['username'];
+    $_SESSION['email']    = $datauser['email'];
+    $_SESSION['foto']     = $datauser['foto'];
+}
 
-    // ambil id_user dari session dan konversi ke integer untuk keamanan
-    $iduser = (int)$_SESSION['id_user'];
-
-    // cari data toko milik penjual ini berdasarkan id_user
-    // deleted=0 berarti toko belum dihapus (soft delete)
-    $qt = $conn->prepare("SELECT id_toko, nama_toko, status_toko FROM tb_toko WHERE id_user=? AND deleted=0 LIMIT 1");
-    $qt->bind_param("i", $iduser); // "i" berarti tipe data integer
-    $qt->execute();
-    $datatoko = $qt->get_result()->fetch_assoc(); // ambil satu baris hasil query sebagai array asosiatif
-    $qt->close(); // tutup statement untuk membebaskan memori
-
-    if ($datatoko) {
-        // jika data toko ditemukan, simpan ke session agar tidak perlu query ulang
-        $_SESSION['id_toko']     = $datatoko['id_toko'];
-        $_SESSION['nama_toko']   = $datatoko['nama_toko'];
-        $_SESSION['status_toko'] = $datatoko['status_toko'] ?? 'buka'; // default buka jika kolom kosong
-    } else {
-        // penjual belum punya toko di database — isi session dengan nilai default
-        // redirect ke halaman setup toko bisa diaktifkan di sini nanti jika diperlukan
-        $_SESSION['id_toko']     = 0;
-        $_SESSION['nama_toko']   = 'Toko Saya';
-        $_SESSION['status_toko'] = 'buka';
-    }
+// refresh data toko dari tb_toko
+// LIMIT 1 karena 1 penjual hanya punya 1 toko aktif
+$qt = $conn->prepare("SELECT id_toko, nama_toko, status_toko, foto_toko FROM tb_toko WHERE id_user=? AND deleted=0 LIMIT 1");
+$qt->bind_param("i", $iduser); $qt->execute();
+$datatoko = $qt->get_result()->fetch_assoc(); $qt->close();
+if ($datatoko) {
+    // simpan info toko ke session agar bisa dipakai di seluruh halaman tanpa query ulang
+    $_SESSION['id_toko']     = $datatoko['id_toko'];
+    $_SESSION['nama_toko']   = $datatoko['nama_toko'];
+    // operator ?? (null coalescing) — pakai nilai sebelah kiri kalau tidak null, kalau null pakai sebelah kanan
+    $_SESSION['status_toko'] = $datatoko['status_toko'] ?? 'buka';
+    $_SESSION['foto_toko']   = $datatoko['foto_toko'];
+} else {
+    // penjual belum/tidak punya toko aktif — default supaya halaman tidak rusak
+    // (mencegah error "undefined index" saat halaman penjual mencoba membaca data toko)
+    $_SESSION['id_toko']     = 0;
+    $_SESSION['nama_toko']   = 'Toko Saya';
+    $_SESSION['status_toko'] = 'buka';
+    $_SESSION['foto_toko']   = null;
 }
 ?>

@@ -72,14 +72,20 @@ if (!password_verify($password, $user['password'])) {
     exit;
 }
 
-// langkah 6: tentukan nama sesi berdasarkan peran (role) user
+// langkah 6a: halaman ini KHUSUS untuk pembeli & penjual. Admin harus pakai
+// halaman login admin (admin/login/loginadmin.php) — tolak sebelum sesi dibuat.
+if ($user['role'] === 'admin') {
+    header("Location: login.php?error=" . urlencode("Akun admin harus login lewat halaman admin.") .
+           "&usernameemail=" . urlencode($usernameemail));
+    exit;
+}
+
+// langkah 6b: tentukan nama sesi berdasarkan peran (role) user
 // setiap peran memakai nama sesi yang berbeda agar tidak saling bentrok.
 // contoh: pembeli di tab 1 dan penjual di tab 2 bisa login bersamaan.
-// match() adalah cara modern php untuk melakukan pencocokan nilai (seperti switch tapi lebih ringkas)
 $namaSesi = match($user['role']) {
     'penjual' => 'sesi_penjual',
-    'admin'   => 'sesi_admin',
-    default   => 'sesi_pembeli', // jika role lain atau tidak dikenali, pakai sesi pembeli
+    default   => 'sesi_pembeli', // role pembeli (atau yang tidak dikenali, fallback ke pembeli)
 };
 
 // terapkan nama sesi sebelum session_start() dipanggil
@@ -157,14 +163,8 @@ if ($user['role'] === 'pembeli') {
 }
 
 // langkah 9: arahkan pengguna ke halaman utama sesuai dengan perannya
-// catatan: admin memiliki halaman login sendiri (admin/login/loginadmin.php)
-// jika admin mencoba login dari halaman ini, arahkan ke login admin
+// (admin sudah ditolak di langkah 6a — tidak sampai sini)
 switch ($user['role']) {
-    case 'admin':
-        // admin tidak boleh login dari halaman ini — arahkan ke halaman login admin
-        header("Location: ../admin/login/loginadmin.php?error=" . urlencode("Gunakan halaman login admin.") .
-               "&usernameemail=" . urlencode($usernameemail));
-        break;
     case 'penjual':
         header("Location: ../penjual/index/index.php");
         break;
@@ -172,8 +172,7 @@ switch ($user['role']) {
         header("Location: ../pembeli/index/index.php");
         break;
     default:
-        // jika role tidak dikenali (kasus yang seharusnya tidak terjadi),
-        // kembali ke login dengan pesan error
+        // role tidak dikenali (kasus yang seharusnya tidak terjadi)
         header("Location: login.php?error=" . urlencode("Role tidak dikenali."));
 }
 exit;

@@ -17,9 +17,11 @@ $idpengguna = (int)$_SESSION['id_user'];
 // jika id pesanan tidak valid, kembali ke daftar pesanan
 if (!$idpesanan) { header("Location: pesanan.php"); exit; }
 
-// ambil data pesanan beserta nama tokonya
-// id_user dicocokkan juga untuk memastikan struk ini memang milik pembeli yang login
-$q = $conn->prepare("SELECT o.*,t.nama_toko FROM tb_order o LEFT JOIN tb_toko t ON o.id_toko=t.id_toko WHERE o.id_order=? AND o.id_user=? AND o.deleted=0");
+// ambil data pesanan — nama_toko diambil dari snapshot supaya histori tetap benar
+// meski penjual sudah dihapus atau slot toko diisi penjual baru
+$q = $conn->prepare("SELECT o.*, o.nama_toko_snapshot AS nama_toko
+                     FROM tb_order o
+                     WHERE o.id_order=? AND o.id_user=? AND o.deleted=0");
 $q->bind_param("ii", $idpesanan, $idpengguna);
 $q->execute();
 $pesanan = $q->get_result()->fetch_assoc();
@@ -28,23 +30,29 @@ $q->close();
 // jika pesanan tidak ditemukan atau bukan milik pembeli ini, redirect
 if (!$pesanan) { header("Location: pesanan.php"); exit; }
 
-// ambil daftar item yang dipesan dari tabel detail_order
-$d = $conn->prepare("SELECT d.*,m.nama_menu FROM tb_detail_order d JOIN tb_menu m ON d.id_menu=m.id_menu WHERE d.id_order=? AND d.deleted=0");
+// ambil daftar item — nama menu pakai snapshot (fallback ke tb_menu jika snapshot kosong)
+$d = $conn->prepare("SELECT d.*,
+                            COALESCE(d.nama_menu_snapshot, m.nama_menu) AS nama_menu
+                     FROM tb_detail_order d
+                     LEFT JOIN tb_menu m ON d.id_menu=m.id_menu
+                     WHERE d.id_order=? AND d.deleted=0");
 $d->bind_param("i", $idpesanan);
 $d->execute();
 $detail = $d->get_result()->fetch_all(MYSQLI_ASSOC);
 $d->close();
 
-/* hitung nomor antrian harian per toko
-   logika: berapa banyak order di toko yang sama pada hari yang sama
-   dengan id_order <= id pesanan ini (urutan berdasarkan id_order)
-   nomor antrian reset otomatis setiap hari karena menggunakan DATE() */
+/* hitung nomor antrian harian per PENJUAL (bukan per slot toko)
+   logika: berapa banyak order di penjual yang sama pada hari yang sama
+   dengan id_order <= id pesanan ini.
+   filter by id_penjual penting: kalau pakai id_toko, antrian penjual baru
+   bisa tercampur dengan antrian penjual lama di slot kantin yang sama.
+   nomor antrian reset otomatis setiap hari karena pakai DATE(). */
 $nomerantrian = null;
-if ($pesanan['id_toko']) {
-    $qa = $conn->prepare("SELECT COUNT(*) FROM tb_order WHERE id_toko=? AND DATE(tanggal_order)=DATE(?) AND id_order<=? AND deleted=0");
+if (!empty($pesanan['id_penjual'])) {
+    $qa = $conn->prepare("SELECT COUNT(*) FROM tb_order WHERE id_penjual=? AND DATE(tanggal_order)=DATE(?) AND id_order<=? AND deleted=0");
     $tglpesanan = $pesanan['tanggal_order'];
     // bind_param "isi": integer, string, integer
-    $qa->bind_param("isi", $pesanan['id_toko'], $tglpesanan, $idpesanan);
+    $qa->bind_param("isi", $pesanan['id_penjual'], $tglpesanan, $idpesanan);
     $qa->execute();
     $nomerantrian = (int)$qa->get_result()->fetch_row()[0];
     $qa->close();

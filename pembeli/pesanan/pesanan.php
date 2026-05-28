@@ -22,18 +22,27 @@ $ha->execute();
 $jumlahaktif = (int)$ha->get_result()->fetch_row()[0];
 $ha->close();
 
-// ambil daftar pesanan sesuai tab yang dipilih
+// ambil daftar pesanan sesuai tab yang dipilih.
+// nama_toko diambil dari snapshot (o.nama_toko_snapshot) bukan JOIN tb_toko —
+// supaya riwayat tetap menampilkan nama toko saat order dibuat, bukan nama sekarang
 if ($tab === 'aktif') {
     // tab aktif: pesanan yang belum selesai, diurutkan terbaru di atas
-    $q = $conn->prepare("SELECT o.*,t.nama_toko FROM tb_order o LEFT JOIN tb_toko t ON o.id_toko=t.id_toko WHERE o.id_user=? AND o.deleted=0 AND o.status_order IN ('Menunggu','Diproses','Siap Diambil') ORDER BY o.tanggal_order DESC");
+    $q = $conn->prepare("SELECT o.*, o.nama_toko_snapshot AS nama_toko
+                         FROM tb_order o
+                         WHERE o.id_user=? AND o.deleted=0
+                           AND o.status_order IN ('Menunggu','Diproses','Siap Diambil')
+                         ORDER BY o.tanggal_order DESC");
     $q->bind_param("i", $idpengguna);
 } else {
     // tab riwayat: pesanan selesai atau dibatalkan, bisa difilter lebih lanjut
-    $kondisifilter = "status_order IN ('Selesai','Dibatalkan')";
-    if ($filter === 'selesai')    $kondisifilter = "status_order='Selesai'";
-    if ($filter === 'dibatalkan') $kondisifilter = "status_order='Dibatalkan'";
+    $kondisifilter = "o.status_order IN ('Selesai','Dibatalkan')";
+    if ($filter === 'selesai')    $kondisifilter = "o.status_order='Selesai'";
+    if ($filter === 'dibatalkan') $kondisifilter = "o.status_order='Dibatalkan'";
     // LIMIT 50 agar tidak memuat terlalu banyak data sekaligus
-    $q = $conn->prepare("SELECT o.*,t.nama_toko FROM tb_order o LEFT JOIN tb_toko t ON o.id_toko=t.id_toko WHERE o.id_user=? AND o.deleted=0 AND $kondisifilter ORDER BY o.tanggal_order DESC LIMIT 50");
+    $q = $conn->prepare("SELECT o.*, o.nama_toko_snapshot AS nama_toko
+                         FROM tb_order o
+                         WHERE o.id_user=? AND o.deleted=0 AND $kondisifilter
+                         ORDER BY o.tanggal_order DESC LIMIT 50");
     $q->bind_param("i", $idpengguna);
 }
 $q->execute();
@@ -42,9 +51,13 @@ $daftarpesanan = $q->get_result()->fetch_all(MYSQLI_ASSOC);
 $q->close();
 
 // fungsi bantu: ambil daftar item (menu) dari satu pesanan
-// dipanggil per pesanan saat loop di bawah
+// nama menu pakai snapshot (fallback ke tb_menu kalau snapshot belum di-backfill)
 function ambilItemPesanan($conn, int $idpesanan): array {
-    $q = $conn->prepare("SELECT d.jumlah,m.nama_menu FROM tb_detail_order d JOIN tb_menu m ON d.id_menu=m.id_menu WHERE d.id_order=? AND d.deleted=0");
+    $q = $conn->prepare("SELECT d.jumlah,
+                                COALESCE(d.nama_menu_snapshot, m.nama_menu) AS nama_menu
+                         FROM tb_detail_order d
+                         LEFT JOIN tb_menu m ON d.id_menu=m.id_menu
+                         WHERE d.id_order=? AND d.deleted=0");
     $q->bind_param("i", $idpesanan);
     $q->execute();
     return $q->get_result()->fetch_all(MYSQLI_ASSOC);

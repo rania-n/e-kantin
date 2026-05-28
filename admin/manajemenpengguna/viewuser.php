@@ -10,36 +10,43 @@ include '../../3. komponen/guardadmin.php';
 
 $halamansaatini = 'user';
 
+// ambil id user dari url, redirect kembali kalau id tidak valid
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 if (!$id) { header("Location: user.php"); exit; }
 
+// ambil data user — pakai prepared statement untuk cegah sql injection
 $qu = $conn->prepare("SELECT * FROM tb_user WHERE id_user=?");
 $qu->bind_param("i", $id); $qu->execute();
 $user = $qu->get_result()->fetch_assoc(); $qu->close();
 if (!$user) { header("Location: user.php"); exit; }
 
+// status soft-delete user — kalau sudah dihapus, halaman ditampilkan read-only
 $isDihapus   = (int)($user['deleted'] ?? 0) === 1;
 $adaDelAtVu  = array_key_exists('deleted_at', $user);
 $tglBerhenti = ($adaDelAtVu && !empty($user['deleted_at'])) ? date('d M Y, H:i', strtotime($user['deleted_at'])) : null;
 
+// dua huruf pertama username, dipakai sebagai fallback avatar bila foto kosong
 $inisial = strtoupper(mb_substr($user['username'], 0, 2));
 
 // ── init variabel ──────────────────────────────────────────────────────────────
 $toko = null; $riwayat = null;
-$totalpesanan = $totalomset = $omsetselesai = $jmlselesai = 0;
+$totalpesanan = $totalomset = $omsetselesai = $jmlselesai = $jmldibatalkan = $nilaidibatalkan = 0;
 $ratarating   = $jmlrating  = $totalmenu    = $jmlpelanggan = 0;
 $distribusirating = []; $ulasanterbaru = []; $terlaris = [];
 $daftarmenu = []; $toppelanggan = []; $statuspesanan = [];
 $totalorder_pembeli = $totalbelanja = 0; $tokofavorit = [];
-$charthari = []; $maxomsethari = 1; $topmahal = [];
+$charthari = []; $maxomsethari = 1;
 $pesanandetail = []; // array detail pesanan selesai + dibatalkan
+// mode periode chart omset: custom (date range), atau preset 7/14/30 hari
 $modecustom = ($_GET['hari'] ?? '') === 'custom';
 if ($modecustom) {
+    // mode custom — admin pilih sendiri rentang tanggal lewat form
     $dari   = (!empty($_GET['dari']))   ? date('Y-m-d', strtotime($_GET['dari']))   : date('Y-m-d', strtotime('-7 days'));
     $sampai = (!empty($_GET['sampai'])) ? date('Y-m-d', strtotime($_GET['sampai'])) : date('Y-m-d');
-    if ($sampai < $dari) $sampai = $dari;
+    if ($sampai < $dari) $sampai = $dari; // proteksi: tanggal mundur dipaksa sama
     $nhari  = (int)ceil((strtotime($sampai) - strtotime($dari)) / 86400) + 1;
 } else {
+    // mode preset — validasi hanya boleh 7/14/30, fallback ke 7
     $nhari  = in_array((int)($_GET['hari'] ?? 7), [7,14,30]) ? (int)($_GET['hari'] ?? 7) : 7;
     $dari   = date('Y-m-d', strtotime('-' . ($nhari - 1) . ' days'));
     $sampai = date('Y-m-d');
@@ -48,7 +55,7 @@ if ($modecustom) {
 // ── PENJUAL ────────────────────────────────────────────────────────────────────
 if ($user['role'] === 'penjual') {
     // cari toko aktif (slot belum dikosongkan penuh — id_user masih ada)
-    $qt = $conn->prepare("SELECT * FROM tb_toko WHERE id_user=? ORDER BY id_toko DESC LIMIT 1");
+    $qt = $conn->prepare("SELECT * FROM tb_toko WHERE id_user=? AND deleted=0 ORDER BY id_toko DESC LIMIT 1");
     $qt->bind_param("i", $id); $qt->execute();
     $toko = $qt->get_result()->fetch_assoc(); $qt->close();
 
@@ -65,92 +72,101 @@ if ($user['role'] === 'penjual') {
     // $it = id_toko untuk semua query statistik (dari toko aktif atau riwayat)
     $it = $toko ? (int)$toko['id_toko'] : ($riwayat ? (int)$riwayat['id_toko'] : 0);
 
-    // tanggal mulai penjual di slot ini — mencegah data penjual sebelumnya ikut dihitung
-    $cekmulai   = $conn->query("SHOW COLUMNS FROM tb_toko LIKE 'tanggal_mulai'");
-    $adatm      = ($cekmulai && $cekmulai->num_rows > 0);
-    $tm         = ($adatm && $toko && !empty($toko['tanggal_mulai'])) ? $toko['tanggal_mulai'] : '';
-    // kondisi sql tambahan: hanya pesanan sejak penjual ini mulai bertugas
-    $filterpesanan = $tm ? " AND o.tanggal_order >= '{$tm}'" : "";
-    $filterrating  = $tm ? " AND r.created >= '{$tm}'" : "";
+    // isolasi data penjual: semua query pesanan/rating difilter WHERE id_penjual=$id
+    // id_penjual disimpan di tb_order dan tb_rating saat transaksi dibuat — tidak perlu filter tanggal
 
     if ($it) {
-        $s = $conn->prepare("SELECT COUNT(*), COALESCE(SUM(total_harga),0) FROM tb_order o WHERE o.id_toko=? AND o.deleted=0{$filterpesanan}");
-        $s->bind_param("i",$it); $s->execute(); $r=$s->get_result()->fetch_row(); $s->close();
-        $totalpesanan=(int)$r[0]; $totalomset=(float)$r[1];
+        // total pesanan (semua status) — untuk tahu volume pesanan masuk
+        $s = $conn->prepare("SELECT COUNT(*) FROM tb_order o WHERE o.id_penjual=? AND o.deleted=0");
+        $s->bind_param("i",$id); $s->execute(); $totalpesanan=(int)$s->get_result()->fetch_row()[0]; $s->close();
 
-        $s = $conn->prepare("SELECT COUNT(*), COALESCE(SUM(total_harga),0) FROM tb_order o WHERE o.id_toko=? AND o.status_order='Selesai' AND o.deleted=0{$filterpesanan}");
-        $s->bind_param("i",$it); $s->execute(); $r=$s->get_result()->fetch_row(); $s->close();
+        // omset = HANYA pesanan Selesai (uang yang benar-benar diterima penjual)
+        $s = $conn->prepare("SELECT COUNT(*), COALESCE(SUM(total_harga),0) FROM tb_order o WHERE o.id_penjual=? AND o.status_order='Selesai' AND o.deleted=0");
+        $s->bind_param("i",$id); $s->execute(); $r=$s->get_result()->fetch_row(); $s->close();
         $jmlselesai=(int)$r[0]; $omsetselesai=(float)$r[1];
+        // $totalomset disamakan dengan $omsetselesai supaya kompatibel dengan template lama
+        $totalomset = $omsetselesai;
 
-        $s = $conn->prepare("SELECT ROUND(AVG(rating_toko),1), COUNT(*) FROM tb_rating r WHERE r.id_toko=? AND r.deleted=0{$filterrating}");
-        $s->bind_param("i",$it); $s->execute(); $r=$s->get_result()->fetch_row(); $s->close();
+        // nilai dibatalkan — potensi omset hilang (ditampilkan terpisah)
+        $s = $conn->prepare("SELECT COUNT(*), COALESCE(SUM(total_harga),0) FROM tb_order o WHERE o.id_penjual=? AND o.status_order='Dibatalkan' AND o.deleted=0");
+        $s->bind_param("i",$id); $s->execute(); $r=$s->get_result()->fetch_row(); $s->close();
+        $jmldibatalkan=(int)$r[0]; $nilaidibatalkan=(float)$r[1];
+
+        // rata-rata + jumlah rating toko — filter id_penjual supaya rating penjual lama tidak ikut
+        $s = $conn->prepare("SELECT ROUND(AVG(rating_toko),1), COUNT(*) FROM tb_rating r WHERE r.id_penjual=? AND r.deleted=0");
+        $s->bind_param("i",$id); $s->execute(); $r=$s->get_result()->fetch_row(); $s->close();
         $ratarating=(float)($r[0]??0); $jmlrating=(int)($r[1]??0);
 
+        // jumlah menu aktif — filter id_toko (slot) bukan id_penjual karena menu nempel ke toko
         $s = $conn->prepare("SELECT COUNT(*) FROM tb_menu WHERE id_toko=? AND status='aktif' AND deleted=0");
         $s->bind_param("i",$it); $s->execute(); $totalmenu=(int)$s->get_result()->fetch_row()[0]; $s->close();
 
-        $s = $conn->prepare("SELECT COUNT(DISTINCT o.id_user) FROM tb_order o WHERE o.id_toko=? AND o.deleted=0{$filterpesanan}");
-        $s->bind_param("i",$it); $s->execute(); $jmlpelanggan=(int)$s->get_result()->fetch_row()[0]; $s->close();
+        // jumlah pelanggan unik (count distinct id_user yang pernah pesan ke penjual ini)
+        $s = $conn->prepare("SELECT COUNT(DISTINCT o.id_user) FROM tb_order o WHERE o.id_penjual=? AND o.deleted=0");
+        $s->bind_param("i",$id); $s->execute(); $jmlpelanggan=(int)$s->get_result()->fetch_row()[0]; $s->close();
 
-        $s = $conn->prepare("SELECT rating_toko, COUNT(*) AS jml FROM tb_rating r WHERE r.id_toko=? AND r.deleted=0{$filterrating} GROUP BY rating_toko ORDER BY rating_toko DESC");
-        $s->bind_param("i",$it); $s->execute(); $res=$s->get_result();
+        // distribusi rating per bintang (5,4,3,2,1) — untuk tabel breakdown rating
+        $s = $conn->prepare("SELECT rating_toko, COUNT(*) AS jml FROM tb_rating r WHERE r.id_penjual=? AND r.deleted=0 GROUP BY rating_toko ORDER BY rating_toko DESC");
+        $s->bind_param("i",$id); $s->execute(); $res=$s->get_result();
         while ($r=$res->fetch_assoc()) $distribusirating[(int)$r['rating_toko']]=(int)$r['jml'];
         $s->close();
 
+        // ulasan terbaru beserta menu yang dipesan saat rating diberikan
         $s = $conn->prepare(
-            "SELECT r.rating_toko, r.ulasan, r.created, u.username
+            "SELECT r.rating_toko, r.ulasan, r.created, u.username,
+                    (SELECT GROUP_CONCAT(COALESCE(d.nama_menu_snapshot, m2.nama_menu) SEPARATOR ', ')
+                     FROM tb_detail_order d
+                     LEFT JOIN tb_menu m2 ON d.id_menu=m2.id_menu
+                     WHERE d.id_order=r.id_order AND d.deleted=0) AS menu_dipesan
              FROM tb_rating r JOIN tb_user u ON r.id_user=u.id_user
-             WHERE r.id_toko=? AND r.deleted=0{$filterrating}
-             ORDER BY r.created DESC LIMIT 5"
+             WHERE r.id_penjual=? AND r.deleted=0
+             ORDER BY r.created DESC LIMIT 10"
         );
-        $s->bind_param("i",$it); $s->execute(); $ulasanterbaru=$s->get_result()->fetch_all(MYSQLI_ASSOC); $s->close();
+        $s->bind_param("i",$id); $s->execute(); $ulasanterbaru=$s->get_result()->fetch_all(MYSQLI_ASSOC); $s->close();
 
+        // produk terlaris — hanya yang benar-benar terjual (Selesai), bukan yang masih diproses
         $s = $conn->prepare(
             "SELECT m.nama_menu, m.harga, SUM(d.jumlah) AS terjual, SUM(d.subtotal) AS omset
              FROM tb_detail_order d
              JOIN tb_menu m ON d.id_menu=m.id_menu
              JOIN tb_order o ON d.id_order=o.id_order
-             WHERE m.id_toko=? AND d.deleted=0 AND o.deleted=0 AND o.status_order!='Dibatalkan'{$filterpesanan}
+             WHERE o.id_penjual=? AND d.deleted=0 AND o.deleted=0 AND o.status_order='Selesai'
              GROUP BY m.id_menu, m.nama_menu, m.harga
              ORDER BY terjual DESC LIMIT 5"
         );
-        $s->bind_param("i",$it); $s->execute(); $terlaris=$s->get_result()->fetch_all(MYSQLI_ASSOC); $s->close();
+        $s->bind_param("i",$id); $s->execute(); $terlaris=$s->get_result()->fetch_all(MYSQLI_ASSOC); $s->close();
 
+        // daftar menu — total terjual = jumlah pesanan Selesai (real)
         $s = $conn->prepare(
-            "SELECT m.nama_menu, m.harga, m.status,
+            "SELECT m.nama_menu, m.harga, m.status, m.deleted,
                     COALESCE((SELECT SUM(d2.jumlah) FROM tb_detail_order d2
                               JOIN tb_order o2 ON d2.id_order=o2.id_order
                               WHERE d2.id_menu=m.id_menu AND d2.deleted=0
-                                AND o2.deleted=0 AND o2.status_order!='Dibatalkan'),0) AS terjual
-             FROM tb_menu m WHERE m.id_toko=? AND m.deleted=0
-             ORDER BY (m.status='aktif') DESC, terjual DESC, m.nama_menu ASC"
+                                AND o2.id_penjual=? AND o2.deleted=0 AND o2.status_order='Selesai'),0) AS terjual
+             FROM tb_menu m WHERE m.id_penjual=?
+             ORDER BY m.deleted ASC, (m.status='aktif') DESC, terjual DESC, m.nama_menu ASC"
         );
-        $s->bind_param("i",$it); $s->execute(); $daftarmenu=$s->get_result()->fetch_all(MYSQLI_ASSOC); $s->close();
+        $s->bind_param("ii",$id,$id); $s->execute(); $daftarmenu=$s->get_result()->fetch_all(MYSQLI_ASSOC); $s->close();
 
+        // top pelanggan gabungan — urut by jumlah pesanan dulu, lalu total belanja
         $s = $conn->prepare(
             "SELECT u.username, COUNT(o.id_order) AS jml_order, COALESCE(SUM(o.total_harga),0) AS total_belanja
              FROM tb_order o JOIN tb_user u ON o.id_user=u.id_user
-             WHERE o.id_toko=? AND o.status_order='Selesai' AND o.deleted=0{$filterpesanan}
-             GROUP BY o.id_user, u.username ORDER BY jml_order DESC LIMIT 5"
+             WHERE o.id_penjual=? AND o.status_order='Selesai' AND o.deleted=0
+             GROUP BY o.id_user, u.username
+             ORDER BY jml_order DESC, total_belanja DESC LIMIT 10"
         );
-        $s->bind_param("i",$it); $s->execute(); $toppelanggan=$s->get_result()->fetch_all(MYSQLI_ASSOC); $s->close();
+        $s->bind_param("i",$id); $s->execute(); $toppelanggan=$s->get_result()->fetch_all(MYSQLI_ASSOC); $s->close();
 
-        $s = $conn->prepare(
-            "SELECT u.username, COUNT(o.id_order) AS jml_order, COALESCE(SUM(o.total_harga),0) AS total_belanja
-             FROM tb_order o JOIN tb_user u ON o.id_user=u.id_user
-             WHERE o.id_toko=? AND o.status_order='Selesai' AND o.deleted=0{$filterpesanan}
-             GROUP BY o.id_user, u.username ORDER BY total_belanja DESC LIMIT 5"
-        );
-        $s->bind_param("i",$it); $s->execute(); $topmahal=$s->get_result()->fetch_all(MYSQLI_ASSOC); $s->close();
-
-        // tren omset per hari dalam rentang tanggal (7/14/30 hari terakhir, atau custom)
+        // tren omset per hari — HANYA Selesai (uang masuk per hari)
         $sqchart = $conn->prepare(
             "SELECT DATE(tanggal_order) AS tgl, COALESCE(SUM(total_harga),0) AS nilai
-             FROM tb_order WHERE id_toko=? AND deleted=0
+             FROM tb_order WHERE id_penjual=? AND deleted=0
+               AND status_order='Selesai'
                AND DATE(tanggal_order) BETWEEN ? AND ?
              GROUP BY DATE(tanggal_order)"
         );
-        $sqchart->bind_param("iss",$it,$dari,$sampai); $sqchart->execute();
+        $sqchart->bind_param("iss",$id,$dari,$sampai); $sqchart->execute();
         $reschart = $sqchart->get_result(); $tmpmap = [];
         while ($rc = $reschart->fetch_assoc()) $tmpmap[$rc['tgl']] = (float)$rc['nilai'];
         $sqchart->close();
@@ -172,11 +188,11 @@ if ($user['role'] === 'penjual') {
              JOIN tb_user u  ON o.id_user=u.id_user
              LEFT JOIN tb_detail_order d ON o.id_order=d.id_order AND d.deleted=0
              LEFT JOIN tb_menu m ON d.id_menu=m.id_menu
-             WHERE o.id_toko=? AND o.status_order IN ('Selesai','Dibatalkan') AND o.deleted=0{$filterpesanan}
+             WHERE o.id_penjual=? AND o.status_order IN ('Selesai','Dibatalkan') AND o.deleted=0
              ORDER BY o.tanggal_order DESC, o.id_order, m.nama_menu
              LIMIT 500"
         );
-        $sqdet->bind_param("i",$it); $sqdet->execute();
+        $sqdet->bind_param("i",$id); $sqdet->execute();
         $resdet = $sqdet->get_result();
         while ($rd = $resdet->fetch_assoc()) {
             $oid = $rd['id_order'];
@@ -204,19 +220,30 @@ if ($user['role'] === 'penjual') {
 
 // ── PEMBELI ────────────────────────────────────────────────────────────────────
 } elseif ($user['role'] === 'pembeli') {
-    $s = $conn->prepare("SELECT COUNT(*), COALESCE(SUM(total_harga),0) FROM tb_order WHERE id_user=? AND deleted=0");
-    $s->bind_param("i",$id); $s->execute(); $r=$s->get_result()->fetch_row(); $s->close();
-    $totalorder_pembeli=(int)$r[0]; $totalbelanja=(float)$r[1];
+    // total pesanan = COUNT semua status (volume), total belanja = SUM Selesai only
+    $s = $conn->prepare("SELECT COUNT(*) FROM tb_order WHERE id_user=? AND deleted=0");
+    $s->bind_param("i",$id); $s->execute(); $totalorder_pembeli=(int)$s->get_result()->fetch_row()[0]; $s->close();
 
+    $s = $conn->prepare("SELECT COALESCE(SUM(total_harga),0) FROM tb_order WHERE id_user=? AND status_order='Selesai' AND deleted=0");
+    $s->bind_param("i",$id); $s->execute(); $totalbelanja=(float)$s->get_result()->fetch_row()[0]; $s->close();
+
+    // toko favorit — pakai snapshot nama_toko + group by id_penjual supaya beda penjual
+    // di slot yang sama tidak digabung. coalesce ke "Kantin ke-X" kalau snapshot null.
     $s = $conn->prepare(
-        "SELECT t.nama_toko, t.id_toko, COUNT(o.id_order) AS jml_order, COALESCE(SUM(o.total_harga),0) AS total_belanja
-         FROM tb_order o JOIN tb_toko t ON o.id_toko=t.id_toko
+        "SELECT COALESCE(o.nama_toko_snapshot, CONCAT('Kantin ke-', COALESCE(o.nomor_kantin_snapshot, o.id_toko))) AS nama_toko,
+                o.id_penjual,
+                COUNT(o.id_order) AS jml_order,
+                COALESCE(SUM(o.total_harga),0) AS total_belanja
+         FROM tb_order o
          WHERE o.id_user=? AND o.status_order='Selesai' AND o.deleted=0
-         GROUP BY o.id_toko, t.id_toko, t.nama_toko ORDER BY jml_order DESC LIMIT 5"
+         GROUP BY o.id_penjual, nama_toko
+         ORDER BY jml_order DESC LIMIT 5"
     );
     $s->bind_param("i",$id); $s->execute(); $tokofavorit=$s->get_result()->fetch_all(MYSQLI_ASSOC); $s->close();
 }
 
+// flash message — pesan sementara setelah redirect (mis. sukses toggle status toko)
+// dihapus setelah dibaca supaya tidak muncul lagi saat halaman direfresh
 $flashpesan = ''; $flashjenis = '';
 if (!empty($_SESSION['flash'])) {
     $flashpesan = $_SESSION['flash']['pesan'];
@@ -250,13 +277,16 @@ $svgw    = max(700, $svgn * 30);
 $svgbarw = max(8, min(40, (int)(($svgw - 80) / max(1, $svgn)) - 4));
 $svggap  = max(4, (int)(($svgw - 80 - $svgn * $svgbarw) / max(1, $svgn - 1)));
 
+// format angka jadi rupiah — contoh: 15000 -> "Rp 15.000"
 function rp(float $n): string { return 'Rp ' . number_format($n, 0, ',', '.'); }
+// singkat nilai besar supaya muat di kartu statistik — contoh: 1.500.000 -> "Rp 1,5 Jt", 2.000.000.000 -> "Rp 2 M"
 function singkat(float $n): string {
     if ($n >= 1_000_000_000) { $v=$n/1_000_000_000; return 'Rp '.rtrim(rtrim(number_format($v,1,',','.'),'0'),',').' M'; }
     if ($n >= 1_000_000)     { $v=$n/1_000_000;     return 'Rp '.rtrim(rtrim(number_format($v,1,',','.'),'0'),',').' Jt'; }
     return 'Rp ' . number_format($n, 0, ',', '.');
 }
 
+// render 5 bintang — yang aktif kuning (#F59E0B), sisanya abu-abu (#D1D5DB)
 function bintanghtml(float $r): string {
     $out = '';
     for ($i = 1; $i <= 5; $i++) {
@@ -278,14 +308,15 @@ function bintanghtml(float $r): string {
 .cetakjudul { display:none; }
 .bar-dist { height:8px;background:#f0f0f0;border-radius:4px;overflow:hidden;flex:1; }
 .bar-dist-isi { height:100%;background:var(--kedua);border-radius:4px; }
+/* judul section: flex row supaya h3 di kiri & tombol cetak di kanan rapi */
+.seksi-judul { display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+.seksi-judul h3 { margin:0; }
 @media print {
   .takprint { display:none !important; }
   .cetakjudul { display:block !important; margin-bottom:14px; }
   @page { size:A4; margin:12mm; }
   .kartu { box-shadow:none !important; border:1px solid #ddd !important; page-break-inside:avoid; }
   .grid-stat { grid-template-columns:repeat(3,1fr) !important; }
-  .grid-dua  { display:flex; flex-wrap:wrap; gap:14px; }
-  .grid-dua > .kartu { flex:1; min-width:200px; }
   table { font-size:11px; }
 }
 </style>
@@ -302,8 +333,8 @@ function bintanghtml(float $r): string {
       <p><?= htmlspecialchars($user['username']) ?> — <?= ucfirst($user['role']) ?><?= $isDihapus ? ' <span style="color:#dc2626;font-weight:700;">· Terhapus</span>' : '' ?></p>
     </div>
     <div class="takprint" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-      <button onclick="window.print()" class="tombolringan">
-        <i class="fa-solid fa-print"></i> Cetak
+      <button onclick="eksporXlsSemua('detail_pengguna')" class="tombolringan" style="background:var(--sukses);color:white;border-color:var(--sukses);">
+        <i class="fa-solid fa-file-csv"></i> Cetak Semua
       </button>
       <a href="edituser.php?id=<?= $id ?>" class="tombolutama">
         <i class="fa-solid fa-pen"></i> Edit
@@ -407,12 +438,7 @@ function bintanghtml(float $r): string {
             <span style="font-size:12px;color:var(--tekssamar);">(<?= $jmlrating ?> ulasan)</span>
             <?php endif; ?>
           </div>
-          <?php if ($tm): ?>
-          <div style="font-size:10px;color:var(--tekssamar);margin-top:4px;">
-            <i class="fa-solid fa-clock" style="font-size:9px;"></i>
-            Statistik dihitung sejak <?= date('d M Y', strtotime($tm)) ?>
-          </div>
-          <?php endif; ?>
+
         </div>
       </div>
     </div>
@@ -426,19 +452,26 @@ function bintanghtml(float $r): string {
     </div>
   </div>
 
-  <!-- stat cards (6) -->
-  <div class="grid-stat" style="grid-template-columns:repeat(3,1fr);margin-bottom:18px;">
+  <!-- stat cards — omset HANYA dari pesanan Selesai (uang yang benar-benar diterima),
+       sedangkan jumlah & nilai dibatalkan ditampilkan terpisah untuk info lengkap -->
+  <div class="seksi-laporan" id="seksi-stat" style="margin-bottom:18px;">
+  <div class="takprint" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+    <small style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--tekssamar);">Statistik Utama</small>
+  </div>
+  <!-- urutan stat cards sinkron dengan laporan platform per-kantin Group 2:
+       Total Pesanan, Rating Toko, Omset Selesai, Nilai Dibatalkan, Menu Aktif, Pelanggan -->
+  <div class="grid-stat" style="grid-template-columns:repeat(3,1fr);">
     <div class="kartu-stat">
       <div class="ikon-stat"><i class="fa-solid fa-receipt"></i></div>
       <div class="isi-stat"><div class="nilai"><?= $totalpesanan ?></div><div class="label">Total Pesanan</div><div class="sub">Semua status</div></div>
     </div>
     <div class="kartu-stat">
-      <div class="ikon-stat"><i class="fa-solid fa-coins"></i></div>
-      <div class="isi-stat"><div class="nilai" style="font-size:13px;"><?= rp($totalomset) ?></div><div class="label">Total Omset</div><div class="sub">Semua status</div></div>
+      <div class="ikon-stat" style="background:var(--suksebg);color:var(--sukses);"><i class="fa-solid fa-coins"></i></div>
+      <div class="isi-stat"><div class="nilai" style="font-size:13px;color:var(--sukses);"><?= rp($omsetselesai) ?></div><div class="label">Omset Selesai</div><div class="sub"><?= $jmlselesai ?> pesanan selesai</div></div>
     </div>
     <div class="kartu-stat">
-      <div class="ikon-stat" style="background:var(--suksebg);color:var(--sukses);"><i class="fa-solid fa-circle-check"></i></div>
-      <div class="isi-stat"><div class="nilai" style="font-size:13px;"><?= rp($omsetselesai) ?></div><div class="label">Omset Selesai</div><div class="sub"><?= $jmlselesai ?> pesanan</div></div>
+      <div class="ikon-stat" style="background:#fee2e2;color:#dc2626;"><i class="fa-solid fa-circle-xmark"></i></div>
+      <div class="isi-stat"><div class="nilai" style="font-size:13px;color:#dc2626;"><?= rp($nilaidibatalkan) ?></div><div class="label">Nilai Dibatalkan</div><div class="sub"><?= $jmldibatalkan ?> pesanan dibatalkan</div></div>
     </div>
     <div class="kartu-stat">
       <div class="ikon-stat" style="background:#fffbeb;color:#D97706;"><i class="fa-solid fa-star"></i></div>
@@ -446,21 +479,20 @@ function bintanghtml(float $r): string {
     </div>
     <div class="kartu-stat">
       <div class="ikon-stat"><i class="fa-solid fa-utensils"></i></div>
-      <div class="isi-stat"><div class="nilai"><?= $totalmenu ?></div><div class="label">Menu Aktif</div><div class="sub"><?= count($daftarmenu) ?> total menu</div></div>
+      <div class="isi-stat"><div class="nilai"><?= $totalmenu ?></div><div class="label">Menu Aktif</div><div class="sub">Bisa dipesan</div></div>
     </div>
     <div class="kartu-stat">
       <div class="ikon-stat"><i class="fa-solid fa-users"></i></div>
-      <div class="isi-stat"><div class="nilai"><?= $jmlpelanggan ?></div><div class="label">Pelanggan</div><div class="sub">Pembeli unik</div></div>
+      <div class="isi-stat"><div class="nilai"><?= $jmlpelanggan ?></div><div class="label">Pembeli Berbeda</div><div class="sub">Pelanggan unik</div></div>
     </div>
   </div>
+  </div><!-- /seksi-stat -->
 
-  <!-- tren omset (SVG) -->
-  <div class="kartu" style="margin-bottom:18px;">
+  <!-- ── TREN OMSET (SVG chart) ───────────────────────────────────────────── -->
+  <div class="kartu seksi-laporan" id="seksi-chart" style="margin-bottom:18px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
-      <h3 style="margin:0;"><i class="fa-solid fa-chart-bar"></i> Tren Omset
-        <?= $modecustom ? date('d M',strtotime($dari)).'–'.date('d M Y',strtotime($sampai)) : $nhari.' Hari Terakhir' ?>
-      </h3>
-      <div style="display:flex;gap:4px;flex-wrap:wrap;" class="takprint">
+      <h3 style="margin:0;"><i class="fa-solid fa-chart-bar"></i> Omset — <?= $modecustom ? date('d M Y',strtotime($dari)).' — '.date('d M Y',strtotime($sampai)) : $nhari.' Hari Terakhir' ?></h3>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;" class="takprint">
         <a href="?id=<?= $id ?>&hari=7"      class="chip-filter <?= !$modecustom&&$nhari===7 ?'aktif':'' ?>" style="font-size:11px;padding:4px 10px;">7 Hari</a>
         <a href="?id=<?= $id ?>&hari=14"     class="chip-filter <?= !$modecustom&&$nhari===14?'aktif':'' ?>" style="font-size:11px;padding:4px 10px;">14 Hari</a>
         <a href="?id=<?= $id ?>&hari=30"     class="chip-filter <?= !$modecustom&&$nhari===30?'aktif':'' ?>" style="font-size:11px;padding:4px 10px;">30 Hari</a>
@@ -499,7 +531,7 @@ function bintanghtml(float $r): string {
               font-size="<?= $svgn > 20 ? '7' : '9' ?>" font-weight="<?= $isT ? '700' : '400' ?>"><?= $lbl ?></text>
         <?php if ($ch['nilai'] > 0 && $svgbarw >= 20): ?>
         <text x="<?= $cx + $svgbarw/2 ?>" y="<?= max($by-4, 14) ?>" text-anchor="middle"
-              fill="#643843" font-size="8" font-weight="600"><?= number_format($ch['nilai']/1000, 0) ?>k</text>
+              fill="#643843" font-size="8" font-weight="600"><?php $_n=$ch['nilai']; echo $_n>=1000000 ? number_format($_n/1000000,1).'Jt' : ($_n>=1000 ? number_format($_n/1000,0).'k' : number_format($_n,0)); ?></text>
         <?php endif; ?>
         <?php endforeach; ?>
       </svg>
@@ -509,121 +541,200 @@ function bintanghtml(float $r): string {
     <?php endif; ?>
   </div>
 
-  <!-- produk terlaris -->
-  <div class="grid-dua" style="margin-bottom:18px;">
-    <div class="kartu">
-      <h3><i class="fa-solid fa-fire"></i> Produk Terlaris</h3>
-      <?php if (empty($terlaris)): ?>
-      <div class="kosong" style="padding:20px;"><p>Belum ada data penjualan</p></div>
-      <?php else: ?>
-      <?php $medal=['emas','perak','perunggu']; ?>
-      <?php foreach ($terlaris as $i => $t): ?>
-      <div class="baris-produk">
-        <div class="rangking-produk <?= $medal[$i]??'' ?>">#<?= $i+1 ?></div>
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= htmlspecialchars($t['nama_menu']) ?></div>
-          <div style="font-size:11px;color:var(--tekssamar);"><?= rp($t['harga']) ?> · omset <?= rp($t['omset']) ?></div>
-        </div>
-        <div style="font-size:13px;font-weight:700;color:var(--utama);white-space:nowrap;"><?= (int)$t['terjual'] ?>×</div>
-      </div>
-      <?php endforeach; ?>
-      <?php endif; ?>
+  <!-- ── TOP PELANGGAN (gabung) — tabel rank, username, jml, total, rata-rata ── -->
+  <div class="kartu seksi-laporan" id="seksi-pelanggan" style="margin-bottom:18px;">
+    <div class="seksi-judul">
+      <h3 style="margin:0;"><i class="fa-solid fa-trophy"></i> Top Pelanggan</h3>
+      <button onclick="eksporXlsSeksi('seksi-pelanggan','top_pelanggan')" class="tombolkecil takprint" style="background:var(--sukses);color:white;"><i class="fa-solid fa-file-csv"></i> Cetak</button>
     </div>
-
-    <!-- rating & ulasan -->
-    <div class="kartu">
-      <h3><i class="fa-solid fa-star"></i> Rating &amp; Ulasan</h3>
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--latar);">
-        <div style="font-size:42px;font-weight:900;color:var(--kedua);line-height:1;"><?= $ratarating ?: '—' ?></div>
-        <div>
-          <?php if ($ratarating > 0): ?>
-          <div><?= bintanghtml($ratarating) ?></div>
-          <?php endif; ?>
-          <div style="font-size:12px;color:var(--tekssamar);margin-top:4px;"><?= $jmlrating ?> ulasan masuk</div>
-        </div>
-      </div>
-      <?php if ($jmlrating > 0): ?>
-      <?php for ($bin=5; $bin>=1; $bin--):
-          $j = $distribusirating[$bin] ?? 0;
-          $pct = round($j / $jmlrating * 100);
-      ?>
-      <div style="display:flex;align-items:center;gap:8px;margin:4px 0;">
-        <span style="font-size:11px;font-weight:700;min-width:18px;text-align:right;"><?= $bin ?>★</span>
-        <div class="bar-dist"><div class="bar-dist-isi" style="width:<?= $pct ?>%;"></div></div>
-        <span style="font-size:11px;color:var(--tekssamar);min-width:26px;"><?= $j ?></span>
-      </div>
-      <?php endfor; ?>
-      <?php else: ?>
-      <p style="color:var(--tekssamar);font-size:13px;">Belum ada ulasan</p>
-      <?php endif; ?>
-      <?php if (!empty($ulasanterbaru)): ?>
-      <div style="margin-top:14px;border-top:1px solid var(--latar);padding-top:12px;">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--tekssamar);margin-bottom:10px;">Ulasan Terbaru</div>
-        <?php foreach ($ulasanterbaru as $ul): ?>
-        <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--latar);">
-          <div style="display:flex;justify-content:space-between;margin-bottom:2px;">
-            <span style="font-size:12px;font-weight:700;"><?= htmlspecialchars($ul['username']) ?></span>
-            <span style="font-size:10px;color:var(--tekssamar);"><?= !empty($ul['created']) ? date('d M Y', strtotime($ul['created'])) : '' ?></span>
-          </div>
-          <div style="margin-bottom:4px;"><?= bintanghtml((float)$ul['rating_toko']) ?></div>
-          <?php if (!empty($ul['ulasan'])): ?>
-          <div style="font-size:12px;color:var(--teks);font-style:italic;line-height:1.4;">
-            "<?= htmlspecialchars(mb_substr($ul['ulasan'],0,140)) ?><?= mb_strlen($ul['ulasan'])>140?'...':'' ?>"
-          </div>
-          <?php endif; ?>
-        </div>
-        <?php endforeach; ?>
-      </div>
-      <?php endif; ?>
+    <?php if (empty($toppelanggan)): ?>
+    <div class="kosong" style="padding:24px;"><p>Belum ada data pelanggan</p></div>
+    <?php else: ?>
+    <div class="tabel-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th class="tengah" style="width:50px;">Rank</th>
+            <th>Username Pembeli</th>
+            <th class="tengah" style="width:120px;">Jumlah Pesanan</th>
+            <th class="kanan" style="width:140px;">Total Belanja</th>
+            <th class="kanan" style="width:140px;">Rata-rata / Pesanan</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php $medal=['emas','perak','perunggu']; ?>
+          <?php foreach ($toppelanggan as $i => $p):
+              $rpeso = $p['jml_order'] > 0 ? $p['total_belanja'] / $p['jml_order'] : 0;
+          ?>
+          <tr>
+            <td class="tengah"><div class="rangking-produk <?= $medal[$i]??'' ?>" style="display:inline-block;">#<?= $i+1 ?></div></td>
+            <td style="font-weight:700;"><?= htmlspecialchars($p['username']) ?></td>
+            <td class="tengah" style="font-weight:700;color:var(--utama);"><?= $p['jml_order'] ?>× pesan</td>
+            <td class="kanan" style="font-weight:700;color:var(--sukses);"><?= rp($p['total_belanja']) ?></td>
+            <td class="kanan"><?= rp($rpeso) ?></td>
+          </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
     </div>
+    <?php endif; ?>
   </div>
 
-  <!-- pelanggan terbanyak pesan + pengeluaran terbesar -->
-  <div class="grid-dua" style="margin-bottom:18px;">
-    <div class="kartu">
-      <h3><i class="fa-solid fa-trophy"></i> Pelanggan Terbanyak Pesan</h3>
-      <?php if (empty($toppelanggan)): ?>
-      <div class="kosong" style="padding:20px;"><p>Belum ada data pelanggan</p></div>
-      <?php else: ?>
-      <?php $medal=['emas','perak','perunggu']; ?>
-      <?php foreach ($toppelanggan as $i => $p): ?>
-      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--latar);">
-        <div class="rangking-produk <?= $medal[$i]??'' ?>">#<?= $i+1 ?></div>
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= htmlspecialchars($p['username']) ?></div>
-          <div style="font-size:11px;color:var(--tekssamar);"><?= rp($p['total_belanja']) ?></div>
-        </div>
-        <div style="font-size:13px;font-weight:700;color:var(--utama);white-space:nowrap;"><?= $p['jml_order'] ?>× pesan</div>
+  <!-- ── RATING & ULASAN — standalone section dengan tabel CSV-exportable ───── -->
+  <div class="kartu seksi-laporan" id="seksi-rating" style="margin-bottom:18px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <h3 style="margin:0;"><i class="fa-solid fa-star"></i> Rating &amp; Ulasan</h3>
+      <button onclick="eksporXlsSeksi('seksi-rating','rating_ulasan')" class="tombolkecil takprint" style="background:var(--sukses);color:white;"><i class="fa-solid fa-file-csv"></i> Cetak</button>
+    </div>
+    <!-- ringkasan rata-rata: angka besar + bintang + jumlah ulasan (sederhana) -->
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--latar);">
+      <div style="font-size:42px;font-weight:900;color:var(--kedua);line-height:1;"><?= $ratarating ?: '—' ?></div>
+      <div>
+        <?php if ($ratarating > 0): ?><div style="margin-bottom:3px;"><?= bintanghtml($ratarating) ?></div><?php endif; ?>
+        <div style="font-size:12px;color:var(--tekssamar);"><?= $jmlrating ?> ulasan masuk</div>
       </div>
-      <?php endforeach; ?>
-      <?php endif; ?>
     </div>
 
-    <div class="kartu">
-      <h3><i class="fa-solid fa-wallet"></i> Pelanggan Pengeluaran Terbesar</h3>
-      <?php if (empty($topmahal)): ?>
-      <div class="kosong" style="padding:20px;"><p>Belum ada data pelanggan</p></div>
-      <?php else: ?>
-      <?php $medal=['emas','perak','perunggu']; ?>
-      <?php foreach ($topmahal as $i => $p): ?>
-      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--latar);">
-        <div class="rangking-produk <?= $medal[$i]??'' ?>">#<?= $i+1 ?></div>
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= htmlspecialchars($p['username']) ?></div>
-          <div style="font-size:11px;color:var(--tekssamar);"><?= $p['jml_order'] ?> pesanan</div>
-        </div>
-        <div style="font-size:13px;font-weight:700;color:var(--utama);white-space:nowrap;"><?= rp($p['total_belanja']) ?></div>
-      </div>
-      <?php endforeach; ?>
-      <?php endif; ?>
+    <!-- distribusi rating per bintang (tabel) -->
+    <?php if ($jmlrating > 0): ?>
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--tekssamar);margin-bottom:8px;">Distribusi Rating</div>
+    <div class="tabel-wrapper" style="margin-bottom:14px;">
+      <table>
+        <thead>
+          <tr><th style="width:80px;">Bintang</th><th class="tengah" style="width:140px;">Jumlah Ulasan</th><th class="kanan">Persentase</th></tr>
+        </thead>
+        <tbody>
+          <?php for ($bin=5;$bin>=1;$bin--):
+            $j = $distribusirating[$bin] ?? 0;
+            $pct = $jmlrating > 0 ? round($j / $jmlrating * 100, 1) : 0;
+          ?>
+          <tr>
+            <td style="font-weight:700;"><?= $bin ?> bintang</td>
+            <td class="tengah"><?= $j ?> ulasan</td>
+            <td class="kanan"><?= $pct ?>%</td>
+          </tr>
+          <?php endfor; ?>
+        </tbody>
+      </table>
     </div>
+    <?php endif; ?>
+
+    <!-- daftar ulasan beserta menu yang dipesan saat rating diberikan -->
+    <?php if (!empty($ulasanterbaru)): ?>
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--tekssamar);margin-bottom:8px;">Daftar Ulasan</div>
+    <div class="tabel-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:120px;">Pembeli</th>
+            <th class="tengah" style="width:70px;">Rating</th>
+            <th style="width:180px;">Menu Dipesan</th>
+            <th>Ulasan</th>
+            <th class="tengah" style="width:100px;">Tanggal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php foreach ($ulasanterbaru as $ul): ?>
+          <tr>
+            <td style="font-weight:700;"><?= htmlspecialchars($ul['username']) ?></td>
+            <td class="tengah" style="font-weight:700;color:#D97706;"><?= (int)$ul['rating_toko'] ?>★</td>
+            <td style="font-size:12px;"><?= htmlspecialchars($ul['menu_dipesan'] ?? '—') ?></td>
+            <td style="font-size:12px;font-style:italic;"><?= !empty($ul['ulasan']) ? '"' . htmlspecialchars($ul['ulasan']) . '"' : '—' ?></td>
+            <td class="tengah" style="font-size:11px;color:var(--tekssamar);"><?= !empty($ul['created']) ? date('d M Y', strtotime($ul['created'])) : '—' ?></td>
+          </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
+    <?php endif; ?>
   </div>
 
-  <!-- detail pesanan selesai dan dibatalkan -->
-  <div class="kartu" style="margin-bottom:18px;padding:0;overflow:hidden;">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--latar);">
+  <!-- ── PRODUK TERLARIS — tabel rank, nama menu, harga, terjual, omset ───── -->
+  <div class="kartu seksi-laporan" id="seksi-terlaris" style="margin-bottom:18px;">
+    <div class="seksi-judul">
+      <h3 style="margin:0;"><i class="fa-solid fa-fire"></i> Produk Terlaris</h3>
+      <button onclick="eksporXlsSeksi('seksi-terlaris','produk_terlaris')" class="tombolkecil takprint" style="background:var(--sukses);color:white;"><i class="fa-solid fa-file-csv"></i> Cetak</button>
+    </div>
+    <?php if (empty($terlaris)): ?>
+    <div class="kosong" style="padding:24px;"><p>Belum ada data penjualan</p></div>
+    <?php else: ?>
+    <div class="tabel-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th class="tengah" style="width:50px;">Rank</th>
+            <th>Nama Menu</th>
+            <th class="kanan" style="width:110px;">Harga</th>
+            <th class="tengah" style="width:90px;">Terjual</th>
+            <th class="kanan" style="width:140px;">Total Omset</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php $medal=['emas','perak','perunggu']; ?>
+          <?php foreach ($terlaris as $i => $t): ?>
+          <tr>
+            <td class="tengah"><div class="rangking-produk <?= $medal[$i]??'' ?>" style="display:inline-block;">#<?= $i+1 ?></div></td>
+            <td style="font-weight:700;"><?= htmlspecialchars($t['nama_menu']) ?></td>
+            <td class="kanan"><?= rp((float)$t['harga']) ?></td>
+            <td class="tengah" style="font-weight:700;color:var(--utama);"><?= (int)$t['terjual'] ?>×</td>
+            <td class="kanan" style="font-weight:700;color:var(--sukses);"><?= rp((float)$t['omset']) ?></td>
+          </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
+    <?php endif; ?>
+  </div>
+
+  <!-- ── DAFTAR MENU — tabel semua menu termasuk yang dihapus ─────────────── -->
+  <?php if (!empty($daftarmenu)): ?>
+  <div class="kartu seksi-laporan" id="seksi-menu" style="margin-bottom:18px;">
+    <div class="seksi-judul">
+      <h3 style="margin:0;"><i class="fa-solid fa-utensils"></i> Daftar Menu (<?= count($daftarmenu) ?> item)</h3>
+      <button onclick="eksporXlsSeksi('seksi-menu','daftar_menu')" class="tombolkecil takprint" style="background:var(--sukses);color:white;"><i class="fa-solid fa-file-csv"></i> Cetak</button>
+    </div>
+    <div class="tabel-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Nama Menu</th>
+            <th class="kanan" style="width:110px;">Harga</th>
+            <th class="tengah" style="width:100px;">Status</th>
+            <th class="tengah" style="width:130px;">Total Terjual</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php foreach ($daftarmenu as $m): ?>
+          <tr style="<?= $m['deleted'] ? 'opacity:.5;' : '' ?>">
+            <td style="font-weight:600;">
+              <?= htmlspecialchars($m['nama_menu']) ?>
+              <?php if ($m['deleted']): ?>
+              <span style="font-size:10px;color:#dc2626;font-weight:400;margin-left:4px;">(dihapus)</span>
+              <?php endif; ?>
+            </td>
+            <td class="kanan"><?= rp((float)$m['harga']) ?></td>
+            <td class="tengah">
+              <span class="badge <?= $m['deleted'] ? 'dibatalkan' : ($m['status']==='aktif'?'selesai':'dibatalkan') ?>">
+                <?= $m['deleted'] ? 'Dihapus' : ucfirst($m['status']) ?>
+              </span>
+            </td>
+            <td class="tengah" style="font-weight:700;color:var(--utama);"><?= (int)$m['terjual'] ?>×</td>
+          </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <?php endif; ?>
+
+  <!-- ── DETAIL PESANAN SELESAI & DIBATALKAN ──────────────────────────────── -->
+  <div class="kartu seksi-laporan" id="seksi-detail" style="margin-bottom:18px;">
+    <div class="seksi-judul">
       <h3 style="margin:0;"><i class="fa-solid fa-list-check"></i> Detail Pesanan Selesai &amp; Dibatalkan</h3>
-      <span style="font-size:11px;color:var(--tekssamar);"><?= count($pesanandetail) ?> pesanan</span>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <span style="font-size:11px;color:var(--tekssamar);" class="takprint"><?= count($pesanandetail) ?> pesanan</span>
+        <button onclick="eksporXlsSeksi('seksi-detail','detail_pesanan')" class="tombolkecil takprint" style="background:var(--sukses);color:white;"><i class="fa-solid fa-file-csv"></i> Cetak</button>
+      </div>
     </div>
     <?php if (empty($pesanandetail)): ?>
     <div class="kosong" style="padding:24px;"><p>Belum ada pesanan selesai atau dibatalkan</p></div>
@@ -678,39 +789,6 @@ function bintanghtml(float $r): string {
     <?php endif; ?>
   </div>
 
-  <!-- daftar menu -->
-  <?php if (!empty($daftarmenu)): ?>
-  <div class="kartu" style="margin-bottom:18px;padding:0;overflow:hidden;">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--latar);">
-      <h3 style="margin:0;"><i class="fa-solid fa-utensils"></i> Daftar Menu (<?= count($daftarmenu) ?> item)</h3>
-    </div>
-    <div class="tabel-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <th>Nama Menu</th>
-            <th class="kanan">Harga</th>
-            <th class="tengah">Status</th>
-            <th class="tengah">Total Terjual</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach ($daftarmenu as $m): ?>
-          <tr>
-            <td style="font-weight:600;"><?= htmlspecialchars($m['nama_menu']) ?></td>
-            <td class="kanan"><?= rp((float)$m['harga']) ?></td>
-            <td class="tengah">
-              <span class="badge <?= $m['status']==='aktif'?'selesai':'dibatalkan' ?>"><?= ucfirst($m['status']) ?></span>
-            </td>
-            <td class="tengah" style="font-weight:700;color:var(--utama);"><?= (int)$m['terjual'] ?></td>
-          </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
-    </div>
-  </div>
-  <?php endif; ?>
-
 <?php elseif ($user['role'] === 'penjual' && !$toko && !$riwayat): ?>
 <!-- ════════════════ PENJUAL TANPA TOKO ════════════════ -->
 
@@ -736,6 +814,7 @@ function bintanghtml(float $r): string {
 
 <?php elseif ($user['role'] === 'pembeli'): ?>
 <!-- ════════════════ PEMBELI ════════════════ -->
+<!-- section pembeli: hero kartu identitas + stat ringkas (total pesanan & total belanja) + toko favorit -->
 
   <div class="kartu" style="margin-bottom:18px;text-align:center;padding:32px;">
     <!-- avatar kotak 8px agar sinkron dengan halaman daftar pengguna -->
@@ -764,12 +843,13 @@ function bintanghtml(float $r): string {
     </div>
   </div>
 
+  <!-- daftar toko favorit pembeli — urut berdasarkan jumlah pesanan selesai terbanyak -->
   <div class="kartu">
     <h3><i class="fa-solid fa-heart"></i> Toko Favorit</h3>
       <?php if (empty($tokofavorit)): ?>
       <div class="kosong" style="padding:20px;"><p>Belum ada transaksi selesai</p></div>
       <?php else: ?>
-      <?php $medal=['emas','perak','perunggu']; ?>
+      <?php $medal=['emas','perak','perunggu']; // medali 3 besar — sisanya tanpa kelas ?>
       <?php foreach ($tokofavorit as $i => $tf): ?>
       <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--latar);">
         <div class="rangking-produk <?= $medal[$i]??'' ?>">#<?= $i+1 ?></div>
@@ -785,6 +865,7 @@ function bintanghtml(float $r): string {
 
 <?php else: ?>
 <!-- ════════════════ ADMIN ════════════════ -->
+<!-- section admin platform: tampilan minimal, hanya kartu identitas (admin tidak punya statistik transaksi) -->
 
   <div class="kartu" style="margin-bottom:18px;text-align:center;padding:32px;">
     <!-- avatar kotak 8px agar sinkron -->
@@ -802,5 +883,103 @@ function bintanghtml(float $r): string {
 <?php endif; ?>
 
 </main>
+
+<script>
+/* ekspor XLS (HTML-in-Excel) — tabel bergaris dengan identitas
+   trik: bikin file html dengan mime application/vnd.ms-excel supaya excel mau buka langsung. */
+
+// metadata identitas yang dicetak di header tabel ekspor — diisi dari PHP saat render
+var IDENTITAS = {
+  judul:   'Detail Pengguna',
+  kantin:  <?= json_encode(($nomorkantin > 0 ? 'Kantin ke-' . $nomorkantin : '—') . ($namatoko ? ' — ' . $namatoko : '')) ?>,
+  penjual: <?= json_encode($user['username'] ?? '') ?>,
+  periode: <?= json_encode($modecustom ? date('d M Y', strtotime($dari)) . ' – ' . date('d M Y', strtotime($sampai)) : $nhari . ' Hari Terakhir') ?>,
+};
+
+// bangun tabel header identitas (judul + kantin + penjual + periode + tanggal cetak) untuk file ekspor
+function buildIdentitasHtml(judulSection) {
+  var tgl = new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  var cssLabel = 'border:1px solid #999;padding:6pt 10pt;background:#F8EBF1;font-weight:bold;width:160px;';
+  var cssNilai = 'border:1px solid #999;padding:6pt 10pt;';
+  var html = '<table style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:11pt;margin-bottom:10pt;width:100%;">';
+  html += '<tr><td colspan="2" style="background:#643843;color:white;font-weight:bold;font-size:14pt;text-align:center;padding:10pt;border:1px solid #444;">jajankita &mdash; ' + IDENTITAS.judul + '</td></tr>';
+  if (judulSection)        html += '<tr><td style="'+cssLabel+'">Section</td><td style="'+cssNilai+'">' + judulSection + '</td></tr>';
+  if (IDENTITAS.kantin)    html += '<tr><td style="'+cssLabel+'">Kantin/Toko</td><td style="'+cssNilai+'">' + IDENTITAS.kantin + '</td></tr>';
+  if (IDENTITAS.penjual)   html += '<tr><td style="'+cssLabel+'">Penjual/User</td><td style="'+cssNilai+'">' + IDENTITAS.penjual + '</td></tr>';
+  if (IDENTITAS.periode)   html += '<tr><td style="'+cssLabel+'">Periode</td><td style="'+cssNilai+'">' + IDENTITAS.periode + '</td></tr>';
+  html += '<tr><td style="'+cssLabel+'">Tanggal Cetak</td><td style="'+cssNilai+'">' + tgl + '</td></tr>';
+  html += '</table>';
+  return html;
+}
+
+// kloning tabel HTML lalu sisipkan inline style (border, padding, warna) — supaya tampil rapi di Excel
+// inline style penting: Excel tidak baca CSS file eksternal, jadi semua styling harus dilampir per-elemen
+function tableToBorderedHtml(table) {
+  var clone = table.cloneNode(true);
+  clone.setAttribute('border', '1');
+  clone.setAttribute('cellpadding', '6');
+  clone.setAttribute('cellspacing', '0');
+  clone.setAttribute('style', 'border-collapse:collapse;font-family:Arial,sans-serif;font-size:11pt;width:100%;margin-bottom:8pt;');
+  // styling th: header berwarna pink-tua sesuai tema utama
+  clone.querySelectorAll('th').forEach(function(th){
+    th.setAttribute('style', 'background:#643843;color:white;border:1px solid #3d2230;padding:8pt 10pt;text-align:left;font-weight:bold;');
+  });
+  // styling tbody: baris ganjil/genap beda warna (zebra) untuk keterbacaan
+  clone.querySelectorAll('tbody tr').forEach(function(tr, i){
+    var bg = i % 2 === 1 ? 'background:#FAF6F8;' : '';
+    tr.querySelectorAll('td').forEach(function(td){
+      td.setAttribute('style', 'border:1px solid #c8c8c8;padding:6pt 10pt;vertical-align:top;' + bg);
+    });
+  });
+  // styling tfoot: baris total dengan background highlight
+  clone.querySelectorAll('tfoot td').forEach(function(td){
+    td.setAttribute('style', 'border:1px solid #999;padding:7pt 10pt;background:#F8EBF1;font-weight:bold;');
+  });
+  // buang ikon font-awesome — supaya tidak muncul kotak kosong di Excel
+  clone.querySelectorAll('i').forEach(function(ic){ ic.remove(); });
+  return clone.outerHTML;
+}
+
+// rakit dokumen html lengkap, bungkus jadi blob, lalu trigger download via link sementara
+function unduhXls(htmlBody, namafile) {
+  var doc = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">'
+          + '<head><meta charset="UTF-8"></head><body>' + htmlBody + '</body></html>';
+  var blob = new Blob(['﻿' + doc], { type: 'application/vnd.ms-excel' });
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  var tgl  = new Date().toISOString().slice(0,10);
+  a.href = url; a.download = namafile + '_' + tgl + '.xls';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 100);
+}
+
+// ekspor satu section saja (dipanggil tombol "Cetak" di tiap kartu)
+// idSection = id elemen kartu (mis. 'seksi-pelanggan'), namafile = nama file output tanpa ekstensi
+function eksporXlsSeksi(idSection, namafile) {
+  var section = document.getElementById(idSection);
+  if (!section) return;
+  var tables = section.querySelectorAll('table');
+  if (!tables.length) { alert('Tidak ada tabel data di section ini.'); return; }
+  var judul = section.querySelector('h3') ? section.querySelector('h3').innerText.trim() : '';
+  var html = buildIdentitasHtml(judul);
+  tables.forEach(function(t){ html += tableToBorderedHtml(t) + '<br>'; });
+  unduhXls(html, namafile);
+}
+
+// ekspor semua section sekaligus (dipanggil tombol "Cetak Semua" di header halaman)
+// loop semua .seksi-laporan, sisipkan judul section di atas tiap tabel
+function eksporXlsSemua(namafile) {
+  var html = buildIdentitasHtml('Laporan Lengkap');
+  document.querySelectorAll('.seksi-laporan').forEach(function(section){
+    var tables = section.querySelectorAll('table');
+    if (!tables.length) return;
+    var judul = section.querySelector('h3') ? section.querySelector('h3').innerText.trim() : '';
+    html += '<div style="height:14pt;"></div>';
+    html += '<table style="border-collapse:collapse;width:100%;margin-bottom:4pt;"><tr><td style="background:#643843;color:white;font-family:Arial,sans-serif;font-size:13pt;font-weight:bold;padding:8pt 12pt;border:1px solid #3d2230;">' + judul + '</td></tr></table>';
+    tables.forEach(function(t){ html += tableToBorderedHtml(t); });
+  });
+  unduhXls(html, namafile);
+}
+</script>
 </body>
 </html>

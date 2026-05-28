@@ -10,7 +10,9 @@
       "PowerShell(Rename-Item *)",
       "PowerShell(Move-Item *)",
       "PowerShell(& \"C:\\\\xampp\\\\php\\\\php.exe\" -l \"C:\\\\Code\\\\xampp\\\\htdocs\\\\E-Kantin\\\\admin\\\\laporan\\\\laporan.php\" 2>&1)",
-      "PowerShell(& \"C:\\\\Code\\\\xampp\\\\php\\\\php.exe\" -l \"C:\\\\Code\\\\xampp\\\\htdocs\\\\E-Kantin\\\\admin\\\\laporan\\\\laporan.php\")"
+      "PowerShell(& \"C:\\\\Code\\\\xampp\\\\php\\\\php.exe\" -l \"C:\\\\Code\\\\xampp\\\\htdocs\\\\E-Kantin\\\\admin\\\\laporan\\\\laporan.php\")",
+      "PowerShell(Remove-Item *)",
+      "PowerShell(Test-Path *)"
     ]
   }
 }

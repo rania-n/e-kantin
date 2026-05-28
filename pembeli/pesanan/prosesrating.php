@@ -39,7 +39,7 @@ if (!$idpesanan || $nilaitoko < 1 || $nilaitoko > 5) {
 
 // verifikasi bahwa pesanan memang milik pembeli yang sedang login
 // dan statusnya sudah Selesai atau Siap Diambil
-$q = $conn->prepare("SELECT id_toko,status_order FROM tb_order WHERE id_order=? AND id_user=? AND deleted=0");
+$q = $conn->prepare("SELECT id_toko,id_penjual,status_order FROM tb_order WHERE id_order=? AND id_user=? AND deleted=0");
 $q->bind_param("ii", $idpesanan, $idpengguna);
 $q->execute();
 $pesanan = $q->get_result()->fetch_assoc();
@@ -62,39 +62,18 @@ if ($cd->get_result()->num_rows > 0) {
 $cd->close();
 
 // simpan rating utama ke tabel tb_rating
-$idtoko = $pesanan['id_toko'] ?? null;
-$ins    = $conn->prepare("INSERT INTO tb_rating (id_order,id_user,id_toko,rating_toko,ulasan) VALUES (?,?,?,?,?)");
-// "iiiss": integer, integer, integer, string, string
-$ins->bind_param("iiiss", $idpesanan, $idpengguna, $idtoko, $nilaitoko, $ulasan);
+// id_penjual diambil dari order — mencatat siapa penjualnya saat pembeli memesan
+$idtoko    = $pesanan['id_toko']    ?? null;
+$idpenjual = $pesanan['id_penjual'] ?? null;
+$ins    = $conn->prepare("INSERT INTO tb_rating (id_order,id_user,id_toko,id_penjual,rating_toko,ulasan) VALUES (?,?,?,?,?,?)");
+// "iiiiss": integer, integer, integer, integer, string, string
+$ins->bind_param("iiiiss", $idpesanan, $idpengguna, $idtoko, $idpenjual, $nilaitoko, $ulasan);
 if (!$ins->execute()) {
     // jika gagal menyimpan, beri tahu pembeli
     $_SESSION['flash'] = ['pesan' => 'Gagal menyimpan rating', 'jenis' => 'gagal'];
     header("Location: pesanan.php?tab=riwayat"); exit;
 }
-// simpan id rating baru untuk relasi ke rating_menu
-$idratingbaru = $conn->insert_id;
 $ins->close();
-
-/* simpan rating per item menu (opsional)
-   hanya dijalankan jika tabel tb_rating_menu ada di database
-   dan ada nilai rating per menu yang dikirim via POST */
-$nilaimenu = $_POST['nilai_menu'] ?? [];
-if (!empty($nilaimenu)) {
-    // cek dulu apakah tabelnya ada — agar tidak error jika belum dibuat
-    $cektabel = $conn->query("SHOW TABLES LIKE 'tb_rating_menu'");
-    if ($cektabel && $cektabel->num_rows > 0) {
-        foreach ($nilaimenu as $idmenu => $nilai) {
-            $idmenu = (int)$idmenu;
-            // pastikan nilai antara 1-5
-            $nilai  = max(1, min(5, (int)$nilai));
-            if ($idmenu > 0 && $nilai > 0) {
-                $rm = $conn->prepare("INSERT INTO tb_rating_menu (id_rating,id_menu,rating) VALUES (?,?,?)");
-                $rm->bind_param("iii", $idratingbaru, $idmenu, $nilai);
-                $rm->execute(); $rm->close();
-            }
-        }
-    }
-}
 
 // rating berhasil disimpan — tampilkan pesan sukses dan redirect ke riwayat
 $_SESSION['flash'] = ['pesan' => 'Rating berhasil dikirim, terima kasih!', 'jenis' => 'sukses'];

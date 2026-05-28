@@ -4,9 +4,10 @@
 include '../../1. koneksi/koneksi.php';
 include '../../3. komponen/guardpenjual.php';
 
-// ambil id toko dari session dan aksi/filter dari request (POST atau GET)
-$idtoko = (int)$_SESSION['id_toko'];
-$aksi   = $_POST['aksi'] ?? $_GET['aksi'] ?? '';
+// ambil id toko dan id penjual dari session
+$idtoko    = (int)$_SESSION['id_toko'];
+$idpenjual = (int)$_SESSION['id_user'];
+$aksi      = $_POST['aksi'] ?? $_GET['aksi'] ?? '';
 $filter = $_POST['filter'] ?? $_GET['filter'] ?? 'Semua';
 
 /* fungsi setFlash menyimpan pesan ke session.
@@ -81,11 +82,10 @@ try {
         }
 
         if ($aksi === 'tambah') {
-            // masukkan menu baru ke database dengan status aktif secara default
-            $s = $conn->prepare("INSERT INTO tb_menu (nama_menu, harga, stok, kategori, deskripsi, foto, status, id_toko)
-                                  VALUES (?,?,?,?,?,?,'aktif',?)");
-            // "s" = string, "i" = integer, urutan sesuai ? di query
-            $s->bind_param("siisssi", $namamenu, $harga, $stok, $kategori, $deskripsi, $fotofile, $idtoko);
+            // masukkan menu baru — id_penjual mencatat siapa yang membuat menu ini
+            $s = $conn->prepare("INSERT INTO tb_menu (nama_menu, harga, stok, kategori, deskripsi, foto, status, id_toko, id_penjual)
+                                  VALUES (?,?,?,?,?,?,'aktif',?,?)");
+            $s->bind_param("siisssii", $namamenu, $harga, $stok, $kategori, $deskripsi, $fotofile, $idtoko, $idpenjual);
             $s->execute(); $s->close();
             setFlash("Menu '$namamenu' berhasil ditambahkan!", 'sukses');
         } else {

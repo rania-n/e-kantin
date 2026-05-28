@@ -22,52 +22,50 @@ if ($periode === 'custom') {
 }
 
 // filter kantin (0 = semua kantin)
+// dalam mode per-kantin, filter berdasarkan id_penjual penjual yang
+// sekarang menempati slot — supaya data penjual lama tidak ikut.
 $nomorkantin = (int)($_GET['kantin'] ?? 0);
 $tokoW = ''; // kondisi tambahan jika filter per kantin
 if ($nomorkantin > 0) {
-    // temukan id_toko berdasarkan nomor_kantin
-    $cekkt = $conn->query("SHOW COLUMNS FROM tb_toko LIKE 'nomor_kantin'");
+    // temukan id_user (id_penjual) dari slot ini
+    $cekkt  = $conn->query("SHOW COLUMNS FROM tb_toko LIKE 'nomor_kantin'");
     $adank  = ($cekkt && $cekkt->num_rows > 0);
     if ($adank) {
-        $qtid = $conn->prepare("SELECT id_toko FROM tb_toko WHERE nomor_kantin=? AND deleted=0 LIMIT 1");
+        $qtid = $conn->prepare("SELECT id_user FROM tb_toko WHERE nomor_kantin=? AND deleted=0 AND id_user IS NOT NULL LIMIT 1");
         $qtid->bind_param("i", $nomorkantin); $qtid->execute();
         $rowkt = $qtid->get_result()->fetch_row(); $qtid->close();
-        if ($rowkt) $tokoW = " AND o.id_toko=" . (int)$rowkt[0];
+        if ($rowkt) $tokoW = " AND o.id_penjual=" . (int)$rowkt[0];
     }
 }
 
-// cek apakah kolom nomor_kantin sudah ada untuk ditampilkan di csv
-$cekkolom    = $conn->query("SHOW COLUMNS FROM tb_toko LIKE 'nomor_kantin'");
-$migrasiSudah = ($cekkolom && $cekkolom->num_rows > 0);
-$kolomNomor   = $migrasiSudah ? "COALESCE(t.nomor_kantin, t.id_toko)" : "t.id_toko";
-
 /* query utama: satu baris per item menu per pesanan (detail order).
    pesanan tanpa detail item tetap muncul sebagai satu baris dengan kolom menu kosong.
-   hanya pesanan selesai dan dibatalkan yang diekspor (yang relevan untuk laporan keuangan). */
+   hanya pesanan selesai dan dibatalkan yang diekspor (yang relevan untuk laporan keuangan).
+   pakai snapshot nama_toko/nomor_kantin/nama_menu — supaya CSV historis tetap akurat
+   meski toko sudah dihapus atau menu sudah diubah. */
 $sql = "SELECT
     o.id_order,
     DATE_FORMAT(o.tanggal_order,'%d/%m/%Y') AS tanggal,
     DATE_FORMAT(o.tanggal_order,'%H:%i')    AS waktu,
-    u.username          AS pembeli,
-    t.nama_toko,
-    {$kolomNomor}       AS nokantin,
+    u.username                              AS pembeli,
+    o.nama_toko_snapshot                    AS nama_toko,
+    COALESCE(o.nomor_kantin_snapshot, o.id_toko) AS nokantin,
     o.status_order,
-    COALESCE(m.nama_menu,'—')              AS nama_menu,
-    COALESCE(d.harga_satuan, 0)            AS harga_satuan,
-    COALESCE(d.jumlah, 0)                  AS jumlah,
-    COALESCE(d.subtotal, 0)                AS subtotal,
+    COALESCE(d.nama_menu_snapshot, m.nama_menu, '—') AS nama_menu,
+    COALESCE(d.harga_satuan, 0)             AS harga_satuan,
+    COALESCE(d.jumlah, 0)                   AS jumlah,
+    COALESCE(d.subtotal, 0)                 AS subtotal,
     o.total_harga,
-    COALESCE(o.metode_pembayaran,'—')      AS metode_bayar,
-    COALESCE(o.catatan,'')                 AS catatan
+    COALESCE(o.metode_pembayaran,'—')       AS metode_bayar,
+    COALESCE(o.catatan,'')                  AS catatan
 FROM tb_order o
-JOIN tb_user u  ON o.id_user=u.id_user
-JOIN tb_toko t  ON o.id_toko=t.id_toko
+JOIN tb_user u ON o.id_user=u.id_user
 LEFT JOIN tb_detail_order d ON o.id_order=d.id_order AND d.deleted=0
 LEFT JOIN tb_menu m ON d.id_menu=m.id_menu
 WHERE DATE(o.tanggal_order) BETWEEN ? AND ?
   AND o.status_order IN ('Selesai','Dibatalkan')
   AND o.deleted=0{$tokoW}
-ORDER BY o.tanggal_order DESC, o.id_order, m.nama_menu";
+ORDER BY o.tanggal_order DESC, o.id_order, nama_menu";
 
 $qd = $conn->prepare($sql);
 $qd->bind_param("ss", $tglmulai, $tgljin); $qd->execute();

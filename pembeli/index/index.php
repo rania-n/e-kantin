@@ -89,7 +89,7 @@ if (!$kategori && !$cari && !$idtoko) {
                          JOIN tb_order o ON d.id_order=o.id_order
                          WHERE d.deleted=0 AND o.deleted=0 AND t.status_toko='buka'
                            AND m.deleted=0 AND m.status='aktif' AND m.stok>0
-                           AND o.status_order != 'Dibatalkan'
+                           AND o.status_order='Selesai'
                          GROUP BY m.id_menu, m.nama_menu, m.harga, m.foto, t.nama_toko, t.id_toko
                          ORDER BY terjual DESC
                          LIMIT 5");

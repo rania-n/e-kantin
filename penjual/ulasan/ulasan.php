@@ -5,8 +5,9 @@
 include '../../1. koneksi/koneksi.php';
 include '../../3. komponen/guardpenjual.php';
 
-// ambil id toko dari session
-$idtoko = (int)$_SESSION['id_toko'];
+// ambil id toko dan id penjual dari session
+$idtoko    = (int)$_SESSION['id_toko'];
+$idpenjual = (int)$_SESSION['id_user'];
 
 // tandai halaman aktif untuk navbar
 $halamansaatini = 'ulasan';
@@ -24,7 +25,7 @@ $perhal  = 15; // jumlah ulasan per halaman
 $offset  = ($halaman - 1) * $perhal; // lewati ulasan dari halaman sebelumnya
 
 // bangun kondisi query berdasarkan filter bintang dan pencarian
-$kondisi = "r.id_toko=$idtoko AND r.deleted=0";
+$kondisi = "r.id_penjual=$idpenjual AND r.deleted=0";
 if ($filterbintang > 0) $kondisi .= " AND r.rating_toko=$filterbintang";
 if ($cari !== '') {
     // escape untuk mencegah sql injection
@@ -50,13 +51,13 @@ $qr = $conn->query("SELECT r.id_rating, r.rating_toko, r.ulasan, r.created, u.us
 $daftarulasan = $qr->fetch_all(MYSQLI_ASSOC);
 
 // ambil jumlah ulasan per bintang (1-5) untuk bar distribusi rating
-$qstat = $conn->query("SELECT rating_toko, COUNT(*) AS jml FROM tb_rating WHERE id_toko=$idtoko AND deleted=0 GROUP BY rating_toko ORDER BY rating_toko DESC");
+$qstat = $conn->query("SELECT rating_toko, COUNT(*) AS jml FROM tb_rating WHERE id_penjual=$idpenjual AND deleted=0 GROUP BY rating_toko ORDER BY rating_toko DESC");
 $statrating = [];
 // simpan ke array asosiatif dengan kunci berupa nilai bintang (1-5)
 while ($row = $qstat->fetch_assoc()) $statrating[(int)$row['rating_toko']] = (int)$row['jml'];
 
 // ambil rata-rata rating dan total jumlah ulasan
-$qrata = $conn->query("SELECT ROUND(AVG(rating_toko),1), COUNT(*) FROM tb_rating WHERE id_toko=$idtoko AND deleted=0");
+$qrata = $conn->query("SELECT ROUND(AVG(rating_toko),1), COUNT(*) FROM tb_rating WHERE id_penjual=$idpenjual AND deleted=0");
 $ratarow = $qrata->fetch_row();
 $ratarating = (float)($ratarow[0] ?? 0);
 $jmlrating  = (int)($ratarow[1] ?? 0);

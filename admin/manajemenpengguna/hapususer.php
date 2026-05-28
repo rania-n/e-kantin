@@ -1,8 +1,10 @@
 <?php
-/* halaman konfirmasi hapus pengguna.
-   menampilkan nama pengguna dan peringatan bahwa jika penjual:
-   - akunnya akan dihapus (soft delete)
-   - kantin yang ditempatinya akan DIKOSONGKAN (tidak dihapus) agar bisa dipakai penjual lain */
+/* halaman konfirmasi hapus pengguna / kosongkan kantin.
+   "hapus penjual" dan "kosongkan kantin" adalah operasi yang sama:
+   - akun penjual di-soft-delete (deleted=1)
+   - slot kantin yang ditempati dikosongkan (id_user=NULL, nama_toko=NULL)
+   - menu lama di-soft-delete agar tidak diwarisi penjual baru
+   - snapshot toko (nama_toko, dll) tersimpan di riwayat & tb_order historis */
 
 // sambungkan ke database dan pastikan yang mengakses adalah admin
 include '../../1. koneksi/koneksi.php';
@@ -57,16 +59,20 @@ if ($user['role'] === 'penjual') {
   <!-- kotak konfirmasi di tengah halaman -->
   <div class="kotakkonfirm">
     <div class="ikon-konfirm"><i class="fa-solid fa-triangle-exclamation"></i></div>
-    <h2>Hapus Pengguna?</h2>
+    <h2><?= $kantin ? 'Hapus Penjual &amp; Kosongkan Kantin?' : 'Hapus Pengguna?' ?></h2>
     <p>
       Kamu akan menghapus akun <strong><?= htmlspecialchars($user['username']) ?></strong>
       (<?= htmlspecialchars($user['email']) ?>).
       <?php if ($kantin): ?>
-      <!-- peringatan untuk penjual: kantin tidak ikut dihapus, hanya dikosongkan -->
+      <!-- penjual: akun + slot kantin sekaligus dikosongkan (operasi setara) -->
+      <br><br>
+      Karena pengguna ini adalah penjual,
       Kantin<?php if ($kantin['nomor_kantin'] !== null): ?> <strong>ke-<?= (int)$kantin['nomor_kantin'] ?></strong><?php endif; ?>
-      ("<?= htmlspecialchars($kantin['nama_toko'] ?? '-') ?>") akan
+      ("<?= htmlspecialchars($kantin['nama_toko'] ?? '-') ?>") akan ikut
       <strong>dikosongkan</strong> dan tersedia untuk penjual baru.
-      Kantin tidak ikut dihapus dari database.
+      Slot kantin tetap ada (tidak dihapus), tapi nama toko, foto, dan menu lama dilepas.
+      <br><br>
+      Data pesanan & rating historis tetap tersimpan dengan snapshot nama toko asli.
       <?php endif; ?>
       Akun yang dihapus tidak bisa dipulihkan.
     </p>
@@ -80,7 +86,8 @@ if ($user['role'] === 'penjual') {
         </a>
         <!-- tombol hapus: mengirim form POST ke proseshapususer.php -->
         <button type="submit" class="tombolbahaya">
-          <i class="fa-solid fa-trash"></i> Ya, Hapus Akun
+          <i class="fa-solid fa-trash"></i>
+          <?= $kantin ? 'Ya, Hapus &amp; Kosongkan' : 'Ya, Hapus Akun' ?>
         </button>
       </div>
     </form>

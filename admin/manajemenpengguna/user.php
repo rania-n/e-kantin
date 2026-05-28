@@ -39,11 +39,15 @@ $adaRiwayat = ($cektbr && $cektbr->num_rows > 0);
 
 // bangun query sesuai tab aktif
 if ($rolefilter === 'terhapus') {
+    // pesanan_user = orders dibuat user ini (sebagai pembeli)
+    // pesanan_toko = orders dilayani user ini (sebagai penjual, via id_penjual)
+    // — keduanya disimpan agar template bisa pilih sesuai role
     if ($adaRiwayat) {
         $sql = "SELECT u.id_user, u.username, u.email, u.role, u.created, {$delAtSelect} u.foto,
-                       (SELECT COUNT(*) FROM tb_order o WHERE o.id_user=u.id_user AND o.deleted=0) AS pesanan_user,
+                       (SELECT COUNT(*) FROM tb_order o  WHERE o.id_user=u.id_user     AND o.deleted=0) AS pesanan_user,
+                       (SELECT COUNT(*) FROM tb_order o2 WHERE o2.id_penjual=u.id_user AND o2.deleted=0) AS pesanan_toko,
                        r.id_toko, r.nomor_kantin, r.nama_toko, r.foto_toko
-                FROM tb_user u 
+                FROM tb_user u
                 LEFT JOIN (
                     SELECT r1.* FROM tb_riwayat_toko r1
                     INNER JOIN (
@@ -61,7 +65,8 @@ if ($rolefilter === 'terhapus') {
         }
     } else {
         $sql = "SELECT u.id_user, u.username, u.email, u.role, u.created, {$delAtSelect} u.foto,
-                       (SELECT COUNT(*) FROM tb_order o WHERE o.id_user=u.id_user AND o.deleted=0) AS pesanan_user,
+                       (SELECT COUNT(*) FROM tb_order o  WHERE o.id_user=u.id_user     AND o.deleted=0) AS pesanan_user,
+                       (SELECT COUNT(*) FROM tb_order o2 WHERE o2.id_penjual=u.id_user AND o2.deleted=0) AS pesanan_toko,
                        NULL AS id_toko, NULL AS nomor_kantin, NULL AS nama_toko, NULL AS foto_toko
                 FROM tb_user u WHERE u.deleted=1";
         $params = []; $types = '';
@@ -73,11 +78,14 @@ if ($rolefilter === 'terhapus') {
     }
     $sql .= " ORDER BY {$delAtOrder}";
 } else {
+    // pesanan_toko = pesanan yang dilayani penjual ini (filter by id_penjual=u.id_user).
+    // PENTING: filter pakai id_penjual, bukan id_toko, supaya penjual baru
+    // di slot bekas penjual lain tidak mewarisi hitungan pesanan penjual sebelumnya.
     $sql = "SELECT u.id_user, u.username, u.email, u.role, u.created, u.foto,
                    t.id_toko, {$kolomNomor} t.nama_toko, t.status_toko, t.foto_toko,
                    CASE u.role WHEN 'penjual' THEN 0 WHEN 'pembeli' THEN 1 ELSE 2 END AS urut_role,
-                   (SELECT COUNT(*) FROM tb_order o  WHERE o.id_toko=t.id_toko  AND o.deleted=0) AS pesanan_toko,
-                   (SELECT COUNT(*) FROM tb_order o2 WHERE o2.id_user=u.id_user AND o2.deleted=0) AS pesanan_user
+                   (SELECT COUNT(*) FROM tb_order o  WHERE o.id_penjual=u.id_user AND o.deleted=0) AS pesanan_toko,
+                   (SELECT COUNT(*) FROM tb_order o2 WHERE o2.id_user=u.id_user     AND o2.deleted=0) AS pesanan_user
             FROM tb_user u
             LEFT JOIN tb_toko t ON u.id_user=t.id_user AND t.deleted=0
             WHERE u.deleted=0";
@@ -113,22 +121,13 @@ if (!empty($_SESSION['flash'])) {
 <link rel="stylesheet" href="../../3. komponen/admin.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
-#kartu-cetak-user { display:none; }
 .cetakjudul { display:none; }
 
 @media print {
   .takprint { display:none !important; }
-  .cetakjudul { display:block !important; margin-bottom:16px; font-family:sans-serif; }
-  .cetakjudul h3 { margin:0 0 2px; font-size:16px; }
-  .cetakjudul p  { margin:0; font-size:11px; color:#666; }
   @page { size:A4; margin:12mm; }
   .kartu { box-shadow:none !important; border:1px solid #ddd !important; }
   table  { font-size:11px; width:100%; }
-
-  /* mode cetak per-user: sembunyikan konten utama, tampilkan kartu */
-  body.mode-cetak-user .konten { display:none !important; }
-  body.mode-cetak-user .cetakjudul { display:none !important; }
-  body.mode-cetak-user #kartu-cetak-user { display:block !important; }
 }
 </style>
 </head>
@@ -151,16 +150,13 @@ if (!empty($_SESSION['flash'])) {
       <p>Kelola semua akun pengguna platform jajankita</p>
     </div>
     <div class="takprint" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-      <a href="eksporuser.php?role=<?= htmlspecialchars($rolefilter) ?>&cari=<?= urlencode($cari) ?>" class="tombolringan">
-        <i class="fa-solid fa-file-csv"></i> Ekspor CSV
-      </a>
       <?php if ($rolefilter !== 'terhapus'): ?>
       <a href="tambahuser.php" class="tombolutama">
         <i class="fa-solid fa-user-plus"></i> Tambah Pengguna
       </a>
       <?php endif; ?>
-      <button onclick="window.print()" class="tombolringan">
-        <i class="fa-solid fa-print"></i> Cetak Semua
+      <button onclick="eksporXlsSeksi('seksi-users','daftar_pengguna')" class="tombolringan" style="background:var(--sukses);color:white;border-color:var(--sukses);">
+        <i class="fa-solid fa-file-csv"></i> Cetak
       </button>
     </div>
   </div>
@@ -232,14 +228,14 @@ if (!empty($_SESSION['flash'])) {
     <?php endif; ?>
   </div>
 
-  <div class="kartu" style="padding:0;overflow:hidden;">
+  <div class="kartu seksi-laporan" id="seksi-users" style="padding:0;overflow:hidden;">
     <div class="tabel-wrapper">
       <table>
         <thead>
           <tr>
             <th>Pengguna</th>
             <th class="tengah">Peran Terakhir</th>
-            <th class="tengah">Pesanan Dibuat</th>
+            <th class="tengah">Pesanan</th>
             <th>Bergabung</th>
             <th>Berhenti</th>
             <th class="tengah takprint">Aksi</th>
@@ -260,11 +256,14 @@ if (!empty($_SESSION['flash'])) {
             $tglDaftar   = !empty($u['created'])    ? date('d M Y', strtotime($u['created']))            : '—';
             $tglBerhenti = !empty($u['deleted_at']) ? date('d M Y H:i', strtotime($u['deleted_at']))     : '—';
             $tglBprint   = !empty($u['deleted_at']) ? date('d M Y', strtotime($u['deleted_at']))         : '—';
+            // untuk penjual: tampilkan pesanan yang pernah dia layani (id_penjual=u.id_user)
+            // untuk pembeli/admin: tampilkan pesanan yang dia buat sebagai pembeli
+            $pesanan = $u['role']==='penjual' ? (int)$u['pesanan_toko'] : (int)$u['pesanan_user'];
             $ud = json_encode([
                 'username'   => $u['username'],
                 'email'      => $u['email'],
                 'role'       => $u['role'],
-                'pesanan'    => (int)$u['pesanan_user'],
+                'pesanan'    => $pesanan,
                 'created'    => $tglDaftar,
                 'deleted_at' => $tglBprint,
             ], JSON_HEX_APOS | JSON_HEX_TAG | JSON_UNESCAPED_UNICODE);
@@ -273,9 +272,11 @@ if (!empty($_SESSION['flash'])) {
             <td>
               <div class="user-baris">
                 <?php
+                // tampilkan foto profil yang pernah dipasang user (kalau filenya masih ada).
+                // kalau tidak ada foto/file hilang, fallback ke inisial 2 huruf username.
                 $fotoFile = !empty($u['foto']) ? $u['foto'] : '';
                 if ($fotoFile && file_exists(__DIR__ . '/../../2. aset/profil/' . $fotoFile)) {
-                    $fotoHtml = '<img src="../../2. aset/profil/' . htmlspecialchars($fotoFile) . '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="Foto">';
+                    $fotoHtml = '<img src="../../2. aset/profil/' . htmlspecialchars($fotoFile) . '" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" alt="Foto">';
                 } else {
                     $fotoHtml = strtoupper(mb_substr($u['username'], 0, 2));
                 }
@@ -288,13 +289,12 @@ if (!empty($_SESSION['flash'])) {
               </div>
             </td>
             <td class="tengah"><span class="badge <?= $u['role'] ?>"><?= ucfirst($u['role']) ?></span></td>
-            <td class="tengah" style="font-weight:700;"><?= (int)$u['pesanan_user'] ?></td>
+            <td class="tengah" style="font-weight:700;"><?= $pesanan ?></td>
             <td style="font-size:12px;white-space:nowrap;"><?= $tglDaftar ?></td>
             <td style="font-size:12px;white-space:nowrap;color:<?= !empty($u['deleted_at']) ? '#dc2626' : 'var(--tekssamar)' ?>;"><?= $tglBerhenti ?></td>
             <td class="tengah takprint">
               <div class="aksi-grup">
                 <a href="viewuser.php?id=<?= $u['id_user'] ?>" class="tombolkecil"><i class="fa-solid fa-eye"></i> Detail</a>
-                <button onclick='cetakUser(<?= $ud ?>)' class="tombolkecil"><i class="fa-solid fa-print"></i> Cetak</button>
               </div>
             </td>
           </tr>
@@ -314,7 +314,7 @@ if (!empty($_SESSION['flash'])) {
   </div>
   <?php endif; ?>
 
-  <div class="kartu" style="padding:0;overflow:hidden;">
+  <div class="kartu seksi-laporan" id="seksi-users" style="padding:0;overflow:hidden;">
     <div class="tabel-wrapper">
       <table>
         <thead>
@@ -381,7 +381,7 @@ if (!empty($_SESSION['flash'])) {
                     $fotoFile = $u['foto'];
                 }
                 if ($fotoFile && file_exists(__DIR__ . '/../../2. aset/profil/' . $fotoFile)) {
-                    $fotoHtml = '<img src="../../2. aset/profil/' . htmlspecialchars($fotoFile) . '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="Foto">';
+                    $fotoHtml = '<img src="../../2. aset/profil/' . htmlspecialchars($fotoFile) . '" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" alt="Foto">';
                 } else {
                     $fotoHtml = strtoupper(mb_substr($u['username'], 0, 2));
                 }
@@ -431,7 +431,6 @@ if (!empty($_SESSION['flash'])) {
                 <a href="viewuser.php?id=<?= $u['id_user'] ?>" class="tombolkecil"><i class="fa-solid fa-eye"></i> Detail</a>
                 <a href="edituser.php?id=<?= $u['id_user'] ?>" class="tombolkecil"><i class="fa-solid fa-pen"></i> Edit</a>
                 <a href="hapususer.php?id=<?= $u['id_user'] ?>" class="tombolkecil merah"><i class="fa-solid fa-trash"></i> Hapus</a>
-                <button onclick='cetakUser(<?= $ud ?>)' class="tombolkecil"><i class="fa-solid fa-print"></i> Cetak</button>
               </div>
             </td>
           </tr>
@@ -444,40 +443,51 @@ if (!empty($_SESSION['flash'])) {
 
 </main>
 
-<!-- kartu cetak per-pengguna (diisi via JS, muncul hanya saat print per-user) -->
-<div id="kartu-cetak-user"></div>
-
 <script>
-function cetakUser(u) {
-  var peran = u.role ? (u.role.charAt(0).toUpperCase() + u.role.slice(1)) : '—';
-  var html  = '<div style="font-family:Arial,sans-serif;padding:24px;max-width:600px;margin:0 auto;">';
-  html += '<h2 style="margin:0 0 4px;font-size:18px;">Detail Pengguna</h2>';
-  html += '<p style="margin:0 0 14px;color:#888;font-size:11px;">Dicetak: ' + new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'}) + '</p>';
-  html += '<hr style="margin-bottom:16px;border:none;border-top:2px solid #eee;">';
-  html += '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
-  var baris = function(label, nilai, warna) {
-    return '<tr style="border-bottom:1px solid #f5f5f5;">'
-      + '<td style="padding:8px 4px;font-weight:700;width:160px;color:' + (warna||'#555') + ';">' + label + '</td>'
-      + '<td style="padding:8px 4px;color:' + (warna||'#222') + ';">' + (nilai||'—') + '</td>'
-      + '</tr>';
-  };
-  html += baris('Username', u.username);
-  html += baris('Email', u.email);
-  html += baris('Peran', peran);
-  if (u.nomor_kantin) html += baris('Kantin', 'Kantin ke-' + u.nomor_kantin);
-  if (u.nama_toko)    html += baris('Nama Toko', u.nama_toko);
-  html += baris('Total Pesanan', u.pesanan !== undefined ? String(u.pesanan) : '—');
-  html += baris('Bergabung', u.created);
-  if (u.deleted_at)   html += baris('Berhenti', u.deleted_at, '#dc2626');
-  html += '</table></div>';
-
-  document.getElementById('kartu-cetak-user').innerHTML = html;
-  document.body.classList.add('mode-cetak-user');
-  window.print();
-  window.onafterprint = function() {
-    document.body.classList.remove('mode-cetak-user');
-    document.getElementById('kartu-cetak-user').innerHTML = '';
-  };
+/* ekspor XLS (HTML-in-Excel) — tabel bergaris dengan identitas. */
+var IDENTITAS = {
+  judul:   'Manajemen Pengguna',
+  filter:  <?= json_encode('Filter: ' . ucfirst($rolefilter) . ($cari ? ' · cari "' . $cari . '"' : '')) ?>,
+};
+function buildIdentitasHtml(j) {
+  var tgl = new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  var lbl = 'border:1px solid #999;padding:6pt 10pt;background:#F8EBF1;font-weight:bold;width:160px;';
+  var nil = 'border:1px solid #999;padding:6pt 10pt;';
+  var h = '<table style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:11pt;margin-bottom:10pt;width:100%;">';
+  h += '<tr><td colspan="2" style="background:#643843;color:white;font-weight:bold;font-size:14pt;text-align:center;padding:10pt;border:1px solid #444;">jajankita &mdash; ' + IDENTITAS.judul + '</td></tr>';
+  if (j) h += '<tr><td style="'+lbl+'">Section</td><td style="'+nil+'">' + j + '</td></tr>';
+  h += '<tr><td style="'+lbl+'">Filter</td><td style="'+nil+'">' + IDENTITAS.filter + '</td></tr>';
+  h += '<tr><td style="'+lbl+'">Tanggal Cetak</td><td style="'+nil+'">' + tgl + '</td></tr>';
+  return h + '</table>';
+}
+function tableToBorderedHtml(t) {
+  var c = t.cloneNode(true);
+  c.setAttribute('border','1'); c.setAttribute('cellpadding','6'); c.setAttribute('cellspacing','0');
+  c.setAttribute('style','border-collapse:collapse;font-family:Arial,sans-serif;font-size:11pt;width:100%;margin-bottom:8pt;');
+  c.querySelectorAll('th').forEach(function(th){ th.setAttribute('style','background:#643843;color:white;border:1px solid #3d2230;padding:8pt 10pt;text-align:left;font-weight:bold;'); });
+  c.querySelectorAll('tbody tr').forEach(function(tr,i){
+    var bg = i%2===1 ? 'background:#FAF6F8;' : '';
+    tr.querySelectorAll('td').forEach(function(td){ td.setAttribute('style','border:1px solid #c8c8c8;padding:6pt 10pt;vertical-align:top;'+bg); });
+  });
+  // buang kolom "Aksi" supaya bersih (kelas takprint di header dan cell)
+  c.querySelectorAll('.takprint').forEach(function(el){ el.remove(); });
+  c.querySelectorAll('i').forEach(function(ic){ ic.remove(); });
+  return c.outerHTML;
+}
+function unduhXls(body, namafile) {
+  var doc = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body>' + body + '</body></html>';
+  var blob = new Blob(['﻿'+doc],{type:'application/vnd.ms-excel'});
+  var url = URL.createObjectURL(blob); var a = document.createElement('a');
+  a.href = url; a.download = namafile + '_' + new Date().toISOString().slice(0,10) + '.xls';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 100);
+}
+function eksporXlsSeksi(id, namafile) {
+  var s = document.getElementById(id); if (!s) return;
+  var t = s.querySelector('table'); if (!t) { alert('Tidak ada tabel data.'); return; }
+  var html = buildIdentitasHtml(IDENTITAS.judul);
+  html += tableToBorderedHtml(t);
+  unduhXls(html, namafile);
 }
 </script>
 

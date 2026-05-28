@@ -5,8 +5,9 @@
 include '../../1. koneksi/koneksi.php';
 include '../../3. komponen/guardpenjual.php';
 
-// ambil id toko dari session dan id pesanan dari parameter URL
+// ambil id toko dan id penjual dari session, id pesanan dari parameter URL
 $idtoko    = (int)$_SESSION['id_toko'];
+$idpenjual = (int)$_SESSION['id_user'];
 $idpesanan = (int)($_GET['id'] ?? 0);
 
 // tandai halaman aktif untuk navbar
@@ -18,9 +19,9 @@ $cetak = isset($_GET['cetak']);
 // jika tidak ada id pesanan, redirect ke halaman pesanan
 if (!$idpesanan) { header("Location: manajemenpesanan.php"); exit; }
 
-// ambil data pesanan beserta nama pembeli — pastikan pesanan milik toko ini
-$q = $conn->prepare("SELECT o.*,u.username FROM tb_order o JOIN tb_user u ON o.id_user=u.id_user WHERE o.id_order=? AND o.id_toko=? AND o.deleted=0");
-$q->bind_param("ii", $idpesanan, $idtoko); $q->execute();
+// ambil data pesanan beserta nama pembeli — pastikan pesanan milik penjual ini
+$q = $conn->prepare("SELECT o.*,u.username FROM tb_order o JOIN tb_user u ON o.id_user=u.id_user WHERE o.id_order=? AND o.id_penjual=? AND o.deleted=0");
+$q->bind_param("ii", $idpesanan, $idpenjual); $q->execute();
 $pesanan = $q->get_result()->fetch_assoc(); $q->close();
 
 // jika pesanan tidak ditemukan, redirect ke halaman pesanan
@@ -31,12 +32,13 @@ $qd = $conn->prepare("SELECT d.*,m.nama_menu FROM tb_detail_order d JOIN tb_menu
 $qd->bind_param("i", $idpesanan); $qd->execute();
 $items = $qd->get_result()->fetch_all(MYSQLI_ASSOC); $qd->close();
 
-/* hitung nomor antrian: berapa pesanan yang masuk ke toko ini pada hari yang sama
-   dengan tanggal pesanan ini, yang id_order-nya <= id pesanan ini.
-   hasilnya adalah posisi urutan pesanan di hari tersebut */
-$qa = $conn->prepare("SELECT COUNT(*) FROM tb_order WHERE id_toko=? AND DATE(tanggal_order)=DATE(?) AND id_order<=? AND deleted=0");
+/* hitung nomor antrian per PENJUAL (bukan per slot toko):
+   berapa pesanan yang masuk ke penjual ini pada hari yang sama dengan tanggal
+   pesanan ini, yang id_order-nya <= id pesanan ini.
+   pakai id_penjual supaya penjual baru di slot bekas tidak mewarisi antrian lama. */
+$qa = $conn->prepare("SELECT COUNT(*) FROM tb_order WHERE id_penjual=? AND DATE(tanggal_order)=DATE(?) AND id_order<=? AND deleted=0");
 $tglpesanan = $pesanan['tanggal_order'];
-$qa->bind_param("isi", $idtoko, $tglpesanan, $idpesanan); $qa->execute();
+$qa->bind_param("isi", $idpenjual, $tglpesanan, $idpesanan); $qa->execute();
 $antrian = (int)$qa->get_result()->fetch_row()[0]; $qa->close();
 
 // hitung subtotal semua item untuk ditampilkan di struk

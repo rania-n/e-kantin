@@ -15,9 +15,12 @@ $idpengguna = (int)$_SESSION['id_user'];
 // jika id pesanan tidak valid, kembali ke daftar pesanan
 if (!$idpesanan) { header("Location: pesanan.php"); exit; }
 
-// ambil data pesanan beserta nama toko
+// ambil data pesanan beserta nama toko dari snapshot — supaya saat pembeli memberi rating
+// nama toko yang ditampilkan adalah nama saat order dibuat, bukan nama sekarang.
 // cocokkan dengan id_user agar pembeli tidak bisa mengakses pesanan milik orang lain
-$q = $conn->prepare("SELECT o.*,t.nama_toko FROM tb_order o LEFT JOIN tb_toko t ON o.id_toko=t.id_toko WHERE o.id_order=? AND o.id_user=? AND o.deleted=0");
+$q = $conn->prepare("SELECT o.*, o.nama_toko_snapshot AS nama_toko
+                     FROM tb_order o
+                     WHERE o.id_order=? AND o.id_user=? AND o.deleted=0");
 $q->bind_param("ii", $idpesanan, $idpengguna);
 $q->execute();
 $pesanan = $q->get_result()->fetch_assoc();
@@ -37,7 +40,12 @@ if ($cr->get_result()->num_rows > 0) { header("Location: struk.php?id_order=$idp
 $cr->close();
 
 // ambil daftar item pesanan (untuk ditampilkan sebagai konteks)
-$qi = $conn->prepare("SELECT d.id_menu,d.jumlah,m.nama_menu FROM tb_detail_order d JOIN tb_menu m ON d.id_menu=m.id_menu WHERE d.id_order=? AND d.deleted=0");
+// nama menu pakai snapshot — tetap tampil meski menu sudah dihapus
+$qi = $conn->prepare("SELECT d.id_menu, d.jumlah,
+                            COALESCE(d.nama_menu_snapshot, m.nama_menu) AS nama_menu
+                     FROM tb_detail_order d
+                     LEFT JOIN tb_menu m ON d.id_menu=m.id_menu
+                     WHERE d.id_order=? AND d.deleted=0");
 $qi->bind_param("i", $idpesanan);
 $qi->execute();
 $daftaritem = $qi->get_result()->fetch_all(MYSQLI_ASSOC);

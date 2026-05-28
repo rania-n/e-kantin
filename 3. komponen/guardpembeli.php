@@ -26,4 +26,28 @@ if (empty($_SESSION['id_user']) || ($_SESSION['role'] ?? '') !== 'pembeli') {
     header("Location: ../../4. autentifikasi/login.php");
     exit; // exit wajib dipanggil setelah header redirect agar kode di bawahnya tidak ikut dijalankan
 }
+
+// SELALU refresh data user dari database setiap request — supaya update yang dilakukan
+// admin (username, email, foto) langsung terlihat tanpa perlu logout/login dulu.
+// kalau cuma mengandalkan data session saat login, perubahan baru muncul setelah logout.
+if (!isset($conn)) { require_once __DIR__ . '/../1. koneksi/koneksi.php'; } // load koneksi kalau belum di-include
+$iduser = (int)$_SESSION['id_user']; // cast ke int sebagai pengaman ekstra dari injection
+// prepared statement: query disiapkan dulu lalu parameter diikat terpisah —
+// ini mencegah sql injection karena nilai $iduser tidak digabung langsung ke string query.
+$qu = $conn->prepare("SELECT username, email, foto FROM tb_user WHERE id_user=? AND deleted=0");
+$qu->bind_param("i", $iduser); $qu->execute(); // "i" = tipe integer untuk parameter pertama
+$datauser = $qu->get_result()->fetch_assoc(); $qu->close(); // ambil 1 baris sebagai array asosiatif lalu tutup statement
+if ($datauser) {
+    // timpa data session dengan data terbaru dari database
+    $_SESSION['username'] = $datauser['username'];
+    $_SESSION['email']    = $datauser['email'];
+    $_SESSION['foto']     = $datauser['foto'];
+} else {
+    // akun ternyata sudah dihapus admin saat session masih aktif → paksa logout
+    // session_destroy() menghapus semua data session di server agar pengguna benar-benar keluar
+    session_destroy();
+    // urlencode supaya pesan error aman jadi parameter url (spasi, simbol, dll)
+    header("Location: ../../4. autentifikasi/login.php?error=" . urlencode("Akun sudah tidak aktif."));
+    exit;
+}
 ?>

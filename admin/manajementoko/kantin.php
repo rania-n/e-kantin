@@ -179,9 +179,9 @@ if (!empty($_SESSION['flash'])) {
       <p>10 slot kantin tetap — lihat yang terisi dan yang tersedia</p>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <!-- tombol cetak semua kantin — JS diizinkan untuk print -->
-      <button onclick="window.print()" class="tombolringan takprint">
-        <i class="fa-solid fa-print"></i> Cetak Semua
+      <!-- tombol Cetak: ekspor tabel slot kantin ke file XLS bergaris dengan identitas -->
+      <button onclick="eksporXlsSeksi('seksi-kantin','status_kantin')" class="tombolringan takprint" style="background:var(--sukses);color:white;border-color:var(--sukses);">
+        <i class="fa-solid fa-file-csv"></i> Cetak
       </button>
       <a href="../manajemenpengguna/tambahuser.php?role=penjual" class="tombolutama takprint">
         <i class="fa-solid fa-user-plus"></i> Tambah Penjual
@@ -291,7 +291,7 @@ if (!empty($_SESSION['flash'])) {
       <!-- tombol aksi per kartu (disembunyikan saat cetak) -->
       <div class="aksi-kantin takprint">
         <?php if ($adaPemilik): ?>
-        <!-- jika terisi: tampilkan link ke detail toko dan toggle status -->
+        <!-- jika terisi: tampilkan link ke detail toko, toggle status, dan kosongkan -->
         <a href="../manajemenpengguna/viewuser.php?id=<?= (int)$k['id_user'] ?>" class="tombolkecil">
           <i class="fa-solid fa-eye"></i> Detail
         </a>
@@ -304,6 +304,11 @@ if (!empty($_SESSION['flash'])) {
             <?= $k['status_toko']==='buka' ? 'Tutup Toko' : 'Buka Toko' ?>
           </button>
         </form>
+        <!-- kosongkan slot: hapus penjual + kosongkan kantin (efek setara).
+             arahkan ke hapususer.php karena flow-nya identik. -->
+        <a href="../manajemenpengguna/hapususer.php?id=<?= (int)$k['id_user'] ?>" class="tombolkecil merah" title="Kosongkan kantin sekaligus hapus akun penjual">
+          <i class="fa-solid fa-store-slash"></i> Kosongkan
+        </a>
         <?php else: ?>
         <!-- jika kosong: tombol cepat tambah penjual ke kantin ini -->
         <a href="../manajemenpengguna/tambahuser.php?role=penjual"
@@ -326,6 +331,78 @@ if (!empty($_SESSION['flash'])) {
   </div>
   <?php endif; ?>
 
+  <!-- tabel hidden untuk ekspor XLS — sumber data tombol "Cetak" di atas -->
+  <div id="seksi-kantin" style="display:none;">
+    <table>
+      <thead>
+        <tr>
+          <th>No. Kantin</th>
+          <th>Nama Toko</th>
+          <th>Penjual</th>
+          <th>Email</th>
+          <th>Status Toko</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php foreach ($daftarkantin as $k):
+          $adaPemilik = !empty($k['id_user']) && !empty($k['username']);
+        ?>
+        <tr>
+          <td>Kantin ke-<?= (int)$k['nomor_kantin'] ?></td>
+          <td><?= htmlspecialchars($adaPemilik ? ($k['nama_toko'] ?? '—') : '— Kosong —') ?></td>
+          <td><?= htmlspecialchars($adaPemilik ? $k['username'] : '—') ?></td>
+          <td><?= htmlspecialchars($adaPemilik ? ($k['email'] ?? '—') : '—') ?></td>
+          <td><?= $adaPemilik ? ($k['status_toko'] === 'buka' ? 'Buka' : 'Tutup') : 'Kosong' ?></td>
+        </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
+
 </main>
+
+<script>
+/* ekspor XLS (HTML-in-Excel) — tabel bergaris dengan identitas. */
+var IDENTITAS = {
+  judul:    'Status Kantin',
+  ringkasan: '<?= (int)$terisi ?> terisi / <?= (int)$kosong ?> kosong dari <?= (int)$totalkantin ?> slot',
+};
+function buildIdentitasHtml(j) {
+  var tgl = new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  var lbl = 'border:1px solid #999;padding:6pt 10pt;background:#F8EBF1;font-weight:bold;width:160px;';
+  var nil = 'border:1px solid #999;padding:6pt 10pt;';
+  var h = '<table style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:11pt;margin-bottom:10pt;width:100%;">';
+  h += '<tr><td colspan="2" style="background:#643843;color:white;font-weight:bold;font-size:14pt;text-align:center;padding:10pt;border:1px solid #444;">jajankita &mdash; ' + IDENTITAS.judul + '</td></tr>';
+  if (j) h += '<tr><td style="'+lbl+'">Section</td><td style="'+nil+'">' + j + '</td></tr>';
+  h += '<tr><td style="'+lbl+'">Ringkasan</td><td style="'+nil+'">' + IDENTITAS.ringkasan + '</td></tr>';
+  h += '<tr><td style="'+lbl+'">Tanggal Cetak</td><td style="'+nil+'">' + tgl + '</td></tr>';
+  return h + '</table>';
+}
+function tableToBorderedHtml(t) {
+  var c = t.cloneNode(true);
+  c.setAttribute('border','1'); c.setAttribute('cellpadding','6'); c.setAttribute('cellspacing','0');
+  c.setAttribute('style','border-collapse:collapse;font-family:Arial,sans-serif;font-size:11pt;width:100%;margin-bottom:8pt;');
+  c.querySelectorAll('th').forEach(function(th){ th.setAttribute('style','background:#643843;color:white;border:1px solid #3d2230;padding:8pt 10pt;text-align:left;font-weight:bold;'); });
+  c.querySelectorAll('tbody tr').forEach(function(tr,i){
+    var bg = i%2===1 ? 'background:#FAF6F8;' : '';
+    tr.querySelectorAll('td').forEach(function(td){ td.setAttribute('style','border:1px solid #c8c8c8;padding:6pt 10pt;vertical-align:top;'+bg); });
+  });
+  c.querySelectorAll('i').forEach(function(ic){ ic.remove(); });
+  return c.outerHTML;
+}
+function unduhXls(body, namafile) {
+  var doc = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body>' + body + '</body></html>';
+  var blob = new Blob(['﻿'+doc],{type:'application/vnd.ms-excel'});
+  var url = URL.createObjectURL(blob); var a = document.createElement('a');
+  a.href = url; a.download = namafile + '_' + new Date().toISOString().slice(0,10) + '.xls';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 100);
+}
+function eksporXlsSeksi(id, namafile) {
+  var s = document.getElementById(id); if (!s) return;
+  var t = s.querySelector('table'); if (!t) { alert('Tidak ada tabel data.'); return; }
+  unduhXls(buildIdentitasHtml(IDENTITAS.judul) + tableToBorderedHtml(t), namafile);
+}
+</script>
 </body>
 </html>

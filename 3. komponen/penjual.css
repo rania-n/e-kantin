@@ -277,6 +277,8 @@ ul { list-style: none; }
   gap: 14px;
   overflow: hidden; /* cegah isi kartu meluber keluar batas rounded border */
 }
+/* kartu-stat versi link (a tag) — bisa di-klik untuk buka halaman detail */
+a.kartu-stat { text-decoration: none; color: inherit; cursor: pointer; }
 /* area teks di sisi kanan ikon — harus bisa menyusut agar tidak overflow grid */
 .kartu-stat .isi-stat {
   min-width: 0; /* flex child default min-width:auto, tanpa ini konten tidak bisa menyusut */
@@ -348,7 +350,7 @@ ul { list-style: none; }
 /* grid dua kolom untuk dashboard (grafik + list) */
 .grid-dua {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  grid-template-columns: repeat(2, 1fr); /* desktop: tegas 2 kolom (kanan-kiri stretch) */
   gap: 18px;
   margin-bottom: 18px;
 }

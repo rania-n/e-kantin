@@ -5,8 +5,8 @@
 include '../../1. koneksi/koneksi.php';
 include '../../3. komponen/guardpenjual.php';
 
-// ambil id toko, aksi yang diminta, id pesanan, dan filter aktif dari URL
-$idtoko    = (int)$_SESSION['id_toko'];
+// ambil id penjual, aksi yang diminta, id pesanan, dan filter aktif dari URL
+$idpenjual = (int)$_SESSION['id_user'];
 $aksi      = $_GET['aksi']   ?? '';
 $idpesanan = (int)($_GET['id'] ?? 0);
 $filter    = $_GET['filter'] ?? 'Semua';
@@ -22,12 +22,12 @@ if (!$idpesanan) {
     header("Location: manajemenpesanan.php?filter=" . urlencode($filter)); exit;
 }
 
-// ambil data pesanan dan pastikan pesanan ini memang milik toko yang sedang login
-$cek = $conn->prepare("SELECT id_order, status_order FROM tb_order WHERE id_order=? AND id_toko=? AND deleted=0");
-$cek->bind_param("ii", $idpesanan, $idtoko); $cek->execute();
+// ambil data pesanan dan pastikan pesanan ini memang milik penjual yang sedang login
+$cek = $conn->prepare("SELECT id_order, status_order FROM tb_order WHERE id_order=? AND id_penjual=? AND deleted=0");
+$cek->bind_param("ii", $idpesanan, $idpenjual); $cek->execute();
 $pesanan = $cek->get_result()->fetch_assoc(); $cek->close();
 
-// jika pesanan tidak ditemukan atau bukan milik toko ini, tolak aksi
+// jika pesanan tidak ditemukan atau bukan milik penjual ini, tolak aksi
 if (!$pesanan) {
     setFlash("Pesanan tidak ditemukan atau bukan milik tokomu.", 'gagal');
     header("Location: manajemenpesanan.php?filter=" . urlencode($filter)); exit;

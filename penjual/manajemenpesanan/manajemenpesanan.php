@@ -5,8 +5,9 @@
 include '../../1. koneksi/koneksi.php';
 include '../../3. komponen/guardpenjual.php';
 
-// ambil id toko dari session
-$idtoko = (int)$_SESSION['id_toko'];
+// ambil id toko dan id penjual dari session
+$idtoko    = (int)$_SESSION['id_toko'];
+$idpenjual = (int)$_SESSION['id_user'];
 
 // tandai halaman aktif untuk navbar
 $halamansaatini = 'manajemenpesanan';
@@ -32,15 +33,15 @@ if (!in_array($filter, $statuslist)) $filter = 'Semua';
 // hitung jumlah pesanan per status untuk ditampilkan sebagai badge angka di tab filter
 $hitungstatus = [];
 foreach (['Menunggu','Diproses','Siap Diambil','Selesai','Dibatalkan'] as $st) {
-    $qh = $conn->prepare("SELECT COUNT(*) FROM tb_order WHERE id_toko=? AND status_order=? AND deleted=0");
-    $qh->bind_param("is", $idtoko, $st); $qh->execute();
+    $qh = $conn->prepare("SELECT COUNT(*) FROM tb_order WHERE id_penjual=? AND status_order=? AND deleted=0");
+    $qh->bind_param("is", $idpenjual, $st); $qh->execute();
     $hitungstatus[$st] = (int)$qh->get_result()->fetch_row()[0]; $qh->close();
 }
 // jumlah "semua" adalah total dari semua status
 $hitungstatus['Semua'] = array_sum($hitungstatus);
 
 // bangun kondisi query pesanan berdasarkan filter dan pencarian
-$where = "o.id_toko=$idtoko AND o.deleted=0";
+$where = "o.id_penjual=$idpenjual AND o.deleted=0";
 if ($filter !== 'Semua') {
     // escape untuk mencegah sql injection karena nilai langsung dimasukkan ke string query
     $filteraman = $conn->real_escape_string($filter);
