@@ -24,16 +24,33 @@ $migrasiSudah = ($cekkolom && $cekkolom->num_rows > 0);
 $cekdel   = $conn->query("SHOW COLUMNS FROM tb_user LIKE 'deleted_at'");
 $adaDelAt = ($cekdel && $cekdel->num_rows > 0);
 
+// cek migrasi kolom status_verifikasi (dari migrasi_verifikasi_chat.sql) —
+// kalau sudah ada, halaman ini menyembunyikan pembeli yang belum verified
+// supaya admin tidak melihat duplikasi data antara halaman ini dan halaman Verifikasi Pembeli.
+$cekverif    = $conn->query("SHOW COLUMNS FROM tb_user LIKE 'status_verifikasi'");
+$adaVerifKol = ($cekverif && $cekverif->num_rows > 0);
+
+// klausa tambahan: pembeli yang muncul di halaman ini harus berstatus verified.
+// penjual & admin tidak dipengaruhi (mereka selalu verified setelah migrasi backfill).
+$filterVerif = $adaVerifKol ? "AND (u.role <> 'pembeli' OR u.status_verifikasi='verified')" : "";
+// versi tanpa alias untuk query ringkasan (tidak memakai JOIN/alias)
+$filterVerifPolos = $adaVerifKol ? "AND (role <> 'pembeli' OR status_verifikasi='verified')" : "";
+
 // hitung jumlah per role (aktif) untuk badge tab — GROUP BY role -> kelompokkan per peran
 // deleted=0 berarti soft-delete: baris tidak benar-benar dihapus, hanya ditandai
-$qhitung = $conn->query("SELECT role, COUNT(*) AS jml FROM tb_user WHERE deleted=0 GROUP BY role");
+$qhitung = $conn->query("SELECT role, COUNT(*) AS jml FROM tb_user
+                          WHERE deleted=0 {$filterVerifPolos}
+                          GROUP BY role");
 $jmlrole = ['admin'=>0,'penjual'=>0,'pembeli'=>0];
 // loop hasil query: setiap baris berisi role + jumlah, lalu disimpan ke array $jmlrole
 while ($r = $qhitung->fetch_assoc()) $jmlrole[$r['role']] = (int)$r['jml'];
 $jmlsemua = array_sum($jmlrole);
 
-// hitung berapa akun yang sudah terhapus (deleted=1) — untuk badge tab "Terhapus"
-$qterhapus   = $conn->query("SELECT COUNT(*) AS jml FROM tb_user WHERE deleted=1");
+// hitung berapa akun yang sudah terhapus (deleted=1) — untuk badge tab "Terhapus".
+// pembeli yang ditolak admin TIDAK dihitung di sini — mereka tampil khusus di tab
+// "Ditolak" halaman Verifikasi Pembeli sebagai riwayat verifikasi, bukan riwayat hapus.
+$filterDitolakPolos = $adaVerifKol ? "AND NOT (role='pembeli' AND status_verifikasi='ditolak')" : "";
+$qterhapus   = $conn->query("SELECT COUNT(*) AS jml FROM tb_user WHERE deleted=1 {$filterDitolakPolos}");
 $jmlTerhapus = (int)$qterhapus->fetch_assoc()['jml'];
 
 $kolomNomor  = $migrasiSudah ? "t.nomor_kantin," : "NULL AS nomor_kantin,";
@@ -43,6 +60,10 @@ $delAtOrder  = $adaDelAt ? "u.deleted_at DESC" : "u.id_user DESC";
 // cek apakah tabel tb_riwayat_toko ada
 $cektbr = $conn->query("SHOW TABLES LIKE 'tb_riwayat_toko'");
 $adaRiwayat = ($cektbr && $cektbr->num_rows > 0);
+
+// filter tambahan untuk tab "terhapus": exclude pembeli yang ditolak admin
+// supaya mereka hanya tampil di halaman Verifikasi (tab Ditolak), tidak dobel di sini.
+$filterDitolakAlias = $adaVerifKol ? "AND NOT (u.role='pembeli' AND u.status_verifikasi='ditolak')" : "";
 
 // bangun query sesuai tab aktif
 if ($rolefilter === 'terhapus') {
@@ -63,7 +84,7 @@ if ($rolefilter === 'terhapus') {
                         GROUP BY id_user
                     ) r2 ON r1.id_user = r2.id_user AND r1.id_riwayat = r2.max_id
                 ) r ON u.id_user = r.id_user
-                WHERE u.deleted=1";
+                WHERE u.deleted=1 {$filterDitolakAlias}";
         $params = []; $types = '';
         if ($cari !== '') {
             $sql .= " AND (u.username LIKE ? OR u.email LIKE ? OR r.nama_toko LIKE ?)";
@@ -75,7 +96,7 @@ if ($rolefilter === 'terhapus') {
                        (SELECT COUNT(*) FROM tb_order o  WHERE o.id_user=u.id_user     AND o.deleted=0) AS pesanan_user,
                        (SELECT COUNT(*) FROM tb_order o2 WHERE o2.id_penjual=u.id_user AND o2.deleted=0) AS pesanan_toko,
                        NULL AS id_toko, NULL AS nomor_kantin, NULL AS nama_toko, NULL AS foto_toko
-                FROM tb_user u WHERE u.deleted=1";
+                FROM tb_user u WHERE u.deleted=1 {$filterDitolakAlias}";
         $params = []; $types = '';
         if ($cari !== '') {
             $sql .= " AND (u.username LIKE ? OR u.email LIKE ?)";
@@ -120,7 +141,7 @@ if ($rolefilter === 'terhapus') {
                    (SELECT COUNT(*) FROM tb_order o2 WHERE o2.id_user=u.id_user     AND o2.deleted=0) AS pesanan_user
             FROM tb_user u
             LEFT JOIN tb_toko t ON u.id_user=t.id_user AND t.deleted=0
-            WHERE u.deleted=0";
+            WHERE u.deleted=0 {$filterVerif}";
 
     /* siapkan array kosong untuk parameter prepared statement.
        $types = string berisi tipe data tiap parameter ('s'=string, 'i'=int).
@@ -237,7 +258,14 @@ if (!empty($_SESSION['flash'])) {
     </div>
     <div class="takprint" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
       <?php if ($rolefilter !== 'terhapus'): ?>
-      <a href="tambahuser.php" class="tombolutama">
+      <?php
+      // tombol Tambah Pengguna context-aware: kalau admin lagi di tab penjual/pembeli/admin,
+      // langsung ke form khusus role itu (skip pemilih peran). kalau di tab "semua", ke pemilih peran.
+      $urlTambah = in_array($rolefilter, ['penjual','pembeli','admin'], true)
+                   ? 'tambahuser.php?role=' . urlencode($rolefilter)
+                   : 'tambahuser.php';
+      ?>
+      <a href="<?= $urlTambah ?>" class="tombolutama">
         <i class="fa-solid fa-user-plus"></i> Tambah Pengguna
       </a>
       <?php endif; ?>

@@ -150,8 +150,10 @@ $pathbase = '..';
   <div class="judulbagian"><i class="fa-solid fa-store"></i> Pilih Kantin</div>
   <div class="geserkantin" style="margin-bottom:16px;">
 
-    <!-- tombol "Semua" untuk menghapus filter toko -->
-    <a href="index.php" class="itemkantin <?= $idtoko===0?'aktif':'' ?>">
+    <!-- tombol "Semua" untuk menghapus filter toko — filter kategori dipertahankan
+         supaya pembeli bisa lihat kategori yang sama tapi dari semua kantin. -->
+    <a href="index.php<?= $kategori?'?kategori='.urlencode($kategori):'' ?>"
+       class="itemkantin <?= $idtoko===0?'aktif':'' ?>">
       <div class="ikon"><i class="fa-solid fa-utensils"></i></div>
       <span class="namakan">Semua</span>
     </a>
@@ -167,7 +169,8 @@ $pathbase = '..';
       $fototoko  = $toko['foto_toko'] ?? '';
       $iw++;
     ?>
-    <a href="index.php?toko=<?= $toko['id_toko'] ?>" class="itemkantin <?= $idtoko===(int)$toko['id_toko']?'aktif':'' ?>">
+    <a href="index.php?toko=<?= $toko['id_toko'] ?><?= $kategori?'&kategori='.urlencode($kategori):'' ?>"
+       class="itemkantin <?= $idtoko===(int)$toko['id_toko']?'aktif':'' ?>">
       <!-- tampilkan foto toko jika ada, jika tidak tampilkan inisial berwarna -->
       <?php if ($fototoko && file_exists("../../2. aset/profil/" . $fototoko)): ?>
       <div class="ikon" style="overflow:hidden;padding:0;">
@@ -232,15 +235,25 @@ $pathbase = '..';
   $katDB = array_column($daftarkat, 'kategori');
   ?>
   <div class="filter-bar">
-    <!-- chip "Semua" — reset filter kategori -->
+    <!-- chip kategori MENGGABUNG dengan filter kantin yang sedang aktif:
+         - kalau pembeli sedang di "Toko Bu Dian" (?toko=8) lalu klik "Makanan Berat",
+           URL jadi ?kategori=Makanan%20Berat&toko=8 → tampilkan Makanan Berat
+           HANYA dari Bu Dian.
+         - kalau pembeli di kondisi "Semua kantin" lalu klik kategori, URL jadi
+           ?kategori=X tanpa toko → tampilkan kategori dari semua kantin.
+         filter toko & kategori adalah dua dimensi yang independen, keduanya
+         bisa aktif bersamaan. untuk reset salah satunya, klik chip "Semua" pada
+         baris masing-masing. -->
+
+    <!-- chip "Semua" kategori — hapus filter kategori, tetap pada toko yang dipilih -->
     <a href="index.php<?= $idtoko?'?toko='.$idtoko:'' ?>"
        class="chip-filter <?= $kategori===''?'aktif':'' ?>">Semua</a>
-    <!-- tampilkan kategori tetap terlebih dahulu -->
+    <!-- kategori tetap (selalu muncul walau belum ada datanya) -->
     <?php foreach ($kategoriTetap as $kn): ?>
     <a href="index.php?kategori=<?= urlencode($kn) ?><?= $idtoko?'&toko='.$idtoko:'' ?>"
        class="chip-filter <?= $kategori===$kn?'aktif':'' ?>"><?= $kn ?></a>
     <?php endforeach; ?>
-    <!-- tampilkan kategori tambahan dari database yang tidak ada di daftar tetap -->
+    <!-- kategori tambahan dari database yang tidak ada di daftar tetap -->
     <?php foreach ($daftarkat as $k): ?>
       <?php if (!in_array($k['kategori'], $kategoriTetap)): ?>
       <a href="index.php?kategori=<?= urlencode($k['kategori']) ?><?= $idtoko?'&toko='.$idtoko:'' ?>"

@@ -67,6 +67,13 @@ $namaadmin = htmlspecialchars($_SESSION['username'] ?? 'Admin');
       <span>Manajemen Pengguna</span>
     </a>
 
+    <!-- menu verifikasi pembeli — admin meninjau pembeli baru (status pending) -->
+    <a href="../../admin/manajemenpengguna/verifikasi.php"
+       class="sidebar-item <?= $halamansaatini === 'verifikasi' ? 'aktif' : '' ?>">
+      <i class="fa-solid fa-user-check"></i>
+      <span>Verifikasi Pembeli</span>
+    </a>
+
     <!-- menu status kantin — tampilkan semua 10 slot kantin (kosong/terisi) -->
     <a href="../../admin/manajementoko/kantin.php"
        class="sidebar-item <?= in_array($halamansaatini, ['kantin']) ? 'aktif' : '' ?>">

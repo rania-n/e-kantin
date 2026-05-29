@@ -23,9 +23,14 @@
   catatan: password tidak dikembalikan ke form karena alasan keamanan —
   pengguna harus mengetik ulang password setiap kali ada error.
 */
-$error    = $_GET['error']    ?? '';
-$username = $_GET['username'] ?? '';
-$email    = $_GET['email']    ?? '';
+// helper bersama untuk dropdown kelas (murid 10/11/12 + jurusan, atau guru/staf)
+include "../3. komponen/kelas_jurusan.php";
+
+$error        = $_GET['error']        ?? '';
+$username     = $_GET['username']     ?? '';
+$email        = $_GET['email']        ?? '';
+$namalengkap  = $_GET['namalengkap']  ?? '';
+$kelas        = $_GET['kelas']        ?? '';
 ?>
 
 <!-- form dikirim ke prosesregister.php dengan metode POST -->
@@ -54,6 +59,25 @@ $email    = $_GET['email']    ?? '';
     <?= htmlspecialchars($error) ?>
   </div>
   <?php endif; ?>
+
+  <!-- kolom input nama lengkap — wajib untuk verifikasi admin -->
+  <div class="grup-input">
+    <label for="namalengkap">Nama Lengkap</label>
+    <input type="text" id="namalengkap" name="namalengkap"
+           value="<?= htmlspecialchars($namalengkap) ?>"
+           placeholder="Nama lengkap sesuai kartu pelajar"
+           minlength="3" maxlength="100" required>
+    <div class="keterangan">Wajib sesuai identitas asli untuk verifikasi admin</div>
+  </div>
+
+  <!-- kolom input kelas — pilih kombinasi tingkat+jurusan (untuk murid)
+       atau status Guru / Staff Sekolah (untuk yang bukan murid). dipakai
+       admin untuk verifikasi identitas. -->
+  <div class="grup-input">
+    <label for="kelas">Kelas / Status</label>
+    <?php tampilkanDropdownKelas($kelas, true, 'kelas'); ?>
+    <div class="keterangan">Murid pilih kelas + jurusan. Guru atau staf sekolah pilih opsi Non-Murid.</div>
+  </div>
 
   <!-- kolom input username -->
   <div class="grup-input">

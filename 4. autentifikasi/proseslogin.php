@@ -44,7 +44,8 @@ if (empty($usernameemail) || empty($password)) {
 // langkah 4: cari user di database
 // query ini menerima username ATAU email agar pengguna bisa login dengan salah satunya
 // AND deleted=0 memastikan akun yang sudah dihapus tidak bisa login
-$stmt = $conn->prepare("SELECT id_user, username, email, password, role
+// status_verifikasi ikut diambil supaya bisa memblokir akun yang belum disetujui admin
+$stmt = $conn->prepare("SELECT id_user, username, email, password, role, status_verifikasi
                          FROM tb_user
                          WHERE (username=? OR email=?) AND deleted=0");
 // bind_param("ss", ...) berarti dua parameter bertipe string (s = string)
@@ -69,6 +70,20 @@ if (!$user) {
 // fungsi ini aman karena hash bersifat satu arah — tidak bisa dikembalikan ke teks asli.
 if (!password_verify($password, $user['password'])) {
     header("Location: login.php?error=" . urlencode("Password salah!") . "&usernameemail=" . urlencode($usernameemail));
+    exit;
+}
+
+// langkah 5b: gate verifikasi admin — pembeli yang baru daftar berstatus 'pending' dan
+// belum boleh login sampai admin meninjau identitas (nama lengkap + kelas). yang ditolak
+// admin juga diblokir di sini. penjual & admin selalu 'verified' (otomatis lewat migrasi).
+if (($user['status_verifikasi'] ?? 'verified') === 'pending') {
+    header("Location: login.php?error=" . urlencode("Akunmu masih menunggu verifikasi admin. Silakan tunggu persetujuan.") .
+           "&usernameemail=" . urlencode($usernameemail));
+    exit;
+}
+if (($user['status_verifikasi'] ?? 'verified') === 'ditolak') {
+    header("Location: login.php?error=" . urlencode("Akunmu ditolak oleh admin. Hubungi admin kantin untuk informasi lebih lanjut.") .
+           "&usernameemail=" . urlencode($usernameemail));
     exit;
 }
 

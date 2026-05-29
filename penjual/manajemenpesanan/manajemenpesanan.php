@@ -189,6 +189,18 @@ function kelasstatus(string $s): string {
       <!-- tombol aksi yang ditampilkan berbeda-beda tergantung status pesanan saat ini -->
       <div class="aksi-pesanan">
 
+        <?php
+        // tombol chat tersedia selama pesanan aktif (Menunggu/Diproses/Siap Diambil)
+        // chat tertutup otomatis saat status Selesai/Dibatalkan
+        $bisachat = in_array($pesanan['status_order'], ['Menunggu','Diproses','Siap Diambil'], true);
+        ?>
+        <?php if ($bisachat): ?>
+        <!-- #latest = anchor di halaman chat supaya browser auto-scroll ke pesan terbaru tanpa JS -->
+        <a href="chat.php?id_order=<?= $pesanan['id_order'] ?>#latest" class="tombolkecil">
+          <i class="fa-solid fa-comments"></i> Chat Pembeli
+        </a>
+        <?php endif; ?>
+
         <?php if ($pesanan['status_order'] === 'Menunggu'): ?>
           <!-- pesanan menunggu: bisa diproses atau dibatalkan -->
           <a href="prosesmanajemenpesanan.php?aksi=proses&id=<?= $pesanan['id_order'] ?>&filter=<?= urlencode($filter) ?>"

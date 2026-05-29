@@ -261,6 +261,14 @@ $pathbase = '..';
       <!-- total harga pesanan ini -->
       <div class="totalpesanan">Rp <?= number_format($p['total_harga'],0,',','.') ?></div>
       <div class="aksipesanan">
+        <!-- tombol chat penjual: hanya muncul saat pesanan masih aktif (Menunggu/Diproses/Siap).
+             chat ditutup otomatis saat order Selesai/Dibatalkan supaya tidak dipakai di luar konteks pesanan. -->
+        <?php if ($tab==='aktif'): ?>
+        <!-- #latest = anchor di halaman chat supaya browser auto-scroll ke pesan terbaru tanpa JS -->
+        <a href="chat.php?id_order=<?= $p['id_order'] ?>#latest" class="tombolkecil utama">
+          <i class="fa-solid fa-comments"></i> Chat Penjual
+        </a>
+        <?php endif; ?>
         <!-- tombol struk hanya muncul jika pesanan sudah selesai -->
         <?php if ($selesai): ?>
         <a href="struk.php?id_order=<?= $p['id_order'] ?>" class="tombolkecil">

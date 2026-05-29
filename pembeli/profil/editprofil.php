@@ -2,7 +2,11 @@
 /* halaman edit profil pembeli
    menangani dua kondisi:
    1. GET: tampilkan form dengan data saat ini
-   2. POST: validasi dan simpan perubahan username + email */
+   2. POST: validasi dan simpan perubahan username + email
+
+   catatan: nama lengkap, kelas, dan jurusan TIDAK bisa diubah pembeli karena
+   itu identitas yang sudah diverifikasi admin. kalau pembeli salah tulis saat
+   daftar, dia perlu menghubungi admin untuk perbaikan. */
 
 // guard memastikan hanya pembeli yang login yang bisa mengakses
 include '../../3. komponen/guardpembeli.php';
@@ -151,6 +155,19 @@ $pathbase = '..';
         <input type="email" name="email"
                value="<?= htmlspecialchars($user['email'] ?? '') ?>"
                required placeholder="Email...">
+      </div>
+
+      <!-- field nama lengkap: read-only (sudah diverifikasi admin) -->
+      <div class="kelompokform">
+        <label>Nama Lengkap <span style="color:var(--tekssamar);font-size:11px;">(tidak bisa diubah)</span></label>
+        <input type="text" value="<?= htmlspecialchars($user['nama_lengkap'] ?? '—') ?>" disabled>
+        <small style="color:var(--tekssamar);">Hubungi admin kantin jika ada kesalahan data.</small>
+      </div>
+
+      <!-- field kelas: read-only -->
+      <div class="kelompokform">
+        <label>Kelas &amp; Jurusan <span style="color:var(--tekssamar);font-size:11px;">(tidak bisa diubah)</span></label>
+        <input type="text" value="<?= htmlspecialchars($user['kelas'] ?? '—') ?>" disabled>
       </div>
 
       <!-- field peran: disabled karena tidak bisa diubah oleh pembeli sendiri -->
