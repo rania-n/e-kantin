@@ -12,7 +12,13 @@
       "PowerShell(& \"C:\\\\xampp\\\\php\\\\php.exe\" -l \"C:\\\\Code\\\\xampp\\\\htdocs\\\\E-Kantin\\\\admin\\\\laporan\\\\laporan.php\" 2>&1)",
       "PowerShell(& \"C:\\\\Code\\\\xampp\\\\php\\\\php.exe\" -l \"C:\\\\Code\\\\xampp\\\\htdocs\\\\E-Kantin\\\\admin\\\\laporan\\\\laporan.php\")",
       "PowerShell(Remove-Item *)",
-      "PowerShell(Test-Path *)"
+      "PowerShell(Test-Path *)",
+      "PowerShell($php = \"C:\\\\Code\\\\xampp\\\\php\\\\php.exe\"; & $php -l \"pembeli/index/index.php\")",
+      "PowerShell($php = \"C:\\\\xampp\\\\php\\\\php.exe\"; if \\(Test-Path $php\\) { & $php -l \"C:\\\\Code\\\\xampp\\\\htdocs\\\\E-Kantin\\\\penjual\\\\laporan\\\\laporan.php\"; & $php -l \"C:\\\\Code\\\\xampp\\\\htdocs\\\\E-Kantin\\\\penjual\\\\manajemenpesanan\\\\manajemenpesanan.php\" } else { \"php not found at $php\" })",
+      "PowerShell($paths = @\\(\"C:\\\\xampp\\\\php\\\\php.exe\",\"C:\\\\xampp8\\\\php\\\\php.exe\",\"C:\\\\php\\\\php.exe\"\\); $found = $paths | Where-Object { Test-Path $_ }; if \\($found\\) { $found } else { Get-Command php -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source; Get-ChildItem -Path C:\\\\ -Filter php.exe -Recurse -Depth 3 -ErrorAction SilentlyContinue | Select-Object -First 5 -ExpandProperty FullName })",
+      "PowerShell($php = \"C:\\\\Code\\\\xampp\\\\php\\\\php.exe\"; & $php -r \"include 'C:/Code/xampp/htdocs/E-Kantin/3. komponen/kelas_jurusan.php'; echo '--- render kosong ---'.PHP_EOL; tampilkanDropdownKelas\\('', true, 'kelas'\\); echo PHP_EOL.'--- render terpilih 11 RPL ---'.PHP_EOL; tampilkanDropdownKelas\\('11 RPL', true, 'kelas'\\); echo PHP_EOL.'--- validasi ---'.PHP_EOL; var_dump\\(kelasValid\\('11 RPL'\\), kelasValid\\('Guru'\\), kelasValid\\('xx ngawur'\\)\\);\")",
+      "PowerShell($ports = Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue | Where-Object { $_.LocalPort -in 80,443,3306,8080 } | Select-Object -ExpandProperty LocalPort -Unique; \"Listening ports: $\\($ports -join ', '\\)\"; try { $r = Invoke-WebRequest -Uri \"http://localhost/E-Kantin/index.php\" -UseBasicParsing -TimeoutSec 8 -MaximumRedirection 0 -ErrorAction Stop; \"index.php status: $\\($r.StatusCode\\)\" } catch { \"index.php request: $\\($_.Exception.Message\\)\" })",
+      "PowerShell($php=\"C:\\\\Code\\\\xampp\\\\php\\\\php.exe\"; & $php \"C:\\\\Users\\\\niol\\\\.claude\\\\jobs\\\\d42ee748\\\\tmp\\\\test_stok.php\")"
     ]
   }
 }

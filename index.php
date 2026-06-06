@@ -247,7 +247,7 @@ a { text-decoration: none; color: inherit; }
     <a href="https://wa.me/6285648830046" target="_blank">
       <i class="fa-brands fa-whatsapp"></i> WhatsApp
     </a> &nbsp;&middot;&nbsp;
-    <a href="mailto:ranianuril210@gmail.com">
+    <a href="mailto:admin@jajankita.my.id">
       <i class="fa-solid fa-envelope"></i> Email
     </a>
   </p>

@@ -45,7 +45,7 @@ if (empty($usernameemail) || empty($password)) {
 // query ini menerima username ATAU email agar pengguna bisa login dengan salah satunya
 // AND deleted=0 memastikan akun yang sudah dihapus tidak bisa login
 // status_verifikasi ikut diambil supaya bisa memblokir akun yang belum disetujui admin
-$stmt = $conn->prepare("SELECT id_user, username, email, password, role, status_verifikasi
+$stmt = $conn->prepare("SELECT id_user, username, email, password, role, status_verifikasi, status_akun
                          FROM tb_user
                          WHERE (username=? OR email=?) AND deleted=0");
 // bind_param("ss", ...) berarti dua parameter bertipe string (s = string)
@@ -87,6 +87,14 @@ if (($user['status_verifikasi'] ?? 'verified') === 'ditolak') {
     exit;
 }
 
+// langkah 5c: gate akun nonaktif — admin bisa menonaktifkan/suspend akun (mis. pembeli
+// yang tidak mengambil pesanan). akun nonaktif tidak boleh login sampai diaktifkan lagi.
+if (($user['status_akun'] ?? 'aktif') === 'nonaktif') {
+    header("Location: login.php?error=" . urlencode("Akunmu sedang dinonaktifkan oleh admin. Hubungi admin kantin untuk mengaktifkannya kembali.") .
+           "&usernameemail=" . urlencode($usernameemail));
+    exit;
+}
+
 // langkah 6a: halaman ini KHUSUS untuk pembeli & penjual. Admin harus pakai
 // halaman login admin (admin/login/loginadmin.php) — tolak sebelum sesi dibuat.
 if ($user['role'] === 'admin') {
@@ -106,6 +114,15 @@ $namaSesi = match($user['role']) {
 // terapkan nama sesi sebelum session_start() dipanggil
 session_name($namaSesi);
 session_start();
+
+/* MULAI BERSIH setiap kali login:
+   1. $_SESSION = [] → buang sisa data sesi dari akun sebelumnya yang belum logout
+      di browser yang sama (mencegah keranjang/identitas akun lama "nyangkut" saat
+      ganti akun).
+   2. session_regenerate_id(true) → beri ID sesi baru & hapus file sesi lama, supaya
+      sesi tiap login benar-benar terpisah (lebih aman, anti session fixation). */
+$_SESSION = [];
+session_regenerate_id(true);
 
 // langkah 7: simpan data user ke dalam variabel sesi
 // data sesi ini akan tersedia di semua halaman selama pengguna belum logout
@@ -151,29 +168,29 @@ if ($user['role'] === 'pembeli') {
     $qkeranjang->execute();
     $bariskeranjang = $qkeranjang->get_result()->fetch_all(MYSQLI_ASSOC);
     $qkeranjang->close();
-    // bangun ulang struktur keranjang di session sama persis seperti saat item ditambahkan
-    if (!empty($bariskeranjang)) {
-        $_SESSION['keranjang'] = []; // reset session keranjang dulu
-        foreach ($bariskeranjang as $baris) {
-            $idtokoitem = (int)$baris['id_toko'];
-            $idmenuitem = (int)$baris['id_menu'];
-            // buat slot toko di session jika belum ada
-            if (!isset($_SESSION['keranjang'][$idtokoitem])) {
-                $_SESSION['keranjang'][$idtokoitem] = [
-                    '_info' => ['nama_toko' => $baris['nama_toko'], 'id_toko' => $idtokoitem]
-                ];
-            }
-            // masukkan item dengan seluruh data yang dibutuhkan halaman keranjang
-            $_SESSION['keranjang'][$idtokoitem][$idmenuitem] = [
-                'id_menu'   => $idmenuitem,
-                'nama_menu' => $baris['nama_menu'],
-                'harga'     => (int)$baris['harga'],
-                'foto'      => $baris['foto'],
-                'qty'       => (int)$baris['jumlah'],
-                'id_toko'   => $idtokoitem,
-                'nama_toko' => $baris['nama_toko'],
+    // SELALU mulai dari keranjang KOSONG, lalu isi HANYA dengan item milik user ini.
+    // reset tanpa syarat (bukan cuma kalau ada item) supaya keranjang akun sebelumnya
+    // tidak "nyangkut" ketika user baru ini ternyata keranjang DB-nya kosong.
+    $_SESSION['keranjang'] = [];
+    foreach ($bariskeranjang as $baris) {
+        $idtokoitem = (int)$baris['id_toko'];
+        $idmenuitem = (int)$baris['id_menu'];
+        // buat slot toko di session jika belum ada
+        if (!isset($_SESSION['keranjang'][$idtokoitem])) {
+            $_SESSION['keranjang'][$idtokoitem] = [
+                '_info' => ['nama_toko' => $baris['nama_toko'], 'id_toko' => $idtokoitem]
             ];
         }
+        // masukkan item dengan seluruh data yang dibutuhkan halaman keranjang
+        $_SESSION['keranjang'][$idtokoitem][$idmenuitem] = [
+            'id_menu'   => $idmenuitem,
+            'nama_menu' => $baris['nama_menu'],
+            'harga'     => (int)$baris['harga'],
+            'foto'      => $baris['foto'],
+            'qty'       => (int)$baris['jumlah'],
+            'id_toko'   => $idtokoitem,
+            'nama_toko' => $baris['nama_toko'],
+        ];
     }
 }
 

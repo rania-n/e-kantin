@@ -28,6 +28,29 @@ if (!$menu) { header("Location: ../index/index.php"); exit; }
 // menu "tersedia" jika stok ada dan statusnya aktif
 // menu yang stoknya habis atau dinonaktifkan tidak bisa dipesan
 $tersedia = $menu['stok'] > 0 && $menu['status'] === 'aktif';
+
+// konteks asal pembeli (kantin/kategori/pencarian yang sedang difilter di beranda).
+// dikirim lewat URL saat kartu menu diklik, supaya tombol "Batal"/"Kembali" bisa
+// kembali ke beranda dengan filter yang SAMA — tidak terlempar ke "Semua kantin".
+$dari_toko = (int)($_GET['dari_toko'] ?? 0);
+$dari_kat  = trim($_GET['dari_kat']  ?? '');
+$dari_cari = trim($_GET['dari_cari'] ?? '');
+$paramskembali = [];
+if ($dari_toko > 0)   $paramskembali['toko']     = $dari_toko;
+if ($dari_kat !== '') $paramskembali['kategori'] = $dari_kat;
+if ($dari_cari !== '')$paramskembali['cari']     = $dari_cari;
+// url beranda dengan filter dipertahankan (atau polos kalau tidak ada konteks)
+$urlkembali = '../index/index.php' . ($paramskembali ? '?' . http_build_query($paramskembali) : '');
+
+// simpan URL halaman detail ini ke session supaya setelah "Tambah ke Keranjang"
+// pembeli kembali ke halaman detail menu yang SAMA (bukan dilempar ke keranjang).
+// catatan: path ditulis relatif terhadap proseskeranjang.php (folder keranjang/),
+// jadi diawali "../pesanan/". konteks kantin/kategori/cari ikut dibawa.
+$_SESSION['detail_url'] = '../pesanan/detail.php?id=' . $idmenu
+    . ($dari_toko > 0    ? '&dari_toko=' . $dari_toko          : '')
+    . ($dari_kat !== ''  ? '&dari_kat='  . urlencode($dari_kat) : '')
+    . ($dari_cari !== '' ? '&dari_cari=' . urlencode($dari_cari) : '');
+
 $pathbase = '..';
 ?>
 <!DOCTYPE html>
@@ -103,8 +126,13 @@ $pathbase = '..';
   <form method="POST" action="../keranjang/proseskeranjang.php">
     <input type="hidden" name="aksi" value="tambah">
     <input type="hidden" name="id_menu" value="<?= $menu['id_menu'] ?>">
-    <!-- kembali=keranjang artinya setelah proses, redirect ke halaman keranjang -->
-    <input type="hidden" name="kembali" value="keranjang">
+    <!-- kembali=detail: setelah tambah ke keranjang, TETAP di halaman detail menu ini
+         (proseskeranjang membangun ulang URL detail dari data berikut), bukan ke keranjang -->
+    <input type="hidden" name="kembali" value="detail">
+    <!-- konteks kantin/kategori/cari ikut dikirim agar tombol Batal tetap benar saat kembali -->
+    <input type="hidden" name="dari_toko" value="<?= $dari_toko ?>">
+    <?php if ($dari_kat !== ''): ?><input type="hidden" name="dari_kat" value="<?= htmlspecialchars($dari_kat) ?>"><?php endif; ?>
+    <?php if ($dari_cari !== ''): ?><input type="hidden" name="dari_cari" value="<?= htmlspecialchars($dari_cari) ?>"><?php endif; ?>
 
     <div class="kelompokform">
       <label>Jumlah</label>
@@ -117,8 +145,8 @@ $pathbase = '..';
     </div>
 
     <div style="display:flex;gap:10px;margin-top:8px;">
-      <!-- tombol batal: kembali ke beranda -->
-      <a href="../index/index.php" class="tombolringan" style="padding:10px 14px;font-size:13px;">
+      <!-- tombol batal: kembali ke beranda dengan kantin/filter yang sama -->
+      <a href="<?= htmlspecialchars($urlkembali) ?>" class="tombolringan" style="padding:10px 14px;font-size:13px;">
         Batal
       </a>
       <!-- tombol submit: tambahkan ke keranjang -->
@@ -133,7 +161,7 @@ $pathbase = '..';
   <div class="peringatan peringatangagal">
     <i class="fa-solid fa-circle-xmark"></i> Menu ini sedang tidak tersedia
   </div>
-  <a href="../index/index.php" class="tombolringan blok" style="margin-top:12px;">
+  <a href="<?= htmlspecialchars($urlkembali) ?>" class="tombolringan blok" style="margin-top:12px;">
     Kembali ke Menu
   </a>
   <?php endif; ?>

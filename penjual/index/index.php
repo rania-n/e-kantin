@@ -3,6 +3,8 @@
    pesanan terbaru, produk terlaris, pelanggan setia, dan ulasan terbaru */
 include '../../1. koneksi/koneksi.php';
 include '../../3. komponen/guardpenjual.php';
+// batalkan otomatis pesanan "Menunggu" yang sudah lewat hari (sekalian kembalikan stok)
+include '../../3. komponen/autobatalpesanan.php';
 
 // ambil id toko dan status toko dari session
 $idtoko     = (int)$_SESSION['id_toko'];
@@ -191,17 +193,14 @@ function bintang(float $r): string {
       <h1><i class="fa-solid fa-gauge-high"></i> Dashboard</h1>
       <p>Selamat datang, <?= htmlspecialchars($_SESSION['username']) ?> — <?= date('l, d M Y') ?></p>
     </div>
-    <!-- toggle buka/tutup toko — tanpa js, pakai submit button -->
-    <form method="POST" action="prosesindex.php">
-      <input type="hidden" name="aksi" value="toggle_status">
-      <button type="submit" class="tombol-toggle-toko <?= $statustoko === 'buka' ? 'toko-buka' : 'toko-tutup' ?>">
-        <i class="fa-solid fa-circle-dot"></i>
-        Toko <?= $statustoko === 'buka' ? 'Buka' : 'Tutup' ?>
-        <span style="font-size:11px;font-weight:500;opacity:.8;">
-          — klik untuk <?= $statustoko === 'buka' ? 'tutup' : 'buka' ?>
-        </span>
-      </button>
-    </form>
+    <!-- toggle buka/tutup toko — buka modal konfirmasi dulu (css :target), tanpa js -->
+    <a href="#konfirm-toggle-toko" class="tombol-toggle-toko <?= $statustoko === 'buka' ? 'toko-buka' : 'toko-tutup' ?>">
+      <i class="fa-solid fa-circle-dot"></i>
+      Toko <?= $statustoko === 'buka' ? 'Buka' : 'Tutup' ?>
+      <span style="font-size:11px;font-weight:500;opacity:.8;">
+        — klik untuk <?= $statustoko === 'buka' ? 'tutup' : 'buka' ?>
+      </span>
+    </a>
   </div>
 
   <!-- peringatan muncul hanya jika ada pesanan yang perlu ditangani -->
@@ -486,6 +485,37 @@ function bintang(float $r): string {
   </div>
 
 </main>
+
+<!-- modal konfirmasi buka/tutup toko — muncul saat url berisi #konfirm-toggle-toko -->
+<?php $akanTutup = ($statustoko === 'buka'); ?>
+<div class="modaloverlay" id="konfirm-toggle-toko">
+  <a href="#" class="penutup-modal"></a>
+  <div class="isimodal" style="max-width:380px;text-align:center;position:relative;z-index:1;">
+    <div style="font-size:42px;color:var(--<?= $akanTutup ? 'gagal' : 'sukses' ?>);margin-bottom:10px;">
+      <i class="fa-solid fa-<?= $akanTutup ? 'store-slash' : 'store' ?>"></i>
+    </div>
+    <div style="font-size:17px;font-weight:800;color:var(--utama);margin-bottom:8px;">
+      <?= $akanTutup ? 'Tutup Toko?' : 'Buka Toko?' ?>
+    </div>
+    <div style="font-size:13px;color:var(--tekssamar);margin-bottom:20px;">
+      <?php if ($akanTutup): ?>
+      Saat toko ditutup, pembeli tidak bisa memesan menu dari tokomu sampai dibuka kembali.
+      <?php else: ?>
+      Toko akan kembali tampil di beranda pembeli dan menu bisa dipesan lagi.
+      <?php endif; ?>
+    </div>
+    <!-- form konfirmasi: kirim POST ke prosesindex.php -->
+    <form method="POST" action="prosesindex.php">
+      <input type="hidden" name="aksi" value="toggle_status">
+      <button type="submit" class="tombolutama blok"
+              style="margin-bottom:10px;background:var(--<?= $akanTutup ? 'gagal' : 'sukses' ?>);">
+        <i class="fa-solid fa-<?= $akanTutup ? 'store-slash' : 'store' ?>"></i>
+        <?= $akanTutup ? 'Ya, Tutup Toko' : 'Ya, Buka Toko' ?>
+      </button>
+    </form>
+    <a href="#" class="tombolringan blok">Batal</a>
+  </div>
+</div>
 
 </body>
 </html>

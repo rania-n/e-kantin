@@ -67,9 +67,41 @@ function setFlash(string $pesan, string $jenis = 'sukses'): void {
 // exit wajib ada setelah header redirect agar kode di bawahnya tidak dieksekusi
 function kembalikan(string $kembali): void {
     switch ($kembali) {
-        case 'index':   header("Location: ../index/index.php");  break;
-        // jika kembali=detail, ambil URL detail dari session yang disimpan sebelumnya
-        case 'detail':  header("Location: " . ($_SESSION['detail_url'] ?? '../index/index.php')); break;
+        case 'index':
+            // bangun ulang url beranda dengan filter kantin/kategori/cari yang sedang aktif.
+            // tujuannya: setelah menambah ke keranjang, pembeli TETAP berada di kantin yang
+            // sama (tidak terlempar balik ke tampilan "Semua kantin"). nilai filter dikirim
+            // lewat hidden input di form beranda (ke_toko/ke_kategori/ke_cari).
+            $params = [];
+            $ketoko = (int)($_POST['ke_toko'] ?? 0);
+            $kekat  = trim($_POST['ke_kategori'] ?? '');
+            $kecari = trim($_POST['ke_cari'] ?? '');
+            if ($ketoko > 0)    $params['toko']     = $ketoko;
+            if ($kekat !== '')  $params['kategori'] = $kekat;
+            if ($kecari !== '') $params['cari']     = $kecari;
+            // http_build_query merangkai array jadi querystring aman (mis. ?toko=8&kategori=...)
+            $qs = $params ? ('?' . http_build_query($params)) : '';
+            header("Location: ../index/index.php{$qs}");
+            break;
+        // kembali=detail: balik ke halaman detail menu yang sama. URL dibangun ulang
+        // dari data POST (id_menu + konteks kantin/kategori/cari) — bukan dari session —
+        // supaya tetap benar walau pembeli membuka banyak tab. fallback ke detail_url
+        // session lalu beranda kalau id_menu tidak ada.
+        case 'detail':
+            $idmenuback = (int)($_POST['id_menu'] ?? 0);
+            if ($idmenuback > 0) {
+                $back = '../pesanan/detail.php?id=' . $idmenuback;
+                $dt = (int)($_POST['dari_toko'] ?? 0);
+                $dk = trim($_POST['dari_kat']  ?? '');
+                $dc = trim($_POST['dari_cari'] ?? '');
+                if ($dt > 0)    $back .= '&dari_toko=' . $dt;
+                if ($dk !== '') $back .= '&dari_kat='  . urlencode($dk);
+                if ($dc !== '') $back .= '&dari_cari=' . urlencode($dc);
+                header("Location: $back");
+            } else {
+                header("Location: " . ($_SESSION['detail_url'] ?? '../index/index.php'));
+            }
+            break;
         default:        header("Location: keranjang.php");        break;
     }
     exit;
@@ -228,6 +260,44 @@ switch ($aksi) {
             // simpan juga ke database agar perubahan qty tidak hilang saat logout
             simpanItemKeranjangDB($conn, $idpengguna, $idmenu, $qtybaru);
         }
+        header("Location: keranjang.php"); exit;
+
+    // aksi set_qty: set jumlah item langsung ke angka yang diketik pembeli di keranjang
+    // (bukan hanya tombol +/-) agar mudah saat ingin memesan banyak sekaligus
+    case 'set_qty':
+        // pastikan item ada di session sebelum diubah
+        if (!$idtoko || !$idmenu || !isset($_SESSION['keranjang'][$idtoko][$idmenu])) {
+            header("Location: keranjang.php"); exit;
+        }
+        // ambil stok terkini dari database (bukan dari session) karena stok bisa berubah
+        $cekstok = $conn->prepare("SELECT stok FROM tb_menu WHERE id_menu=? AND deleted=0");
+        $cekstok->bind_param("i", $idmenu);
+        $cekstok->execute();
+        $stokdb = (int)($cekstok->get_result()->fetch_row()[0] ?? 0);
+        $cekstok->close();
+
+        // kalau stok sudah habis, hapus item dari keranjang
+        if ($stokdb <= 0) {
+            $nama = $_SESSION['keranjang'][$idtoko][$idmenu]['nama_menu'];
+            unset($_SESSION['keranjang'][$idtoko][$idmenu]);
+            bersihkanTokoKosong($idtoko);
+            hapusItemKeranjangDB($conn, $idpengguna, $idmenu);
+            setFlash($nama . ' stoknya habis, dihapus dari keranjang', 'gagal');
+            header("Location: keranjang.php"); exit;
+        }
+
+        // $jumlah sudah di-clamp minimal 1 di bagian atas file.
+        // batasi agar tidak melebihi stok yang tersedia.
+        $qtybaru = $jumlah;
+        if ($qtybaru > $stokdb) {
+            $qtybaru = $stokdb;
+            setFlash('Jumlah disesuaikan dengan stok tersedia (' . $stokdb . ')', 'tunggu');
+        } else {
+            setFlash('Jumlah berhasil diperbarui', 'sukses');
+        }
+        // simpan qty baru ke session dan database
+        $_SESSION['keranjang'][$idtoko][$idmenu]['qty'] = $qtybaru;
+        simpanItemKeranjangDB($conn, $idpengguna, $idmenu, $qtybaru);
         header("Location: keranjang.php"); exit;
 
     // aksi tidak dikenali — arahkan ke keranjang

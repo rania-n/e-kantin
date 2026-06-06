@@ -35,6 +35,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'keluar'
     // kosongkan semua data di dalam sesi (hapus semua variabel $_SESSION)
     $_SESSION = [];
 
+    // hapus juga cookie sesi di browser supaya benar-benar bersih (tidak ada
+    // sisa ID sesi lama yang bisa dipakai ulang saat login akun lain di browser ini)
+    if (ini_get('session.use_cookies')) {
+        $p = session_get_cookie_params();
+        setcookie(session_name(), '', time() - 42000, $p['path'], $p['domain'], $p['secure'], $p['httponly']);
+    }
+
     // hancurkan sesi di server — menghapus file sesi dari penyimpanan server
     session_destroy();
 

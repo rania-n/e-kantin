@@ -4,6 +4,8 @@
    menunggu → diproses → siap diambil → selesai (atau dibatalkan) */
 include '../../1. koneksi/koneksi.php';
 include '../../3. komponen/guardpenjual.php';
+// batalkan otomatis pesanan "Menunggu" yang sudah lewat hari (sekalian kembalikan stok)
+include '../../3. komponen/autobatalpesanan.php';
 
 // ambil id toko dan id penjual dari session
 $idtoko    = (int)$_SESSION['id_toko'];
@@ -15,6 +17,9 @@ $halamansaatini = 'manajemenpesanan';
 // ambil parameter filter status dan kata cari dari URL
 $filter = $_GET['filter'] ?? 'Menunggu'; // default tampilkan pesanan menunggu
 $cari   = trim($_GET['cari'] ?? '');
+
+// id pesanan yang akan dibatalkan (0 = tidak ada) — dipakai modal konfirmasi css :target
+$batalid = (int)($_GET['batal'] ?? 0);
 
 // ambil flash message dari session jika ada (pesan sukses/gagal dari proses sebelumnya)
 $flashpesan = ''; $flashjenis = '';
@@ -69,6 +74,21 @@ function kelasstatus(string $s): string {
         default => 'dibatalkan',
     };
 }
+
+/* jika ada ?batal=ID, ambil data pesanan tsb untuk ditampilkan di modal konfirmasi.
+   hanya valid kalau pesanan milik penjual ini dan statusnya masih bisa dibatalkan
+   (Menunggu/Diproses). $databatal null = modal tidak dirender. */
+$databatal = null;
+if ($batalid > 0) {
+    $qb = $conn->prepare("SELECT id_order, status_order FROM tb_order
+                          WHERE id_order=? AND id_penjual=? AND deleted=0
+                            AND status_order IN ('Menunggu','Diproses')");
+    $qb->bind_param("ii", $batalid, $idpenjual); $qb->execute();
+    $databatal = $qb->get_result()->fetch_assoc(); $qb->close();
+}
+
+// url dasar halaman ini (tanpa parameter batal) — dipakai untuk menutup modal
+$urldasar = 'manajemenpesanan.php?filter=' . urlencode($filter) . ($cari !== '' ? '&cari=' . urlencode($cari) : '');
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -207,7 +227,8 @@ function kelasstatus(string $s): string {
              class="tombolkecil biru">
             <i class="fa-solid fa-fire-burner"></i> Proses
           </a>
-          <a href="prosesmanajemenpesanan.php?aksi=batal&id=<?= $pesanan['id_order'] ?>&filter=<?= urlencode($filter) ?>"
+          <!-- buka modal konfirmasi dulu via css :target sebelum benar-benar dibatalkan -->
+          <a href="manajemenpesanan.php?filter=<?= urlencode($filter) ?><?= $cari !== '' ? '&cari='.urlencode($cari) : '' ?>&batal=<?= $pesanan['id_order'] ?>#konfirm-batal"
              class="tombolkecil merah">
             <i class="fa-solid fa-xmark"></i> Batalkan
           </a>
@@ -258,6 +279,32 @@ function kelasstatus(string $s): string {
   <?php endif; ?>
 
 </main>
+
+<!-- modal konfirmasi batalkan pesanan — hanya dirender jika ada ?batal= valid.
+     pakai css :target (tanpa javascript): modal muncul saat url berisi #konfirm-batal -->
+<?php if ($databatal):
+  $nomerbatal = 'EK-' . str_pad($databatal['id_order'], 6, '0', STR_PAD_LEFT);
+?>
+<div class="modaloverlay" id="konfirm-batal">
+  <!-- klik area di luar modal → kembali ke url dasar (tutup modal) -->
+  <a href="<?= $urldasar ?>" class="penutup-modal"></a>
+  <div class="isimodal" style="max-width:380px;text-align:center;position:relative;z-index:1;">
+    <div style="font-size:44px;color:var(--gagal,#dc2626);margin-bottom:10px;">
+      <i class="fa-solid fa-circle-xmark"></i>
+    </div>
+    <div style="font-size:17px;font-weight:800;color:var(--utama);margin-bottom:8px;">Batalkan Pesanan?</div>
+    <div style="font-size:13px;color:var(--tekssamar);margin-bottom:20px;">
+      Pesanan <strong><?= $nomerbatal ?></strong> akan dibatalkan dan stok menu dikembalikan. Tindakan ini tidak bisa diurungkan.
+    </div>
+    <!-- konfirmasi: klik tombol ini baru benar-benar mengirim ke proses batal -->
+    <a href="prosesmanajemenpesanan.php?aksi=batal&id=<?= (int)$databatal['id_order'] ?>&filter=<?= urlencode($filter) ?>"
+       class="tombolutama blok" style="margin-bottom:10px;background:var(--gagal,#dc2626);border-color:var(--gagal,#dc2626);">
+      <i class="fa-solid fa-xmark"></i> Ya, Batalkan
+    </a>
+    <a href="<?= $urldasar ?>" class="tombolringan blok">Kembali</a>
+  </div>
+</div>
+<?php endif; ?>
 
 </body>
 </html>

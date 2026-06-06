@@ -24,6 +24,11 @@ session_name('sesi_penjual');
 session_start();
 // kosongkan semua variabel sesi (hapus isi array $_SESSION)
 $_SESSION = [];
+// hapus cookie sesi penjual di browser supaya tidak ada sisa ID sesi lama
+if (ini_get('session.use_cookies')) {
+    $p = session_get_cookie_params();
+    setcookie(session_name(), '', time() - 42000, $p['path'], $p['domain'], $p['secure'], $p['httponly']);
+}
 // hancurkan sesi di server (hapus file sesi)
 session_destroy();
 // tutup sesi dan pastikan perubahan ditulis ke server
@@ -34,6 +39,11 @@ session_write_close();
 session_name('sesi_pembeli');
 session_start();
 $_SESSION = [];
+// hapus cookie sesi pembeli di browser
+if (ini_get('session.use_cookies')) {
+    $p = session_get_cookie_params();
+    setcookie(session_name(), '', time() - 42000, $p['path'], $p['domain'], $p['secure'], $p['httponly']);
+}
 session_destroy();
 // catatan: session_write_close() tidak dipanggil di sini karena langsung redirect setelahnya
 

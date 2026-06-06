@@ -232,22 +232,6 @@ $startx = 70; $chartH = 160;           // titik mulai bar dan tinggi area chart
         <div class="sub"><?= $totalmenu ?> menu aktif</div>
       </div>
     </a>
-    <a href="../laporan/laporan.php" class="kartu-stat">
-      <div class="ikon-stat"><i class="fa-solid fa-receipt"></i></div>
-      <div class="isi-stat">
-        <div class="nilai"><?= $totalorder ?></div>
-        <div class="label">Total Pesanan</div>
-        <div class="sub"><?= $orderhari ?> pesanan hari ini</div>
-      </div>
-    </a>
-    <a href="../laporan/laporan.php" class="kartu-stat">
-      <div class="ikon-stat" style="background:var(--suksebg);color:var(--sukses);"><i class="fa-solid fa-coins"></i></div>
-      <div class="isi-stat">
-        <div class="nilai" style="color:var(--sukses);"><?= singkat($revenueselesai) ?></div>
-        <div class="label">Total Omset</div>
-        <div class="sub">Pesanan selesai</div>
-      </div>
-    </a>
     <a href="../manajemenpengguna/user.php" class="kartu-stat">
       <div class="ikon-stat"><i class="fa-solid fa-user-plus"></i></div>
       <div class="isi-stat">
@@ -258,82 +242,8 @@ $startx = 70; $chartH = 160;           // titik mulai bar dan tinggi area chart
     </a>
   </div>
 
-  <!-- CHART REVENUE -->
-  <div class="kartu">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-      <h3 style="margin:0;border:none;padding:0;">
-        <i class="fa-solid fa-chart-bar"></i> Omset Platform — 7 Hari Terakhir
-      </h3>
-      <a href="../laporan/laporan.php" style="font-size:12px;color:var(--kedua);font-weight:600;white-space:nowrap;">
-        Lihat Semua Laporan →
-      </a>
-    </div>
-    <div class="area-chart">
-      <!-- svg bar chart dibuat murni dari php, tanpa library javascript -->
-      <svg viewBox="0 0 <?= $svgw ?> 210" xmlns="http://www.w3.org/2000/svg" style="min-width:<?= min(700,$svgw) ?>px;">
-        <?php for ($g = 0; $g <= 4; $g++): $gy = 20 + ($g * 40); ?>
-        <!-- garis horizontal pembatas skala nilai -->
-        <line x1="60" y1="<?= $gy ?>" x2="<?= $svgw - 10 ?>" y2="<?= $gy ?>" stroke="#E7CBCB" stroke-width="1" stroke-dasharray="4,4"/>
-        <text x="55" y="<?= $gy+4 ?>" text-anchor="end" fill="#99627A" font-size="9"><?= singkat(($maxnilai/4)*(4-$g)) ?></text>
-        <?php endfor; ?>
-        <?php foreach ($chartdata as $i => $d):
-          // hitung posisi dan tinggi tiap bar berdasarkan nilai relatif terhadap maksimum
-          $x    = $startx + $i * ($barw + $gap);
-          $barh = $d['nilai'] > 0 ? ($d['nilai'] / $maxnilai) * $chartH : 2; // minimal tinggi 2px agar bar tetap terlihat
-          $by   = 180 - $barh;
-          $isToday = $d['tgl'] === date('Y-m-d'); // hari ini diberi warna lebih gelap
-        ?>
-        <rect x="<?= $x ?>" y="<?= $by ?>" width="<?= $barw ?>" height="<?= $barh ?>"
-              rx="3" fill="<?= $isToday ? '#643843' : '#99627A' ?>">
-          <title><?= $d['label'] ?> — <?= rp($d['nilai']) ?></title>
-        </rect>
-        <!-- label hari di bawah bar -->
-        <text x="<?= $x + $barw/2 ?>" y="200" text-anchor="middle"
-              fill="<?= $isToday ? '#643843' : '#99627A' ?>"
-              font-size="<?= $hari > 14 ? '8' : '10' ?>"
-              font-weight="<?= $isToday ? '700' : '400' ?>"><?= $d['label'] ?></text>
-        <?php if ($d['nilai'] > 0 && $barw >= 20): ?>
-        <!-- label nilai singkat di atas bar, hanya tampil jika bar cukup lebar -->
-        <text x="<?= $x + $barw/2 ?>" y="<?= max($by-4, 14) ?>" text-anchor="middle" fill="#643843" font-size="8" font-weight="600">
-          <?php $_n=$d['nilai']; echo $_n>=1000000 ? number_format($_n/1000000,1).'Jt' : ($_n>=1000 ? number_format($_n/1000,0).'k' : number_format($_n,0)); ?>
-        </text>
-        <?php endif; ?>
-        <?php endforeach; ?>
-      </svg>
-    </div>
-  </div>
 
   <div class="grid-dua">
-
-    <!-- TOP PRODUK -->
-    <div class="kartu" id="seksi-terlaris">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-        <h3 style="margin:0;border:none;padding:0;"><i class="fa-solid fa-fire"></i> Produk Terlaris Platform</h3>
-        <a href="../laporan/laporan.php" style="font-size:12px;color:var(--kedua);font-weight:600;">Lihat Detail →</a>
-      </div>
-      <?php if (empty($terlaris)): ?>
-      <div class="kosong" style="padding:20px;"><p>Belum ada data penjualan</p></div>
-      <?php else: ?>
-      <?php $medal = ['emas','perak','perunggu']; ?>
-      <?php foreach ($terlaris as $i => $t): ?>
-      <div class="baris-produk">
-        <!-- badge peringkat: emas (#1), perak (#2), perunggu (#3), sisanya tanpa kelas -->
-        <div class="rangking-produk <?= $medal[$i] ?? '' ?>">#<?= $i+1 ?></div>
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-            <?= htmlspecialchars($t['nama_menu']) ?>
-          </div>
-          <div style="font-size:11px;color:var(--tekssamar);">
-            <?= htmlspecialchars($t['nama_toko']) ?> · <?= rp($t['omset']) ?>
-          </div>
-        </div>
-        <div style="font-size:13px;font-weight:700;color:var(--utama);white-space:nowrap;">
-          <?= $t['terjual'] ?> terjual
-        </div>
-      </div>
-      <?php endforeach; ?>
-      <?php endif; ?>
-    </div>
 
     <!-- PENGGUNA TERBARU -->
     <div class="kartu" id="seksi-pengguna-baru">
@@ -364,66 +274,6 @@ $startx = 70; $chartH = 160;           // titik mulai bar dan tinggi area chart
       <?php endif; ?>
     </div>
 
-  </div>
-
-  <!-- PERFORMA TOKO -->
-  <div class="kartu seksi-laporan" id="seksi-performa">
-    <div class="seksi-judul" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-      <h3 style="margin:0;border:none;padding:0;">
-        <i class="fa-solid fa-store"></i> Performa Toko
-      </h3>
-      <a href="../manajemenpengguna/user.php?role=penjual" style="font-size:12px;color:var(--kedua);font-weight:600;">Kelola Penjual →</a>
-    </div>
-    <div class="tabel-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <!-- kolom nomor kantin hanya tampil jika migrasi sudah dijalankan -->
-            <?php if ($migrasiSudah): ?>
-            <th class="tengah">No.</th>
-            <?php endif; ?>
-            <th>Nama Toko</th>
-            <th class="tengah">Status</th>
-            <th class="tengah">Total Pesanan</th>
-            <th class="tengah">Dibatalkan</th>
-            <th class="tengah">Rating</th>
-            <th class="kanan">Total Omset</th>
-            <th class="tengah">Aksi</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php if (empty($perftoko)): ?>
-          <tr><td colspan="8"><div class="kosong" style="padding:20px;"><p>Belum ada toko</p></div></td></tr>
-          <?php else: ?>
-          <?php foreach ($perftoko as $t): ?>
-          <tr>
-            <!-- kolom nomor kantin hanya ditampilkan jika migrasi sudah dijalankan -->
-            <?php if ($migrasiSudah): ?>
-            <td class="tengah" style="font-weight:800;font-size:16px;color:var(--utama);">
-              <?= (int)$t['nomor_kantin'] ?>
-            </td>
-            <?php endif; ?>
-            <td><strong><?= htmlspecialchars($t['nama_toko']) ?></strong></td>
-            <td class="tengah">
-              <span class="badge <?= $t['status_toko'] === 'buka' ? 'buka' : 'tutup' ?>">
-                <?= $t['status_toko'] === 'buka' ? 'Buka' : 'Tutup' ?>
-              </span>
-            </td>
-            <td class="tengah"><?= $t['total_order'] ?></td>
-            <td class="tengah" style="color:var(--gagal);"><?= (int)$t['jml_dibatalkan'] ?></td>
-            <td class="tengah"><?= $t['rating'] > 0 ? $t['rating'] . ' ★' : '—' ?></td>
-            <td class="kanan" style="font-weight:700;color:var(--sukses);"><?= rp($t['omset']) ?></td>
-            <td class="tengah">
-              <a href="../manajemenpengguna/viewuser.php?id=<?= (int)$t['id_user'] ?>" class="tombol-aksi" title="Detail">
-                <i class="fa-solid fa-eye"></i>
-              </a>
-            </td>
-          </tr>
-          <?php endforeach; ?>
-          <?php endif; ?>
-        </tbody>
-      </table>
-    </div>
   </div>
 
   <!-- PENGUMUMAN — dua kolom: pembeli & penjual -->

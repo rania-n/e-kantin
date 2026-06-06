@@ -47,8 +47,13 @@ $qu->execute(); $qu->close();
 // simpan flash message yang menyebutkan status baru toko
 $_SESSION['flash'] = ['pesan'=>"Status toko berhasil diubah menjadi \"$statusbaru\".", 'jenis'=>'sukses'];
 
-// kembali ke viewuser.php jika dipanggil dari halaman detail pengguna
-if (!empty($_POST['id_user_ref']) && (int)$_POST['id_user_ref'] > 0) {
+// tentukan halaman tujuan redirect sesuai dari mana toggle dipanggil:
+// - asal=kantin            → kembali ke daftar kantin
+// - ada id_user_ref        → kembali ke halaman detail pengguna
+// - selain itu (default)   → daftar pengguna tab penjual
+if (($_POST['asal'] ?? '') === 'kantin') {
+    header("Location: ../../admin/manajementoko/kantin.php");
+} elseif (!empty($_POST['id_user_ref']) && (int)$_POST['id_user_ref'] > 0) {
     header("Location: ../../admin/manajemenpengguna/viewuser.php?id=" . (int)$_POST['id_user_ref']);
 } else {
     header("Location: ../../admin/manajemenpengguna/user.php?role=penjual");

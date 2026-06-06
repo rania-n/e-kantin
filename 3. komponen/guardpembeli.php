@@ -34,10 +34,16 @@ if (!isset($conn)) { require_once __DIR__ . '/../1. koneksi/koneksi.php'; } // l
 $iduser = (int)$_SESSION['id_user']; // cast ke int sebagai pengaman ekstra dari injection
 // prepared statement: query disiapkan dulu lalu parameter diikat terpisah —
 // ini mencegah sql injection karena nilai $iduser tidak digabung langsung ke string query.
-$qu = $conn->prepare("SELECT username, email, foto FROM tb_user WHERE id_user=? AND deleted=0");
+$qu = $conn->prepare("SELECT username, email, foto, status_akun FROM tb_user WHERE id_user=? AND deleted=0");
 $qu->bind_param("i", $iduser); $qu->execute(); // "i" = tipe integer untuk parameter pertama
 $datauser = $qu->get_result()->fetch_assoc(); $qu->close(); // ambil 1 baris sebagai array asosiatif lalu tutup statement
 if ($datauser) {
+    // jika admin menonaktifkan akun saat session masih aktif → paksa logout
+    if (($datauser['status_akun'] ?? 'aktif') === 'nonaktif') {
+        session_destroy();
+        header("Location: ../../4. autentifikasi/login.php?error=" . urlencode("Akunmu sedang dinonaktifkan oleh admin."));
+        exit;
+    }
     // timpa data session dengan data terbaru dari database
     $_SESSION['username'] = $datauser['username'];
     $_SESSION['email']    = $datauser['email'];

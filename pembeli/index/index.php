@@ -33,6 +33,13 @@ $orderKolom = $migrasiSudah ? "t.nomor_kantin" : "t.id_toko";
 $hasiltoko  = $conn->query("SELECT t.id_toko, t.nama_toko, t.foto_toko, $kolomNomor FROM tb_toko t WHERE t.deleted=0 AND t.status_toko='buka' AND t.id_user IS NOT NULL ORDER BY $orderKolom");
 $daftartoko = $hasiltoko ? $hasiltoko->fetch_all(MYSQLI_ASSOC) : [];
 
+// susun label tampilan tiap kantin (nama + "Kantin ke-N") — dipakai untuk opsi dropdown
+foreach ($daftartoko as &$_t) {
+    $_t['label'] = $_t['nama_toko'];
+    if (!empty($_t['nomor_kantin'])) $_t['label'] .= ' — Kantin ke-' . (int)$_t['nomor_kantin'];
+}
+unset($_t);
+
 // jika pembeli memilih toko tertentu lewat URL ?toko=X, cek apakah toko itu sedang tutup
 // ini perlu karena link toko bisa tersimpan di bookmark meskipun toko sudah tutup
 $tokotutup = false;
@@ -104,6 +111,14 @@ if (!$kategori && !$cari && !$idtoko) {
     if ($qtl) $produkterlaris = $qtl->fetch_all(MYSQLI_ASSOC);
 }
 
+// konteks filter yang sedang aktif, dikirim ke halaman detail menu lewat URL.
+// tujuannya: tombol "Batal"/"Kembali" di detail bisa balik ke beranda dengan kantin
+// yang sama, tidak terlempar ke "Semua kantin".
+$ctxdetail = '';
+if ($idtoko && !$tokotutup) $ctxdetail .= '&dari_toko=' . $idtoko;
+if ($kategori)              $ctxdetail .= '&dari_kat='  . urlencode($kategori);
+if ($cari)                  $ctxdetail .= '&dari_cari=' . urlencode($cari);
+
 // $pathbase dipakai oleh navbar untuk menentukan path relatif ke folder lain
 $pathbase = '..';
 ?>
@@ -145,60 +160,32 @@ $pathbase = '..';
 
 <div class="bungkus">
 
-  <!-- daftar toko yang sedang buka — hanya toko aktif yang ditampilkan -->
+  <!-- pilih kantin — dropdown biasa: klik → semua kantin langsung tampil, pilih satu,
+       halaman langsung pindah otomatis (onchange submit). tidak perlu hapus/ketik
+       apa pun. tombol cadangan muncul hanya kalau JS mati (noscript).
+       filter kategori yang aktif dipertahankan lewat hidden input. -->
   <?php if (!empty($daftartoko)): ?>
   <div class="judulbagian"><i class="fa-solid fa-store"></i> Pilih Kantin</div>
-  <div class="geserkantin" style="margin-bottom:16px;">
-
-    <!-- tombol "Semua" untuk menghapus filter toko — filter kategori dipertahankan
-         supaya pembeli bisa lihat kategori yang sama tapi dari semua kantin. -->
-    <a href="index.php<?= $kategori?'?kategori='.urlencode($kategori):'' ?>"
-       class="itemkantin <?= $idtoko===0?'aktif':'' ?>">
-      <div class="ikon"><i class="fa-solid fa-utensils"></i></div>
-      <span class="namakan">Semua</span>
-    </a>
-
-    <?php
-    // warna inisial logo bergantian antara 'utama' dan 'kedua'
-    $warnalogo = ['utama','kedua'];
-    $iw = 0;
-    foreach ($daftartoko as $toko):
-      // ambil 2 huruf pertama nama toko sebagai inisial avatar
-      $inisialkantin = strtoupper(mb_substr($toko['nama_toko'], 0, 2));
-      $warnakini = $warnalogo[$iw % count($warnalogo)];
-      $fototoko  = $toko['foto_toko'] ?? '';
-      $iw++;
-    ?>
-    <a href="index.php?toko=<?= $toko['id_toko'] ?><?= $kategori?'&kategori='.urlencode($kategori):'' ?>"
-       class="itemkantin <?= $idtoko===(int)$toko['id_toko']?'aktif':'' ?>">
-      <!-- tampilkan foto toko jika ada, jika tidak tampilkan inisial berwarna -->
-      <?php if ($fototoko && file_exists("../../2. aset/profil/" . $fototoko)): ?>
-      <div class="ikon" style="overflow:hidden;padding:0;">
-        <img src="../../2. aset/profil/<?= htmlspecialchars($fototoko) ?>"
-             alt="<?= htmlspecialchars($toko['nama_toko']) ?>"
-             style="width:100%;height:100%;object-fit:cover;">
-      </div>
-      <?php else: ?>
-      <!-- fallback: gambar default profilwarung.png dengan latar warna utama/kedua bergantian.
-           PNG putih + background warna → siluet warung jadi warna kontras (lihat CSS mask). -->
-      <div class="ikon" style="background:var(--<?= $warnakini ?>);color:var(--putihbg);padding:8px;overflow:hidden;">
-        <img src="../../2. aset/profil/profilwarung.png"
-             alt="<?= htmlspecialchars($toko['nama_toko']) ?>"
-             style="width:100%;height:100%;object-fit:contain;filter:brightness(0) invert(1);opacity:.9;">
-      </div>
-      <?php endif; ?>
-      <!-- tampilkan nama toko DAN nomor kantin di bawahnya sebagai identitas fisik -->
-      <span class="namakan"><?= htmlspecialchars($toko['nama_toko']) ?></span>
-      <?php if (!empty($toko['nomor_kantin'])): ?>
-      <!-- "Kantin ke-X" sebagai identitas lokasi fisik yang bisa dilihat pembeli -->
-      <span style="font-size:9px;color:var(--tekssamar);display:block;margin-top:1px;line-height:1.2;">
-        Kantin ke-<?= (int)$toko['nomor_kantin'] ?>
-      </span>
-      <?php endif; ?>
-    </a>
-    <?php endforeach; ?>
-
-  </div>
+  <form method="GET" action="index.php" class="formpilihkantin"
+        style="margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+    <?php if ($kategori): ?>
+    <input type="hidden" name="kategori" value="<?= htmlspecialchars($kategori) ?>">
+    <?php endif; ?>
+    <select name="toko" onchange="this.form.submit()"
+            style="flex:1;min-width:220px;padding:11px 14px;border:1.5px solid var(--garis);border-radius:12px;font-size:14px;font-family:inherit;background:var(--putih);color:var(--teks);">
+      <option value="0" <?= $idtoko===0?'selected':'' ?>>Semua Kantin</option>
+      <?php foreach ($daftartoko as $toko): ?>
+      <option value="<?= (int)$toko['id_toko'] ?>" <?= $idtoko===(int)$toko['id_toko']?'selected':'' ?>>
+        <?= htmlspecialchars($toko['label']) ?>
+      </option>
+      <?php endforeach; ?>
+    </select>
+    <noscript>
+      <button type="submit" class="tombolutama" style="white-space:nowrap;">
+        <i class="fa-solid fa-arrow-right"></i> Lihat
+      </button>
+    </noscript>
+  </form>
   <?php endif; ?>
 
   <!-- peringatan jika toko yang dipilih sedang tutup -->
@@ -269,8 +256,8 @@ $pathbase = '..';
   <div class="gridmenu" style="margin-bottom:20px;">
     <?php foreach ($produkterlaris as $tl): ?>
     <div class="kartumenu">
-      <!-- klik gambar menuju halaman detail menu -->
-      <a href="../pesanan/detail.php?id=<?= $tl['id_menu'] ?>">
+      <!-- klik gambar menuju halaman detail menu (bawa konteks kantin/filter) -->
+      <a href="../pesanan/detail.php?id=<?= $tl['id_menu'] ?><?= $ctxdetail ?>">
         <!-- onerror: jika gambar gagal dimuat, tampilkan background kosong -->
         <img class="gambarmenu"
              src="../../2. aset/katalog/<?= htmlspecialchars($tl['foto']) ?>"
@@ -325,7 +312,7 @@ $pathbase = '..';
     <!-- fetch_assoc mengambil satu baris hasil query setiap iterasi -->
     <?php while ($menu = $hasilmenu->fetch_assoc()): ?>
     <div class="kartumenu">
-      <a href="../pesanan/detail.php?id=<?= $menu['id_menu'] ?>">
+      <a href="../pesanan/detail.php?id=<?= $menu['id_menu'] ?><?= $ctxdetail ?>">
         <img class="gambarmenu"
              src="../../2. aset/katalog/<?= htmlspecialchars($menu['foto']) ?>"
              alt="<?= htmlspecialchars($menu['nama_menu']) ?>"
@@ -348,6 +335,11 @@ $pathbase = '..';
           <input type="hidden" name="id_menu" value="<?= $menu['id_menu'] ?>">
           <input type="hidden" name="qty" value="1">
           <input type="hidden" name="kembali" value="index">
+          <!-- kirim filter aktif (kantin/kategori/cari) supaya setelah tambah ke keranjang
+               pembeli tetap di kantin yang sama, tidak balik ke tampilan "Semua" -->
+          <?php if ($idtoko && !$tokotutup): ?><input type="hidden" name="ke_toko" value="<?= $idtoko ?>"><?php endif; ?>
+          <?php if ($kategori): ?><input type="hidden" name="ke_kategori" value="<?= htmlspecialchars($kategori) ?>"><?php endif; ?>
+          <?php if ($cari): ?><input type="hidden" name="ke_cari" value="<?= htmlspecialchars($cari) ?>"><?php endif; ?>
           <button type="submit" class="tomboltambah" title="Tambah ke keranjang">
             <i class="fa-solid fa-plus"></i>
           </button>

@@ -136,10 +136,12 @@ h2 {
   margin-bottom: 6px;
 }
 
-/* gaya dasar semua jenis input teks di halaman autentifikasi */
+/* gaya dasar semua jenis input teks di halaman autentifikasi.
+   type="tel" dipakai kolom nomor telepon — disamakan agar tidak tampil polos. */
 input[type="text"],
 input[type="email"],
-input[type="password"] {
+input[type="password"],
+input[type="tel"] {
   width: 100%;
   padding: 11px 14px;
   font-size: 14px;

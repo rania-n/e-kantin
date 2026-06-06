@@ -14,9 +14,10 @@ $idpengguna   = (int)$_SESSION['id_user'];
 $idtoko       = (int)$_SESSION['id_toko'];
 
 // ambil dan bersihkan input dari form
-$usernamebaru = trim($_POST['username']  ?? '');
-$emailbaru    = trim($_POST['email']     ?? '');
-$namatokobaru = trim($_POST['nama_toko'] ?? '');
+$usernamebaru = trim($_POST['username']   ?? '');
+$emailbaru    = trim($_POST['email']      ?? '');
+$noteleponbaru= trim($_POST['no_telepon'] ?? '');
+$namatokobaru = trim($_POST['nama_toko']  ?? '');
 $err = []; // array untuk menampung semua pesan error validasi
 
 // validasi panjang username
@@ -24,6 +25,9 @@ if (strlen($usernamebaru) < 6)                        $err[] = "Username minimal
 if (strlen($usernamebaru) > 50)                       $err[] = "Username maksimal 50 karakter.";
 // validasi format email menggunakan filter bawaan PHP
 if (!filter_var($emailbaru, FILTER_VALIDATE_EMAIL))   $err[] = "Format email tidak valid.";
+// validasi nomor telepon: ambil angkanya saja, harus 8–15 digit
+$telpdigit = preg_replace('/\D/', '', $noteleponbaru);
+if (strlen($telpdigit) < 8 || strlen($telpdigit) > 15) $err[] = "Nomor telepon harus 8–15 digit angka.";
 // validasi nama toko tidak boleh kosong
 if (empty($namatokobaru))                             $err[] = "Nama toko wajib diisi.";
 if (strlen($namatokobaru) > 100)                      $err[] = "Nama toko maksimal 100 karakter.";
@@ -84,9 +88,9 @@ if (empty($err)) {
         move_uploaded_file($_FILES['foto_toko']['tmp_name'], $targetdir . $namafotobaru);
     }
 
-    // update data akun pengguna: username dan email
-    $upd = $conn->prepare("UPDATE tb_user SET username=?, email=? WHERE id_user=?");
-    $upd->bind_param("ssi", $usernamebaru, $emailbaru, $idpengguna);
+    // update data akun pengguna: username, email, dan nomor telepon
+    $upd = $conn->prepare("UPDATE tb_user SET username=?, email=?, no_telepon=? WHERE id_user=?");
+    $upd->bind_param("sssi", $usernamebaru, $emailbaru, $noteleponbaru, $idpengguna);
     $upd->execute(); $upd->close();
 
     // update data toko — query berbeda tergantung ada/tidak foto baru

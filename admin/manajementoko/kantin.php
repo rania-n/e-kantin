@@ -52,6 +52,16 @@ if (!empty($_SESSION['flash'])) {
     $flashjenis = $_SESSION['flash']['jenis'];
     unset($_SESSION['flash']);
 }
+
+// jika ada ?toggletoko=ID di URL, ambil data toko untuk modal konfirmasi buka/tutup.
+$toggletokoid   = (int)($_GET['toggletoko'] ?? 0);
+$datatoggletoko = null;
+if ($toggletokoid > 0) {
+    $qtt = $conn->prepare("SELECT id_toko, nama_toko, status_toko FROM tb_toko WHERE id_toko=? AND deleted=0");
+    $qtt->bind_param("i", $toggletokoid); $qtt->execute();
+    $datatoggletoko = $qtt->get_result()->fetch_assoc();
+    $qtt->close();
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -295,15 +305,12 @@ if (!empty($_SESSION['flash'])) {
         <a href="../manajemenpengguna/viewuser.php?id=<?= (int)$k['id_user'] ?>" class="tombolkecil">
           <i class="fa-solid fa-eye"></i> Detail
         </a>
-        <!-- form toggle status toko (buka/tutup) tanpa halaman baru -->
-        <form method="POST" action="prosestoggletoko.php" style="display:inline;">
-          <input type="hidden" name="id_toko" value="<?= (int)$k['id_toko'] ?>">
-          <button type="submit"
-                  class="tombolkecil <?= $k['status_toko']==='buka' ? '' : 'merah' ?>"
-                  title="Klik untuk ubah status toko">
-            <?= $k['status_toko']==='buka' ? 'Tutup Toko' : 'Buka Toko' ?>
-          </button>
-        </form>
+        <!-- toggle status toko: buka modal konfirmasi dulu (css :target), tanpa halaman baru -->
+        <a href="kantin.php?toggletoko=<?= (int)$k['id_toko'] ?>#konfirm-toggletoko"
+           class="tombolkecil <?= $k['status_toko']==='buka' ? '' : 'merah' ?>"
+           title="Klik untuk ubah status toko" style="text-decoration:none;">
+          <?= $k['status_toko']==='buka' ? 'Tutup Toko' : 'Buka Toko' ?>
+        </a>
         <!-- kosongkan slot: hapus penjual + kosongkan kantin (efek setara).
              arahkan ke hapususer.php karena flow-nya identik. -->
         <a href="../manajemenpengguna/hapususer.php?id=<?= (int)$k['id_user'] ?>" class="tombolkecil merah" title="Kosongkan kantin sekaligus hapus akun penjual">
@@ -360,6 +367,38 @@ if (!empty($_SESSION['flash'])) {
   </div>
 
 </main>
+
+<!-- modal konfirmasi buka/tutup toko — hanya dirender jika ada ?toggletoko=ID valid -->
+<?php if ($datatoggletoko):
+  $akanTutupToko = ($datatoggletoko['status_toko'] === 'buka');
+?>
+<div class="modaloverlay" id="konfirm-toggletoko">
+  <a href="kantin.php" class="penutup-modal"></a>
+  <div class="isimodal" style="text-align:center;">
+    <div style="font-size:42px;color:var(--<?= $akanTutupToko ? 'gagal' : 'sukses' ?>);margin-bottom:10px;">
+      <i class="fa-solid fa-<?= $akanTutupToko ? 'store-slash' : 'store' ?>"></i>
+    </div>
+    <div style="font-size:17px;font-weight:800;color:var(--utama);margin-bottom:8px;">
+      <?= $akanTutupToko ? 'Tutup Toko Ini?' : 'Buka Toko Ini?' ?>
+    </div>
+    <div style="font-size:13px;color:var(--tekssamar);margin-bottom:20px;">
+      Toko <strong><?= htmlspecialchars($datatoggletoko['nama_toko'] ?? 'ini') ?></strong>
+      akan <?= $akanTutupToko ? 'ditutup — pembeli tidak bisa memesan sampai dibuka lagi.' : 'dibuka kembali dan menu bisa dipesan pembeli.' ?>
+    </div>
+    <!-- form konfirmasi: kirim POST ke prosestoggletoko.php; asal=kantin agar kembali ke halaman ini -->
+    <form method="POST" action="prosestoggletoko.php">
+      <input type="hidden" name="id_toko" value="<?= (int)$datatoggletoko['id_toko'] ?>">
+      <input type="hidden" name="asal" value="kantin">
+      <button type="submit" class="tombolutama blok"
+              style="margin-bottom:10px;background:var(--<?= $akanTutupToko ? 'gagal' : 'sukses' ?>);border-color:var(--<?= $akanTutupToko ? 'gagal' : 'sukses' ?>);">
+        <i class="fa-solid fa-<?= $akanTutupToko ? 'store-slash' : 'store' ?>"></i>
+        <?= $akanTutupToko ? 'Ya, Tutup Toko' : 'Ya, Buka Toko' ?>
+      </button>
+    </form>
+    <a href="kantin.php" class="tombolringan blok">Batal</a>
+  </div>
+</div>
+<?php endif; ?>
 
 <script>
 /* ekspor XLS (HTML-in-Excel) — tabel bergaris dengan identitas. */

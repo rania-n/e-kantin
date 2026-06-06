@@ -31,6 +31,7 @@ $username     = $_GET['username']     ?? '';
 $email        = $_GET['email']        ?? '';
 $namalengkap  = $_GET['namalengkap']  ?? '';
 $kelas        = $_GET['kelas']        ?? '';
+$notelepon    = $_GET['notelepon']    ?? '';
 ?>
 
 <!-- form dikirim ke prosesregister.php dengan metode POST -->
@@ -99,6 +100,19 @@ $kelas        = $_GET['kelas']        ?? '';
            value="<?= htmlspecialchars($email) ?>"
            placeholder="Alamat email aktif"
            required>
+  </div>
+
+  <!-- kolom input nomor telepon — supaya admin bisa menghubungi jika ada kendala -->
+  <div class="grup-input">
+    <label for="notelepon">Nomor Telepon / WhatsApp</label>
+    <!-- inputmode numeric + pattern + oninput strip → hanya angka yang bisa diketik.
+         keyboard angka muncul di ponsel; validasi utama tetap di server. -->
+    <input type="tel" id="notelepon" name="notelepon"
+           inputmode="numeric" pattern="[0-9]{8,15}" minlength="8" maxlength="15"
+           oninput="this.value=this.value.replace(/\D/g,'')"
+           value="<?= htmlspecialchars($notelepon) ?>"
+           placeholder="cth: 081234567890" title="Hanya angka, 8–15 digit" required>
+    <div class="keterangan">Nomor aktif yang bisa dihubungi (hanya angka, 8–15 digit)</div>
   </div>
 
   <!-- kolom input password dengan tombol show/hide -->

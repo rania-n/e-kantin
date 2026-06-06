@@ -14,8 +14,9 @@ $halamansaatini = 'manajemenmenu';
 // ambil parameter filter, pencarian, dan id untuk aksi edit/hapus dari URL
 $filter   = $_GET['filter'] ?? 'Semua';
 $cari     = trim($_GET['cari'] ?? '');
-$editid   = (int)($_GET['edit']  ?? 0); // id menu yang akan diedit (0 = tidak ada)
-$hapusid  = (int)($_GET['hapus'] ?? 0); // id menu yang akan dihapus (0 = tidak ada)
+$editid   = (int)($_GET['edit']   ?? 0); // id menu yang akan diedit (0 = tidak ada)
+$hapusid  = (int)($_GET['hapus']  ?? 0); // id menu yang akan dihapus (0 = tidak ada)
+$toggleid = (int)($_GET['toggle'] ?? 0); // id menu yang akan diubah status (0 = tidak ada)
 
 // ambil flash message dari session jika ada (pesan sukses/gagal dari proses sebelumnya)
 $flashpesan = ''; $flashjenis = '';
@@ -55,6 +56,17 @@ if ($editid > 0) {
     $qe->execute();
     $dataedit = $qe->get_result()->fetch_assoc(); // null jika tidak ditemukan
     $qe->close();
+}
+
+// ambil data menu yang akan di-toggle status (hanya jika ada parameter ?toggle= di URL)
+// dipakai untuk modal konfirmasi sebelum benar-benar mengubah status aktif/nonaktif
+$datatoggle = null;
+if ($toggleid > 0) {
+    $qt = $conn->prepare("SELECT id_menu, nama_menu, status FROM tb_menu WHERE id_menu=? AND id_toko=? AND deleted=0");
+    $qt->bind_param("ii", $toggleid, $idtoko);
+    $qt->execute();
+    $datatoggle = $qt->get_result()->fetch_assoc();
+    $qt->close();
 }
 
 // url dasar halaman ini tanpa fragment (#) dan tanpa parameter edit/hapus
@@ -161,8 +173,8 @@ $urldasar = 'manajemenmenu.php?filter=' . urlencode($filter) . ($cari ? '&cari='
            class="tombolkecil">
           <i class="fa-solid fa-pen"></i> Edit
         </a>
-        <!-- toggle aktif/nonaktif: langsung ke file proses tanpa konfirmasi (reversible) -->
-        <a href="prosesmanajemenmenu.php?aksi=toggle&id=<?= $menu['id_menu'] ?>&filter=<?= urlencode($filter) ?>"
+        <!-- toggle aktif/nonaktif: buka modal konfirmasi dulu via css :target sebelum diubah -->
+        <a href="manajemenmenu.php?toggle=<?= $menu['id_menu'] ?>&filter=<?= urlencode($filter) ?><?= $cari ? '&cari='.urlencode($cari) : '' ?>#konfirm-toggle"
            class="tombolkecil <?= $menu['status'] === 'aktif' ? 'kuning' : 'hijau' ?>">
           <i class="fa-solid fa-<?= $menu['status'] === 'aktif' ? 'ban' : 'check' ?>"></i>
           <?= $menu['status'] === 'aktif' ? 'Nonaktifkan' : 'Aktifkan' ?>
@@ -218,7 +230,7 @@ $urldasar = 'manajemenmenu.php?filter=' . urlencode($filter) . ($cari ? '&cari='
           <label>Kategori <span style="color:var(--gagal);">*</span></label>
           <select name="kategori" required>
             <?php foreach ($kategorilist as $k): ?>
-            <option value="<?= $k ?>"><?= $k ?></option>
+            <option value="<?= htmlspecialchars($k) ?>"><?= htmlspecialchars($k) ?></option>
             <?php endforeach; ?>
           </select>
         </div>
@@ -284,7 +296,7 @@ $urldasar = 'manajemenmenu.php?filter=' . urlencode($filter) . ($cari ? '&cari='
           <select name="kategori" required>
             <?php foreach ($kategorilist as $k): ?>
             <!-- tandai "selected" pada kategori yang sesuai data saat ini -->
-            <option value="<?= $k ?>" <?= $dataedit['kategori'] === $k ? 'selected' : '' ?>><?= $k ?></option>
+            <option value="<?= htmlspecialchars($k) ?>" <?= $dataedit['kategori'] === $k ? 'selected' : '' ?>><?= htmlspecialchars($k) ?></option>
             <?php endforeach; ?>
           </select>
         </div>
@@ -324,6 +336,37 @@ $urldasar = 'manajemenmenu.php?filter=' . urlencode($filter) . ($cari ? '&cari='
     <?php endif; ?>
   </div>
 </div>
+
+<!-- modal konfirmasi aktif/nonaktif menu — hanya dirender jika ada ?toggle= valid -->
+<?php if ($datatoggle):
+  $akanNonaktif = $datatoggle['status'] === 'aktif';
+?>
+<div class="modaloverlay" id="konfirm-toggle">
+  <a href="<?= $urldasar ?>" class="penutup-modal"></a>
+  <div class="isimodal" style="max-width:380px;text-align:center;position:relative;z-index:1;">
+    <div style="font-size:42px;color:var(--<?= $akanNonaktif ? 'tunggu' : 'sukses' ?>);margin-bottom:10px;">
+      <i class="fa-solid fa-<?= $akanNonaktif ? 'ban' : 'circle-check' ?>"></i>
+    </div>
+    <div style="font-size:17px;font-weight:800;color:var(--utama);margin-bottom:8px;">
+      <?= $akanNonaktif ? 'Nonaktifkan Menu?' : 'Aktifkan Menu?' ?>
+    </div>
+    <div style="font-size:13px;color:var(--tekssamar);margin-bottom:20px;">
+      <?php if ($akanNonaktif): ?>
+      Menu <strong><?= htmlspecialchars($datatoggle['nama_menu']) ?></strong> akan disembunyikan dari pembeli sampai diaktifkan lagi.
+      <?php else: ?>
+      Menu <strong><?= htmlspecialchars($datatoggle['nama_menu']) ?></strong> akan kembali tampil dan bisa dipesan pembeli.
+      <?php endif; ?>
+    </div>
+    <!-- konfirmasi: klik akan mengirim ke prosesmanajemenmenu.php dengan aksi=toggle -->
+    <a href="prosesmanajemenmenu.php?aksi=toggle&id=<?= (int)$datatoggle['id_menu'] ?>&filter=<?= urlencode($filter) ?>"
+       class="tombolutama blok" style="margin-bottom:10px;background:var(--<?= $akanNonaktif ? 'tunggu' : 'sukses' ?>);">
+      <i class="fa-solid fa-<?= $akanNonaktif ? 'ban' : 'check' ?>"></i>
+      <?= $akanNonaktif ? 'Ya, Nonaktifkan' : 'Ya, Aktifkan' ?>
+    </a>
+    <a href="<?= $urldasar ?>" class="tombolringan blok">Batal</a>
+  </div>
+</div>
+<?php endif; ?>
 
 <!-- modal konfirmasi hapus — hanya dirender jika ada parameter ?hapus= di URL -->
 <?php if ($hapusid > 0): ?>

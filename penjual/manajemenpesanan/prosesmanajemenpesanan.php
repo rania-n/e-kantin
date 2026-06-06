@@ -61,17 +61,20 @@ if (!in_array($pesanan['status_order'], $statusdiizinkan)) {
 /* jika pesanan dibatalkan, kembalikan stok semua item yang ada di pesanan ini.
    ini penting agar stok tidak berkurang sia-sia akibat pesanan yang tidak jadi */
 if ($aksi === 'batal') {
-    // ambil semua item di pesanan yang akan dibatalkan
-    $qd = $conn->prepare("SELECT id_menu, jumlah FROM tb_detail_order WHERE id_order=? AND deleted=0");
+    // ambil semua item di pesanan yang akan dibatalkan, beserta stok_dipotong
+    // (jumlah yang benar-benar terpotong saat order dibuat).
+    $qd = $conn->prepare("SELECT id_menu, jumlah, stok_dipotong FROM tb_detail_order WHERE id_order=? AND deleted=0");
     $qd->bind_param("i", $idpesanan);
     $qd->execute();
     $daftaritem = $qd->get_result()->fetch_all(MYSQLI_ASSOC);
     $qd->close();
 
-    // untuk setiap item, tambahkan kembali jumlah ke stok menu di database
+    // kembalikan stok TEPAT sebanyak yang dulu terpotong — tidak lebih.
+    // pakai stok_dipotong; kalau 0 (order lama sebelum kolom ada) fallback ke jumlah.
     foreach ($daftaritem as $item) {
+        $kembali = ((int)$item['stok_dipotong'] > 0) ? (int)$item['stok_dipotong'] : (int)$item['jumlah'];
         $us = $conn->prepare("UPDATE tb_menu SET stok = stok + ? WHERE id_menu=?");
-        $us->bind_param("ii", $item['jumlah'], $item['id_menu']);
+        $us->bind_param("ii", $kembali, $item['id_menu']);
         $us->execute();
         $us->close();
     }

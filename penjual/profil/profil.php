@@ -234,6 +234,16 @@ function bintang(float $r): string {
         </div>
       </div>
       <div class="kelompokform">
+        <label>Nomor Telepon / WhatsApp <span style="color:var(--gagal);">*</span></label>
+        <!-- hanya angka (huruf/simbol ditolak otomatis), 8–15 digit -->
+        <input type="tel" name="no_telepon"
+               inputmode="numeric" pattern="[0-9]{8,15}" minlength="8" maxlength="15"
+               oninput="this.value=this.value.replace(/\D/g,'')"
+               value="<?= htmlspecialchars($user['no_telepon'] ?? '') ?>"
+               required placeholder="cth: 081234567890" title="Hanya angka, 8–15 digit">
+        <small>Nomor aktif yang bisa dihubungi (hanya angka, 8–15 digit).</small>
+      </div>
+      <div class="kelompokform">
         <label>Nama Toko <span style="color:var(--gagal);">*</span></label>
         <input type="text" name="nama_toko"
                value="<?= htmlspecialchars($toko['nama_toko'] ?? '') ?>"

@@ -200,7 +200,7 @@ if (!empty($teks_pengumuman_penjual)):
     </div>
     <!-- dua tombol kontak: email dan whatsapp -->
     <div style="display:flex;flex-direction:column;gap:10px;">
-      <a href="mailto:ranianuril210@gmail.com" class="tombolutama blok">
+      <a href="mailto:admin@jajankita.my.id" class="tombolutama blok">
         <i class="fa-solid fa-envelope"></i> Email Admin
       </a>
       <a href="https://wa.me/6285648830046" target="_blank" class="tombolkedua blok">

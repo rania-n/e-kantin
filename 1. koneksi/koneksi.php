@@ -32,4 +32,14 @@ if (!$conn) {
 // (sering kali utc), sehingga jam transaksi/pesanan bisa tidak sesuai dengan waktu lokal.
 date_default_timezone_get();
 date_default_timezone_set('Asia/Jakarta'); // Set timezone sesuai kebutuhan
+
+/*
+  CATATAN MIGRASI DATABASE:
+  Penambahan kolom (status_akun, no_telepon, stok_dipotong) TIDAK lagi dijalankan
+  otomatis di sini agar koneksi.php bersih dan tidak menjalankan ALTER tiap request.
+
+  Kolom-kolom itu sekarang ada di file "migrasi.sql" (di folder utama proyek).
+  WAJIB jalankan "migrasi.sql" di phpMyAdmin setiap kali setup database baru
+  atau import ulang database, supaya aplikasi tidak error "Unknown column".
+*/
 ?>

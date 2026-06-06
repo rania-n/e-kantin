@@ -20,6 +20,7 @@ $role        = $_POST['role']              ?? '';
 $idkantin    = (int)($_POST['id_kantin']   ?? 0);
 $namalengkap = trim($_POST['nama_lengkap'] ?? '');
 $kelas       = trim($_POST['kelas']        ?? '');
+$notelepon   = trim($_POST['no_telepon']   ?? '');
 
 // siapkan oldinput untuk dikembalikan ke form jika validasi gagal
 $oldinput = [
@@ -29,6 +30,7 @@ $oldinput = [
     'nama_toko'    => $namatoko,
     'nama_lengkap' => $namalengkap,
     'kelas'        => $kelas,
+    'no_telepon'   => $notelepon,
 ];
 
 // validasi role
@@ -59,6 +61,13 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 if (strlen($password) < 8) {
     $_SESSION['oldinput'] = $oldinput;
     flash('gagal','Password minimal 8 karakter.');
+    redirect("tambahuser.php?role=$role");
+}
+// nomor telepon wajib — cek jumlah digitnya 8–15 (boleh ada +, spasi, atau tanda hubung)
+$telpdigit = preg_replace('/\D/', '', $notelepon);
+if (strlen($telpdigit) < 8 || strlen($telpdigit) > 15) {
+    $_SESSION['oldinput'] = $oldinput;
+    flash('gagal','Nomor telepon tidak valid (harus 8–15 digit angka).');
     redirect("tambahuser.php?role=$role");
 }
 
@@ -159,9 +168,9 @@ $hash = password_hash($password, PASSWORD_DEFAULT);
 
 // insert pengguna baru
 $ins = $conn->prepare("INSERT INTO tb_user
-    (username, nama_lengkap, kelas, email, password, role, status_verifikasi, deleted)
-    VALUES (?,?,?,?,?,?,?,0)");
-$ins->bind_param("sssssss", $username, $namaLengkapSimpan, $kelasSimpan, $email, $hash, $role, $statusVerifSimpan);
+    (username, nama_lengkap, kelas, email, no_telepon, password, role, status_verifikasi, deleted)
+    VALUES (?,?,?,?,?,?,?,?,0)");
+$ins->bind_param("ssssssss", $username, $namaLengkapSimpan, $kelasSimpan, $email, $notelepon, $hash, $role, $statusVerifSimpan);
 if (!$ins->execute()) {
     $ins->close();
     flash('gagal','Gagal menyimpan pengguna. Coba lagi.');

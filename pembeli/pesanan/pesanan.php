@@ -7,6 +7,8 @@
 // guard memastikan hanya pembeli yang login yang bisa masuk
 include '../../3. komponen/guardpembeli.php';
 include '../../1. koneksi/koneksi.php';
+// batalkan otomatis pesanan "Menunggu" yang sudah lewat hari (sekalian kembalikan stok)
+include '../../3. komponen/autobatalpesanan.php';
 
 // ambil id pengguna dari session
 $idpengguna = (int)$_SESSION['id_user'];
@@ -87,20 +89,28 @@ function ambilRating($conn, int $idpesanan, int $idpengguna): ?array {
 // fungsi bantu: buat data timeline untuk pesanan aktif
 // mengembalikan array tahap dengan kelas CSS: 'selesai', 'berjalan', atau kosong
 function tahapTimeline(string $statusskrg): array {
-    $all = [
-        ['label' => 'Pesanan Diterima', 'match' => ['Menunggu','Diproses','Siap Diambil','Selesai']],
-        ['label' => 'Sedang Dimasak',   'match' => ['Diproses','Siap Diambil','Selesai']],
-        ['label' => 'Siap Diambil',     'match' => ['Siap Diambil','Selesai']],
-        ['label' => 'Selesai',          'match' => ['Selesai']],
-    ];
-    // urutan status untuk menentukan posisi saat ini
+    // urutan status pesanan dari awal sampai akhir
     $urutan = ['Menunggu','Diproses','Siap Diambil','Selesai'];
     $iskrg  = array_search($statusskrg, $urutan);
+    // tiap tahap timeline dipetakan ke satu status di mana tahap itu "sedang berjalan".
+    // saat status masih 'Menunggu', tahap "Pesanan Diterima" yang berjalan (ungu),
+    // bukan langsung hijau selesai — pesanan belum diterima penjual.
+    $all = [
+        ['label' => 'Menunggu', 'status' => 'Menunggu'],
+        ['label' => 'Diproses',   'status' => 'Diproses'],
+        ['label' => 'Siap Diambil',     'status' => 'Siap Diambil'],
+        ['label' => 'Selesai',          'status' => 'Selesai'],
+    ];
     foreach ($all as &$t) {
-        // tahap yang sudah dilewati: beri kelas 'selesai'
-        if (in_array($statusskrg, $t['match'])) { $t['kelas'] = 'selesai'; }
-        // tahap berikutnya: beri kelas 'berjalan'
-        elseif ($iskrg !== false && array_search($t['match'][0], $urutan) === $iskrg + 1) { $t['kelas'] = 'berjalan'; }
+        $itahap = array_search($t['status'], $urutan);
+        // status tidak dikenali: biarkan kosong
+        if ($iskrg === false) { $t['kelas'] = ''; }
+        // tahap yang sudah dilewati: beri kelas 'selesai' (hijau, ada centang)
+        elseif ($itahap < $iskrg) { $t['kelas'] = 'selesai'; }
+        // tahap saat ini: beri kelas 'berjalan' (ungu, sedang berlangsung).
+        // pengecualian: tahap terakhir 'Selesai' langsung hijau, bukan ungu
+        elseif ($itahap === $iskrg) { $t['kelas'] = ($statusskrg === 'Selesai') ? 'selesai' : 'berjalan'; }
+        // tahap berikutnya yang belum terjadi: kosong (abu-abu)
         else { $t['kelas'] = ''; }
     }
     return $all;
@@ -265,6 +275,9 @@ $pathbase = '..';
              chat ditutup otomatis saat order Selesai/Dibatalkan supaya tidak dipakai di luar konteks pesanan. -->
         <?php if ($tab==='aktif'): ?>
         <!-- #latest = anchor di halaman chat supaya browser auto-scroll ke pesan terbaru tanpa JS -->
+        <a href="struk.php?id_order=<?= $p['id_order'] ?>" class="tombolkecil">
+          <i class="fa-solid fa-receipt"></i> Struk
+        </a>
         <a href="chat.php?id_order=<?= $p['id_order'] ?>#latest" class="tombolkecil utama">
           <i class="fa-solid fa-comments"></i> Chat Penjual
         </a>

@@ -94,7 +94,7 @@ $toppelanggan = $qpel->get_result()->fetch_all(MYSQLI_ASSOC); $qpel->close();
 // daftar semua menu penjual ini (termasuk yang sudah dihapus) — laporan historis lengkap
 // terjual dihitung dari pesanan Selesai pada periode ini saja
 $qmenu = $conn->prepare(
-    "SELECT m.nama_menu, m.harga, m.status, m.deleted,
+    "SELECT m.nama_menu, m.harga, m.status, m.deleted, m.stok,
             COALESCE((SELECT SUM(d2.jumlah) FROM tb_detail_order d2
                       JOIN tb_order o2 ON d2.id_order=o2.id_order
                       WHERE d2.id_menu=m.id_menu AND d2.deleted=0
@@ -560,14 +560,23 @@ $startx = 70; $chartH = 160;
         <thead>
           <tr>
             <th>Nama Menu</th>
-            <th class="kanan" style="width:110px;">Harga</th>
-            <th class="tengah" style="width:100px;">Status</th>
-            <th class="tengah" style="width:120px;">Terjual Periode</th>
-            <th class="tengah" style="width:130px;">Terjual Semua Waktu</th>
+            <th class="kanan" style="width:100px;">Harga</th>
+            <th class="tengah" style="width:90px;">Status</th>
+            <th class="tengah" style="width:90px;">Stok Awal</th>
+            <th class="tengah" style="width:80px;">Laku</th>
+            <th class="tengah" style="width:90px;">Stok Akhir</th>
+            <th class="tengah" style="width:120px;">Terjual Semua Waktu</th>
           </tr>
         </thead>
         <tbody>
-          <?php foreach ($daftarmenu as $m): ?>
+          <?php foreach ($daftarmenu as $m):
+            // stok akhir = stok saat ini di database (sisa stok sekarang)
+            // laku       = jumlah terjual pada periode (dari pesanan Selesai)
+            // stok awal  = stok akhir + laku (perkiraan stok di awal periode, sebelum terjual)
+            $stokakhir = (int)$m['stok'];
+            $laku      = (int)$m['terjual_periode'];
+            $stokawal  = $stokakhir + $laku;
+          ?>
           <tr style="<?= $m['deleted'] ? 'opacity:.5;' : '' ?>">
             <td style="font-weight:600;">
               <?= htmlspecialchars($m['nama_menu']) ?>
@@ -581,7 +590,9 @@ $startx = 70; $chartH = 160;
                 <?= $m['deleted'] ? 'Dihapus' : ucfirst($m['status']) ?>
               </span>
             </td>
-            <td class="tengah" style="font-weight:700;color:var(--utama);"><?= (int)$m['terjual_periode'] ?>×</td>
+            <td class="tengah"><?= $stokawal ?></td>
+            <td class="tengah" style="font-weight:700;color:var(--utama);"><?= $laku ?>×</td>
+            <td class="tengah" style="font-weight:700;"><?= $stokakhir ?></td>
             <td class="tengah"><?= (int)$m['terjual_total'] ?>×</td>
           </tr>
           <?php endforeach; ?>

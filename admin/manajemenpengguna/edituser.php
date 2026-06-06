@@ -49,6 +49,7 @@ $valEmail       = $oldinput['email']        ?? $user['email'];
 $valNamaLengkap = $oldinput['nama_lengkap'] ?? ($user['nama_lengkap'] ?? '');
 $valKelas       = $oldinput['kelas']        ?? ($user['kelas'] ?? '');
 $valNamaToko    = $oldinput['nama_toko']    ?? ($toko['nama_toko'] ?? '');
+$valTelepon     = $oldinput['no_telepon']   ?? ($user['no_telepon'] ?? '');
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -101,6 +102,18 @@ $valNamaToko    = $oldinput['nama_toko']    ?? ($toko['nama_toko'] ?? '');
           <label>Email <span style="color:var(--gagal);">*</span></label>
           <input type="email" name="email" required autocomplete="off"
                  value="<?= htmlspecialchars($valEmail) ?>">
+        </div>
+      </div>
+
+      <div class="barisform">
+        <div class="kelompokform">
+          <label>Nomor Telepon / WhatsApp <span style="color:var(--gagal);">*</span></label>
+          <input type="tel" name="no_telepon" required autocomplete="off"
+                 inputmode="numeric" pattern="[0-9]{8,15}" minlength="8" maxlength="15"
+                 oninput="this.value=this.value.replace(/\D/g,'')"
+                 value="<?= htmlspecialchars($valTelepon) ?>"
+                 placeholder="cth: 081234567890" title="Hanya angka, 8–15 digit">
+          <small>Nomor aktif yang bisa dihubungi (hanya angka, 8–15 digit).</small>
         </div>
       </div>
 

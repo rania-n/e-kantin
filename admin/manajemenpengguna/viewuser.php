@@ -390,6 +390,9 @@ function bintanghtml(float $r): string {
         <div>
           <div style="font-size:18px;font-weight:800;color:var(--teks);"><?= htmlspecialchars($user['username']) ?></div>
           <div style="font-size:13px;color:var(--tekssamar);"><?= htmlspecialchars($user['email']) ?></div>
+          <?php if (!empty($user['no_telepon'] ?? '')): ?>
+          <div style="font-size:12px;color:var(--tekssamar);margin-top:2px;"><i class="fa-solid fa-phone" style="font-size:10px;"></i> <?= htmlspecialchars($user['no_telepon']) ?></div>
+          <?php endif; ?>
           <div style="font-size:11px;color:var(--tekssamar);margin-top:4px;">
             <i class="fa-solid fa-calendar" style="font-size:9px;"></i>
             Bergabung <?= !empty($user['created']) ? date('d M Y', strtotime($user['created'])) : '—' ?>
@@ -425,15 +428,12 @@ function bintanghtml(float $r): string {
           <?php endif; ?>
           <div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap;">
             <?php if (!$isDihapus && $toko): ?>
-            <form method="POST" action="../manajementoko/prosestoggletoko.php" style="display:inline;margin:0;">
-              <input type="hidden" name="id_toko"     value="<?= $toko['id_toko'] ?>">
-              <input type="hidden" name="id_user_ref" value="<?= $user['id_user'] ?>">
-              <button type="submit" class="badge <?= $statustoko==='buka'?'buka':'tutup' ?>"
-                      style="border:none;cursor:pointer;font-family:inherit;" title="Klik untuk ubah status">
-                <?= $statustoko==='buka'?'Buka':'Tutup' ?>
-                <i class="fa-solid fa-arrows-rotate takprint" style="font-size:9px;"></i>
-              </button>
-            </form>
+            <!-- buka modal konfirmasi dulu sebelum ubah status toko (tanpa js, css :target) -->
+            <a href="#konfirm-toggletoko" class="badge <?= $statustoko==='buka'?'buka':'tutup' ?>"
+               style="text-decoration:none;cursor:pointer;" title="Klik untuk ubah status">
+              <?= $statustoko==='buka'?'Buka':'Tutup' ?>
+              <i class="fa-solid fa-arrows-rotate takprint" style="font-size:9px;"></i>
+            </a>
             <?php else: ?>
             <span class="badge <?= $statustoko==='buka'?'buka':'tutup' ?>"><?= $statustoko==='buka'?'Buka':'Tutup' ?></span>
             <?php endif; ?>
@@ -801,6 +801,9 @@ function bintanghtml(float $r): string {
     <div style="width:68px;height:68px;border-radius:8px;background:var(--latar);color:var(--utama);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;margin:0 auto 12px;overflow:hidden;"><?= $avatarHtml ?></div>
     <div style="font-size:18px;font-weight:800;"><?= htmlspecialchars($user['username']) ?></div>
     <div style="font-size:13px;color:var(--tekssamar);margin:4px 0 8px;"><?= htmlspecialchars($user['email']) ?></div>
+    <?php if (!empty($user['no_telepon'] ?? '')): ?>
+    <div style="font-size:12px;color:var(--tekssamar);margin:-4px 0 8px;"><i class="fa-solid fa-phone" style="font-size:10px;"></i> <?= htmlspecialchars($user['no_telepon']) ?></div>
+    <?php endif; ?>
     <span class="badge penjual">Penjual</span>
     <div style="margin-top:10px;font-size:11px;color:var(--tekssamar);">
       <i class="fa-solid fa-calendar" style="font-size:9px;"></i>
@@ -825,6 +828,9 @@ function bintanghtml(float $r): string {
     <div style="width:68px;height:68px;border-radius:8px;background:var(--latar);color:var(--utama);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;margin:0 auto 12px;overflow:hidden;"><?= $avatarHtml ?></div>
     <div style="font-size:18px;font-weight:800;"><?= htmlspecialchars($user['username']) ?></div>
     <div style="font-size:13px;color:var(--tekssamar);margin:4px 0 8px;"><?= htmlspecialchars($user['email']) ?></div>
+    <?php if (!empty($user['no_telepon'] ?? '')): ?>
+    <div style="font-size:12px;color:var(--tekssamar);margin:-4px 0 8px;"><i class="fa-solid fa-phone" style="font-size:10px;"></i> <?= htmlspecialchars($user['no_telepon']) ?></div>
+    <?php endif; ?>
     <span class="badge pembeli">Pembeli</span>
     <div style="margin-top:10px;font-size:11px;color:var(--tekssamar);">
       <i class="fa-solid fa-calendar" style="font-size:9px;"></i>
@@ -876,6 +882,9 @@ function bintanghtml(float $r): string {
     <div style="width:68px;height:68px;border-radius:8px;background:var(--infobg);color:var(--info);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;margin:0 auto 12px;overflow:hidden;"><?= $avatarHtml ?></div>
     <div style="font-size:18px;font-weight:800;"><?= htmlspecialchars($user['username']) ?></div>
     <div style="font-size:13px;color:var(--tekssamar);margin:4px 0 8px;"><?= htmlspecialchars($user['email']) ?></div>
+    <?php if (!empty($user['no_telepon'] ?? '')): ?>
+    <div style="font-size:12px;color:var(--tekssamar);margin:-4px 0 8px;"><i class="fa-solid fa-phone" style="font-size:10px;"></i> <?= htmlspecialchars($user['no_telepon']) ?></div>
+    <?php endif; ?>
     <span class="badge admin">Admin Platform</span>
     <div style="margin-top:10px;font-size:11px;color:var(--tekssamar);">
       <i class="fa-solid fa-calendar" style="font-size:9px;"></i>
@@ -887,6 +896,38 @@ function bintanghtml(float $r): string {
 <?php endif; ?>
 
 </main>
+
+<!-- modal konfirmasi buka/tutup toko — muncul saat url berisi #konfirm-toggletoko -->
+<?php if (!$isDihapus && $toko):
+  $akanTutupToko = ($statustoko === 'buka');
+?>
+<div class="modaloverlay" id="konfirm-toggletoko">
+  <a href="#" class="penutup-modal"></a>
+  <div class="isimodal" style="text-align:center;">
+    <div style="font-size:42px;color:var(--<?= $akanTutupToko ? 'gagal' : 'sukses' ?>);margin-bottom:10px;">
+      <i class="fa-solid fa-<?= $akanTutupToko ? 'store-slash' : 'store' ?>"></i>
+    </div>
+    <div style="font-size:17px;font-weight:800;color:var(--utama);margin-bottom:8px;">
+      <?= $akanTutupToko ? 'Tutup Toko Ini?' : 'Buka Toko Ini?' ?>
+    </div>
+    <div style="font-size:13px;color:var(--tekssamar);margin-bottom:20px;">
+      Toko <strong><?= htmlspecialchars($namatoko ?: 'ini') ?></strong>
+      akan <?= $akanTutupToko ? 'ditutup — pembeli tidak bisa memesan sampai dibuka lagi.' : 'dibuka kembali dan menu bisa dipesan pembeli.' ?>
+    </div>
+    <!-- form konfirmasi: kirim POST ke prosestoggletoko.php (kembali ke halaman detail ini) -->
+    <form method="POST" action="../manajementoko/prosestoggletoko.php">
+      <input type="hidden" name="id_toko"     value="<?= (int)$toko['id_toko'] ?>">
+      <input type="hidden" name="id_user_ref" value="<?= (int)$user['id_user'] ?>">
+      <button type="submit" class="tombolutama blok"
+              style="margin-bottom:10px;background:var(--<?= $akanTutupToko ? 'gagal' : 'sukses' ?>);border-color:var(--<?= $akanTutupToko ? 'gagal' : 'sukses' ?>);">
+        <i class="fa-solid fa-<?= $akanTutupToko ? 'store-slash' : 'store' ?>"></i>
+        <?= $akanTutupToko ? 'Ya, Tutup Toko' : 'Ya, Buka Toko' ?>
+      </button>
+    </form>
+    <a href="#" class="tombolringan blok">Batal</a>
+  </div>
+</div>
+<?php endif; ?>
 
 <script>
 /* ekspor XLS (HTML-in-Excel) — tabel bergaris dengan identitas

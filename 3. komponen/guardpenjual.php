@@ -30,10 +30,16 @@ $iduser = (int)$_SESSION['id_user']; // cast ke int sebagai pengaman ekstra
 
 // refresh username/email/foto dari tb_user
 // pakai prepared statement: aman dari sql injection karena parameter dipisah dari query
-$qu = $conn->prepare("SELECT username, email, foto FROM tb_user WHERE id_user=? AND deleted=0");
+$qu = $conn->prepare("SELECT username, email, foto, status_akun FROM tb_user WHERE id_user=? AND deleted=0");
 $qu->bind_param("i", $iduser); $qu->execute(); // bind parameter integer ke ?
 $datauser = $qu->get_result()->fetch_assoc(); $qu->close(); // ambil 1 baris hasil
 if ($datauser) {
+    // jika admin menonaktifkan akun penjual saat session masih aktif → paksa logout
+    if (($datauser['status_akun'] ?? 'aktif') === 'nonaktif') {
+        session_destroy();
+        header("Location: ../../4. autentifikasi/login.php?error=" . urlencode("Akunmu sedang dinonaktifkan oleh admin."));
+        exit;
+    }
     // overwrite data session pakai data terbaru dari db
     $_SESSION['username'] = $datauser['username'];
     $_SESSION['email']    = $datauser['email'];

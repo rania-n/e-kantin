@@ -37,7 +37,7 @@ if ($qh) {
 // ambil daftar pembeli sesuai filter.
 // untuk tab ditolak: cari yang deleted=1, untuk yang lain: deleted=0.
 $kondisiHapus = ($filter === 'ditolak') ? 'deleted=1' : 'deleted=0';
-$st = $conn->prepare("SELECT id_user, username, nama_lengkap, kelas, email, created, status_verifikasi
+$st = $conn->prepare("SELECT id_user, username, nama_lengkap, kelas, email, no_telepon, created, status_verifikasi
                        FROM tb_user
                        WHERE role='pembeli' AND {$kondisiHapus} AND status_verifikasi=?
                        ORDER BY created DESC");
@@ -117,6 +117,7 @@ if (!empty($_SESSION['flash'])) {
             <th>Nama Lengkap</th>
             <th>Kelas</th>
             <th>Email</th>
+            <th>No. HP</th>
             <th>Daftar</th>
             <th class="tengah">Aksi</th>
           </tr>
@@ -124,7 +125,7 @@ if (!empty($_SESSION['flash'])) {
         <tbody>
           <?php if (empty($daftar)): ?>
           <tr>
-            <td colspan="6">
+            <td colspan="7">
               <div class="kosong">
                 <div class="ikon-kosong">
                   <i class="fa-solid fa-<?= $filter==='pending' ? 'inbox' : ($filter==='verified' ? 'circle-check' : 'circle-xmark') ?>"></i>
@@ -157,6 +158,20 @@ if (!empty($_SESSION['flash'])) {
             <td><strong><?= htmlspecialchars($u['nama_lengkap'] ?: '—') ?></strong></td>
             <td><?= htmlspecialchars($u['kelas'] ?: '—') ?></td>
             <td style="font-size:12px;color:var(--tekssamar);"><?= htmlspecialchars($u['email']) ?></td>
+            <td style="font-size:12px;white-space:nowrap;">
+              <?php if (!empty($u['no_telepon'])):
+                // normalisasi ke format internasional untuk link WhatsApp: 08xx -> 628xx
+                $telpdigit = preg_replace('/\D/', '', $u['no_telepon']);
+                $wa = (strpos($telpdigit, '0') === 0) ? '62' . substr($telpdigit, 1) : $telpdigit;
+              ?>
+              <a href="https://wa.me/<?= $wa ?>" target="_blank" rel="noopener"
+                 style="color:var(--info,#2563eb);text-decoration:none;" title="Hubungi via WhatsApp">
+                <i class="fa-brands fa-whatsapp" style="color:#25D366;"></i> <?= htmlspecialchars($u['no_telepon']) ?>
+              </a>
+              <?php else: ?>
+              <span style="color:var(--tekssamar);">—</span>
+              <?php endif; ?>
+            </td>
             <td style="font-size:12px;white-space:nowrap;"><?= date('d M Y H:i', strtotime($u['created'])) ?></td>
             <td class="tengah">
               <div class="aksi-grup">

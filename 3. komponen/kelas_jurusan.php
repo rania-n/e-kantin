@@ -78,9 +78,11 @@ if (!function_exists('daftarTingkatKelas')) {
     ): void {
         $req = $wajib ? 'required' : '';
         ?>
+        <!-- dropdown <select> biasa: klik → semua pilihan langsung tampil, tinggal pilih.
+             dikelompokkan optgroup (Murid SMK / Non-Murid) supaya jelas. nilai yang
+             dikirim string resmi spt "10 RPL"/"Guru", divalidasi server via kelasValid(). -->
         <select name="<?= htmlspecialchars($nama) ?>" <?= $req ?> style="width:100%;">
           <option value="">— Pilih kelas / status —</option>
-
           <optgroup label="Murid SMK">
             <?php foreach (daftarTingkatKelas() as $t): ?>
               <?php foreach (daftarJurusan() as $kode => $namaJurusan):
@@ -92,7 +94,6 @@ if (!function_exists('daftarTingkatKelas')) {
               <?php endforeach; ?>
             <?php endforeach; ?>
           </optgroup>
-
           <optgroup label="Non-Murid">
             <?php foreach (daftarPembeliNonMurid() as $val => $label): ?>
             <option value="<?= htmlspecialchars($val) ?>" <?= $val===$kelasTerpilih ? 'selected' : '' ?>>

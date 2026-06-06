@@ -24,12 +24,16 @@ if (!isset($pathbase)) $pathbase = '..';
 // contoh: jika sedang di halaman pesanan.php maka $halamansaatini = 'pesanan'
 $halamansaatini = basename($_SERVER['PHP_SELF'], '.php');
 
-// hitung total item di keranjang belanja untuk ditampilkan sebagai badge angka
+// hitung total item di keranjang belanja untuk ditampilkan sebagai badge angka.
+// PENTING: gunakan nama variabel loop SENDIRI ($idtoko_brg / $itemtoko_brg), JANGAN $idtoko.
+// navbar ini di-include di tengah halaman (mis. beranda) yang juga memakai $idtoko untuk
+// menyimpan kantin yang sedang dipilih pembeli. kalau loop ini memakai $idtoko, nilainya
+// tertimpa jadi id toko terakhir di keranjang → dropdown "Pilih Kantin" jadi salah pilih.
 $jumlahkeranjang = 0;
 if (!empty($_SESSION['keranjang'])) {
-    // keranjang disusun per toko: $_SESSION['keranjang'][$idtoko][$kunci_item]
-    foreach ($_SESSION['keranjang'] as $idtoko => $itemtoko) {
-        foreach ($itemtoko as $kunci => $isi) {
+    // keranjang disusun per toko: $_SESSION['keranjang'][id_toko][kunci_item]
+    foreach ($_SESSION['keranjang'] as $idtoko_brg => $itemtoko_brg) {
+        foreach ($itemtoko_brg as $kunci => $isi) {
             if ($kunci === '_info') continue; // '_info' adalah metadata toko, bukan item — skip
             $jumlahkeranjang += (int)($isi['qty'] ?? 0); // jumlahkan qty setiap item
         }
@@ -156,8 +160,8 @@ $profilaktif    = in_array($halamansaatini, ['profil','editprofil','gantipasswor
       Butuh bantuan? Hubungi admin jajankita melalui:
     </div>
     <!-- tombol kontak email — target="_blank" tidak perlu di sini karena href mailto akan membuka aplikasi email -->
-    <a href="mailto:ranianuril210@gmail.com" class="tombolutama blok" style="margin-bottom:10px;">
-      <i class="fa-solid fa-envelope"></i> ranianuril210@gmail.com
+    <a href="mailto:admin@jajankita.my.id" class="tombolutama blok" style="margin-bottom:10px;">
+      <i class="fa-solid fa-envelope"></i> admin@jajankita.my.id
     </a>
     <!-- tombol whatsapp — target="_blank" membuka di tab baru agar tidak keluar dari aplikasi -->
     <a href="https://wa.me/6285648830046" target="_blank" class="tombolkedua blok" style="margin-bottom:14px;">

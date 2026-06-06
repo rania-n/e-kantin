@@ -855,6 +855,7 @@ tbody tr:hover td { background: var(--latar); }
   font-size: 14px; font-weight: 700;
   border: none; cursor: pointer;
   transition: opacity .15s;
+  text-decoration: none; /* dipakai sebagai <a> pembuka modal — hilangkan garis bawah link */
 }
 .tombol-toggle-toko:hover { opacity: .85; }
 /* tampilan tombol saat toko dalam kondisi buka */

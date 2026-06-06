@@ -136,21 +136,31 @@ try {
         $sub      = $item['harga'] * $item['qty']; // hitung subtotal item
         $snapmenu = $item['nama_menu'] ?? null;    // snapshot nama menu saat order
 
+        // baca stok terkini di dalam transaksi, lalu hitung berapa yang BENAR-BENAR dipotong.
+        // $dipotong = min(qty, stok) → tidak pernah melebihi stok yang ada. nilai ini disimpan
+        // ke kolom stok_dipotong dan dipakai saat pembatalan agar pengembalian stok tepat
+        // (tidak melebihi yang terpotong). dalam alur normal stok sudah divalidasi cukup,
+        // jadi $dipotong = qty; pengaman ini untuk kasus langka stok keburu berubah.
+        $qs = $conn->prepare("SELECT stok FROM tb_menu WHERE id_menu=?");
+        $qs->bind_param("i", $item['id_menu']); $qs->execute();
+        $stoksaatini = (int)($qs->get_result()->fetch_row()[0] ?? 0); $qs->close();
+        $dipotong = min((int)$item['qty'], $stoksaatini);
+
         // insert ke detail order — nama_menu_snapshot membekukan nama menu di saat order dibuat
         // kenapa snapshot? agar histori order tetap menampilkan nama lama meski menu sudah diedit/dihapus penjual
+        // stok_dipotong = jumlah stok yang benar-benar dikurangi (untuk pengembalian saat batal)
         $d = $conn->prepare("INSERT INTO tb_detail_order
-            (id_order, id_menu, nama_menu_snapshot, jumlah, harga_satuan, subtotal)
-            VALUES (?,?,?,?,?,?)");
-        $d->bind_param("iisidd",
-            $idpesananbaru, $item['id_menu'], $snapmenu, $item['qty'], $item['harga'], $sub
+            (id_order, id_menu, nama_menu_snapshot, jumlah, harga_satuan, subtotal, stok_dipotong)
+            VALUES (?,?,?,?,?,?,?)");
+        $d->bind_param("iisiddi",
+            $idpesananbaru, $item['id_menu'], $snapmenu, $item['qty'], $item['harga'], $sub, $dipotong
         );
         $d->execute(); $d->close();
 
-        // kurangi stok menu — GREATEST(0, stok-qty) mencegah stok jadi negatif
-        // GREATEST mysql function: ambil nilai terbesar dari argumen yang diberikan
-        // jadi kalau stok-qty hasilnya negatif, dipaksa 0
-        $u = $conn->prepare("UPDATE tb_menu SET stok=GREATEST(0,stok-?) WHERE id_menu=?");
-        $u->bind_param("ii", $item['qty'], $item['id_menu']);
+        // kurangi stok sebanyak yang benar-benar dipotong. karena $dipotong <= stok saat ini,
+        // hasil stok-dipotong selalu >= 0 (tidak mungkin negatif).
+        $u = $conn->prepare("UPDATE tb_menu SET stok = stok - ? WHERE id_menu=?");
+        $u->bind_param("ii", $dipotong, $item['id_menu']);
         $u->execute(); $u->close();
     }
 

@@ -134,7 +134,7 @@ if ($rolefilter === 'terhapus') {
        - pesanan_user (subquery)
            hitung jumlah pesanan yang DIBUAT user ini sebagai pembeli.
            dipakai untuk kolom "Pesanan" di tab pembeli/admin. */
-    $sql = "SELECT u.id_user, u.username, u.email, u.role, u.created, u.foto,
+    $sql = "SELECT u.id_user, u.username, u.email, u.role, u.created, u.foto, u.status_akun,
                    t.id_toko, {$kolomNomor} t.nama_toko, t.status_toko, t.foto_toko,
                    CASE u.role WHEN 'penjual' THEN 0 WHEN 'pembeli' THEN 1 ELSE 2 END AS urut_role,
                    (SELECT COUNT(*) FROM tb_order o  WHERE o.id_penjual=u.id_user AND o.deleted=0) AS pesanan_toko,
@@ -218,6 +218,29 @@ if (!empty($_SESSION['flash'])) {
     $flashjenis = $_SESSION['flash']['jenis'];
     unset($_SESSION['flash']);
 }
+
+// jika ada parameter ?suspend=ID di URL, ambil data user itu untuk modal konfirmasi
+// aktif/nonaktif. modal hanya dirender bila data ditemukan (lihat bagian bawah halaman).
+$suspendid   = (int)($_GET['suspend'] ?? 0);
+$datasuspend = null;
+if ($suspendid > 0) {
+    $qs = $conn->prepare("SELECT id_user, username, role, status_akun FROM tb_user WHERE id_user=? AND deleted=0");
+    $qs->bind_param("i", $suspendid); $qs->execute();
+    $datasuspend = $qs->get_result()->fetch_assoc(); // null jika tidak ada
+    $qs->close();
+    // admin tidak bisa dinonaktifkan → abaikan modal jika targetnya admin
+    if ($datasuspend && $datasuspend['role'] === 'admin') $datasuspend = null;
+}
+
+// jika ada ?toggletoko=ID_TOKO di URL, ambil data toko untuk modal konfirmasi buka/tutup.
+$toggletokoid   = (int)($_GET['toggletoko'] ?? 0);
+$datatoggletoko = null;
+if ($toggletokoid > 0) {
+    $qtt = $conn->prepare("SELECT id_toko, nama_toko, status_toko FROM tb_toko WHERE id_toko=? AND deleted=0");
+    $qtt->bind_param("i", $toggletokoid); $qtt->execute();
+    $datatoggletoko = $qtt->get_result()->fetch_assoc();
+    $qtt->close();
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -281,30 +304,6 @@ if (!empty($_SESSION['flash'])) {
     <?= htmlspecialchars($flashpesan) ?>
   </div>
   <?php endif; ?>
-
-  <!-- stat kartu -->
-  <div class="grid-stat takprint" style="grid-template-columns:repeat(5,1fr);margin-bottom:20px;">
-    <div class="kartu-stat">
-      <div class="ikon-stat"><i class="fa-solid fa-users"></i></div>
-      <div class="isi-stat"><div class="nilai"><?= $jmlsemua ?></div><div class="label">Total Aktif</div></div>
-    </div>
-    <div class="kartu-stat">
-      <div class="ikon-stat" style="background:var(--tunggubg);color:#B45309;"><i class="fa-solid fa-store"></i></div>
-      <div class="isi-stat"><div class="nilai"><?= $jmlrole['penjual'] ?></div><div class="label">Penjual</div><div class="sub">Pemilik kantin</div></div>
-    </div>
-    <div class="kartu-stat">
-      <div class="ikon-stat"><i class="fa-solid fa-bag-shopping"></i></div>
-      <div class="isi-stat"><div class="nilai"><?= $jmlrole['pembeli'] ?></div><div class="label">Pembeli</div><div class="sub">Pelanggan</div></div>
-    </div>
-    <div class="kartu-stat">
-      <div class="ikon-stat" style="background:var(--infobg);color:var(--info);"><i class="fa-solid fa-user-shield"></i></div>
-      <div class="isi-stat"><div class="nilai"><?= $jmlrole['admin'] ?></div><div class="label">Admin</div><div class="sub">Pengelola platform</div></div>
-    </div>
-    <div class="kartu-stat">
-      <div class="ikon-stat" style="background:#fee2e2;color:#dc2626;"><i class="fa-solid fa-user-slash"></i></div>
-      <div class="isi-stat"><div class="nilai"><?= $jmlTerhapus ?></div><div class="label">Terhapus</div><div class="sub">Akun nonaktif</div></div>
-    </div>
-  </div>
 
   <!-- tab filter -->
   <div class="filter-bar takprint">
@@ -429,7 +428,7 @@ if (!empty($_SESSION['flash'])) {
   <?php if (in_array($rolefilter, ['semua','penjual'])): ?>
   <div class="peringatan peringataninfo takprint" style="margin-bottom:16px;">
     <i class="fa-solid fa-lightbulb"></i>
-    Klik badge <strong>Buka</strong> atau <strong>Tutup</strong> di kolom Status Toko untuk mengubah status toko langsung.
+    Klik badge <strong>Buka</strong> atau <strong>Tutup</strong> di kolom Status Toko untuk mengubah status toko (ada konfirmasi dulu).
   </div>
   <?php endif; ?>
 
@@ -512,7 +511,13 @@ if (!empty($_SESSION['flash'])) {
                 ?>
                 <div class="avatar-tabel"><?= $fotoHtml ?></div>
                 <div>
-                  <div class="nama"><?= htmlspecialchars($u['username']) ?></div>
+                  <div class="nama">
+                    <?= htmlspecialchars($u['username']) ?>
+                    <?php if (($u['status_akun'] ?? 'aktif') === 'nonaktif'): ?>
+                    <!-- penanda akun yang sedang dinonaktifkan admin -->
+                    <span class="badge dibatalkan" style="font-size:10px;">Nonaktif</span>
+                    <?php endif; ?>
+                  </div>
                   <small style="color:var(--tekssamar);"><?= htmlspecialchars($u['email']) ?></small>
                 </div>
               </div>
@@ -536,14 +541,13 @@ if (!empty($_SESSION['flash'])) {
             </td>
             <td class="tengah takprint">
               <?php if ($u['role'] === 'penjual' && $u['id_toko']): ?>
-              <form method="POST" action="../manajementoko/prosestoggletoko.php" style="display:inline;">
-                <input type="hidden" name="id_toko" value="<?= $u['id_toko'] ?>">
-                <button type="submit" class="badge <?= $u['status_toko']==='buka'?'buka':'tutup' ?>"
-                        style="border:none;cursor:pointer;font-family:inherit;" title="Klik untuk ubah status toko">
-                  <?= $u['status_toko']==='buka'?'Buka':'Tutup' ?>
-                  <i class="fa-solid fa-arrows-rotate" style="font-size:9px;"></i>
-                </button>
-              </form>
+              <!-- buka modal konfirmasi dulu sebelum mengubah status toko -->
+              <a href="user.php?toggletoko=<?= (int)$u['id_toko'] ?>&role=<?= urlencode($rolefilter) ?>#konfirm-toggletoko"
+                 class="badge <?= $u['status_toko']==='buka'?'buka':'tutup' ?>"
+                 style="text-decoration:none;cursor:pointer;" title="Klik untuk ubah status toko">
+                <?= $u['status_toko']==='buka'?'Buka':'Tutup' ?>
+                <i class="fa-solid fa-arrows-rotate" style="font-size:9px;"></i>
+              </a>
               <?php else: ?>
               <span style="color:var(--tekssamar);font-size:12px;">—</span>
               <?php endif; ?>
@@ -554,6 +558,19 @@ if (!empty($_SESSION['flash'])) {
               <div class="aksi-grup">
                 <a href="viewuser.php?id=<?= $u['id_user'] ?>" class="tombolkecil"><i class="fa-solid fa-eye"></i> Detail</a>
                 <a href="edituser.php?id=<?= $u['id_user'] ?>" class="tombolkecil"><i class="fa-solid fa-pen"></i> Edit</a>
+                <?php
+                // tombol aktif/nonaktif akun — admin tidak bisa dinonaktifkan.
+                // membuka modal konfirmasi dulu (#konfirm-status) sebelum benar-benar diubah.
+                $statusakun = $u['status_akun'] ?? 'aktif';
+                if ($u['role'] !== 'admin'):
+                ?>
+                <a href="user.php?suspend=<?= $u['id_user'] ?>&role=<?= urlencode($rolefilter) ?>#konfirm-status"
+                   class="tombolkecil <?= $statusakun==='aktif' ? 'kuning' : 'hijau' ?>"
+                   title="<?= $statusakun==='aktif' ? 'Nonaktifkan akun' : 'Aktifkan akun' ?>">
+                  <i class="fa-solid fa-<?= $statusakun==='aktif' ? 'user-slash' : 'user-check' ?>"></i>
+                  <?= $statusakun==='aktif' ? 'Nonaktifkan' : 'Aktifkan' ?>
+                </a>
+                <?php endif; ?>
                 <a href="hapususer.php?id=<?= $u['id_user'] ?>" class="tombolkecil merah"><i class="fa-solid fa-trash"></i> Hapus</a>
               </div>
             </td>
@@ -566,6 +583,75 @@ if (!empty($_SESSION['flash'])) {
   <?php endif; ?>
 
 </main>
+
+<!-- modal konfirmasi aktif/nonaktif akun — hanya dirender jika ada ?suspend=ID valid.
+     muncul saat url mengandung #konfirm-status (lihat tombol di kolom Aksi). -->
+<?php if ($datasuspend):
+  $akanNonaktif = ($datasuspend['status_akun'] ?? 'aktif') === 'aktif';
+?>
+<div class="modaloverlay" id="konfirm-status">
+  <!-- klik area luar → tutup modal (kembali ke daftar tanpa ?suspend) -->
+  <a href="user.php?role=<?= urlencode($rolefilter) ?>" class="penutup-modal"></a>
+  <div class="isimodal" style="text-align:center;">
+    <div style="font-size:42px;color:var(--<?= $akanNonaktif ? 'gagal' : 'sukses' ?>);margin-bottom:10px;">
+      <i class="fa-solid fa-<?= $akanNonaktif ? 'user-slash' : 'user-check' ?>"></i>
+    </div>
+    <div style="font-size:17px;font-weight:800;color:var(--utama);margin-bottom:8px;">
+      <?= $akanNonaktif ? 'Nonaktifkan Akun?' : 'Aktifkan Akun?' ?>
+    </div>
+    <div style="font-size:13px;color:var(--tekssamar);margin-bottom:20px;">
+      <?php if ($akanNonaktif): ?>
+      Akun <strong><?= htmlspecialchars($datasuspend['username']) ?></strong> tidak akan bisa login
+      dan langsung dikeluarkan jika sedang aktif. Cocok untuk pembeli yang tidak mengambil pesanan.
+      <?php else: ?>
+      Akun <strong><?= htmlspecialchars($datasuspend['username']) ?></strong> akan bisa login kembali seperti biasa.
+      <?php endif; ?>
+    </div>
+    <!-- form konfirmasi: kirim POST ke prosesstatususer.php -->
+    <form method="POST" action="prosesstatususer.php">
+      <input type="hidden" name="id_user" value="<?= (int)$datasuspend['id_user'] ?>">
+      <input type="hidden" name="role" value="<?= htmlspecialchars($rolefilter) ?>">
+      <button type="submit" class="tombolutama blok"
+              style="margin-bottom:10px;background:var(--<?= $akanNonaktif ? 'gagal' : 'sukses' ?>);border-color:var(--<?= $akanNonaktif ? 'gagal' : 'sukses' ?>);">
+        <i class="fa-solid fa-<?= $akanNonaktif ? 'user-slash' : 'user-check' ?>"></i>
+        <?= $akanNonaktif ? 'Ya, Nonaktifkan' : 'Ya, Aktifkan' ?>
+      </button>
+    </form>
+    <a href="user.php?role=<?= urlencode($rolefilter) ?>" class="tombolringan blok">Batal</a>
+  </div>
+</div>
+<?php endif; ?>
+
+<!-- modal konfirmasi buka/tutup toko — hanya dirender jika ada ?toggletoko=ID valid -->
+<?php if ($datatoggletoko):
+  $akanTutupToko = ($datatoggletoko['status_toko'] === 'buka');
+?>
+<div class="modaloverlay" id="konfirm-toggletoko">
+  <a href="user.php?role=<?= urlencode($rolefilter) ?>" class="penutup-modal"></a>
+  <div class="isimodal" style="text-align:center;">
+    <div style="font-size:42px;color:var(--<?= $akanTutupToko ? 'gagal' : 'sukses' ?>);margin-bottom:10px;">
+      <i class="fa-solid fa-<?= $akanTutupToko ? 'store-slash' : 'store' ?>"></i>
+    </div>
+    <div style="font-size:17px;font-weight:800;color:var(--utama);margin-bottom:8px;">
+      <?= $akanTutupToko ? 'Tutup Toko Ini?' : 'Buka Toko Ini?' ?>
+    </div>
+    <div style="font-size:13px;color:var(--tekssamar);margin-bottom:20px;">
+      Toko <strong><?= htmlspecialchars($datatoggletoko['nama_toko'] ?? 'ini') ?></strong>
+      akan <?= $akanTutupToko ? 'ditutup — pembeli tidak bisa memesan sampai dibuka lagi.' : 'dibuka kembali dan menu bisa dipesan pembeli.' ?>
+    </div>
+    <!-- form konfirmasi: kirim POST ke prosestoggletoko.php -->
+    <form method="POST" action="../manajementoko/prosestoggletoko.php">
+      <input type="hidden" name="id_toko" value="<?= (int)$datatoggletoko['id_toko'] ?>">
+      <button type="submit" class="tombolutama blok"
+              style="margin-bottom:10px;background:var(--<?= $akanTutupToko ? 'gagal' : 'sukses' ?>);border-color:var(--<?= $akanTutupToko ? 'gagal' : 'sukses' ?>);">
+        <i class="fa-solid fa-<?= $akanTutupToko ? 'store-slash' : 'store' ?>"></i>
+        <?= $akanTutupToko ? 'Ya, Tutup Toko' : 'Ya, Buka Toko' ?>
+      </button>
+    </form>
+    <a href="user.php?role=<?= urlencode($rolefilter) ?>" class="tombolringan blok">Batal</a>
+  </div>
+</div>
+<?php endif; ?>
 
 <script>
 /* ekspor XLS (HTML-in-Excel) — tabel bergaris dengan identitas. */

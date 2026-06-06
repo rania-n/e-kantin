@@ -12,13 +12,56 @@ include '../../1. koneksi/koneksi.php';
 // ?? [] artinya jika $_SESSION['keranjang'] tidak ada, gunakan array kosong
 $keranjang  = $_SESSION['keranjang'] ?? [];
 
-// hitung total harga semua item dari semua toko di keranjang
-$totalsemua = 0;
+// kata kunci pencarian dari kotak cari keranjang — bisa cari nama item atau nama kantin.
+// berguna saat keranjang berisi banyak item dari banyak kantin biar tidak bingung.
+$cari = trim($_GET['cari'] ?? '');
+
+/* tentukan kantin mana yang cocok dengan pencarian.
+   $tokococok[id_toko] = true jika nama kantin ATAU salah satu nama item-nya mengandung $cari.
+   stripos = pencarian tanpa peduli huruf besar/kecil. kalau $cari kosong, semua cocok.
+   pencocokan dilakukan per-kantin (bukan per-item) supaya subtotal & tombol checkout
+   tiap kantin tetap konsisten dengan seluruh isinya. */
+$tokococok = [];
 foreach ($keranjang as $idt => $items) {
+    if ($cari === '') { $tokococok[$idt] = true; continue; }
+    // cocok jika nama kantin mengandung kata kunci
+    $cocok = stripos($items['_info']['nama_toko'] ?? '', $cari) !== false;
+    // kalau belum cocok, cek tiap nama item di kantin ini
+    if (!$cocok) {
+        foreach ($items as $k => $v) {
+            if ($k === '_info') continue;
+            if (stripos($v['nama_menu'] ?? '', $cari) !== false) { $cocok = true; break; }
+        }
+    }
+    if ($cocok) $tokococok[$idt] = true;
+}
+
+// hitung total harga + kumpulkan id_menu HANYA dari kantin yang cocok pencarian
+// (saat $cari kosong semua kantin ikut, jadi total = seluruh isi keranjang seperti biasa)
+$totalsemua = 0;
+$idmenusemua = [];
+foreach ($keranjang as $idt => $items) {
+    if (empty($tokococok[$idt])) continue;
     foreach ($items as $k => $v) {
         // '_info' adalah data toko (nama, id), bukan item menu — lewati
         if ($k === '_info') continue;
         $totalsemua += $v['harga'] * $v['qty'];
+        $idmenusemua[] = (int)$v['id_menu'];
+    }
+}
+
+// jumlah kantin yang cocok — dipakai untuk pesan "tidak ditemukan" saat mencari
+$jumlahcocok = count($tokococok);
+
+// ambil stok terkini setiap menu di keranjang dalam satu query (efisien).
+// $stokmap[id_menu] = stok. dipakai untuk menampilkan stok & membatasi input jumlah.
+$stokmap = [];
+if (!empty($idmenusemua)) {
+    // intval pada tiap elemen + implode → daftar id aman dimasukkan ke klausa IN
+    $daftarid = implode(',', array_map('intval', $idmenusemua));
+    $resstok  = $conn->query("SELECT id_menu, stok FROM tb_menu WHERE id_menu IN ($daftarid) AND deleted=0");
+    if ($resstok) {
+        while ($rs = $resstok->fetch_assoc()) $stokmap[(int)$rs['id_menu']] = (int)$rs['stok'];
     }
 }
 
@@ -44,6 +87,18 @@ $pathbase = '..';
     <p>Checkout dilakukan per kantin</p>
   </div>
 
+  <!-- satu kotak cari: ketik nama item / kantin untuk menyaring, ✕ untuk hapus
+       (= tampil semua). langsung tersaring otomatis (Enter/✕/pindah fokus), tanpa
+       tombol. hanya muncul kalau keranjang tidak kosong. -->
+  <?php if (!empty($keranjang)): ?>
+  <form method="GET" action="keranjang.php" style="margin-bottom:16px;">
+    <input type="search" name="cari" value="<?= htmlspecialchars($cari) ?>"
+           onchange="this.form.submit()" onsearch="this.form.submit()"
+           placeholder="Cari item atau kantin di keranjang..."
+           style="width:100%;padding:11px 14px;border:1.5px solid var(--garis);border-radius:12px;font-size:14px;font-family:inherit;background:var(--putih);color:var(--teks);">
+  </form>
+  <?php endif; ?>
+
   <!-- tampilkan pesan kosong jika keranjang tidak ada item sama sekali -->
   <?php if (empty($keranjang)): ?>
   <div class="kosong">
@@ -57,14 +112,28 @@ $pathbase = '..';
 
   <?php else: ?>
 
+  <?php if ($cari !== '' && $jumlahcocok === 0): ?>
+  <!-- pencarian aktif tapi tidak ada kantin/item yang cocok -->
+  <div class="kosong">
+    <div class="ikonkosong"><i class="fa-solid fa-magnifying-glass"></i></div>
+    <h3>Tidak ada hasil</h3>
+    <p>Tidak ada item atau kantin yang cocok dengan "<?= htmlspecialchars($cari) ?>"</p>
+    <a href="keranjang.php" class="tombolutama">
+      <i class="fa-solid fa-arrow-left"></i> Lihat Semua
+    </a>
+  </div>
+  <?php else: ?>
+
   <!-- info bahwa checkout dilakukan per kantin, bukan semua sekaligus -->
   <div class="peringatan peringataninfo" style="margin-bottom:16px;">
     <i class="fa-solid fa-circle-info"></i>
-    Tekan tombol checkout di setiap kantin untuk melanjutkan
+    <?= $cari !== '' ? 'Menampilkan hasil pencarian "'.htmlspecialchars($cari).'". Tekan checkout di kantin yang dituju.' : 'Tekan tombol checkout di setiap kantin untuk melanjutkan' ?>
   </div>
 
-  <!-- loop setiap toko di keranjang — tiap toko punya grup item sendiri -->
+  <!-- loop setiap toko di keranjang — tiap toko punya grup item sendiri.
+       lewati kantin yang tidak cocok dengan pencarian (saat $cari kosong semua tampil) -->
   <?php foreach ($keranjang as $idtoko => $itemtoko):
+    if (empty($tokococok[$idtoko])) continue;
     // ambil nama toko dari data _info yang disimpan saat item pertama ditambahkan
     $namatoko    = $itemtoko['_info']['nama_toko'] ?? 'Kantin';
     // hitung subtotal khusus toko ini
@@ -88,6 +157,10 @@ $pathbase = '..';
     <?php foreach ($itemtoko as $idmenu => $isi):
       // skip kunci '_info' karena itu bukan item menu
       if ($idmenu === '_info') continue;
+      // stok terkini menu ini (0 kalau menu sudah dihapus/tidak ditemukan)
+      $stokitem = $stokmap[(int)$idmenu] ?? 0;
+      // tandai jika jumlah di keranjang sudah melebihi stok yang tersisa
+      $lebihstok = $isi['qty'] > $stokitem;
     ?>
     <div class="kartukeranjang">
       <!-- gambar menu -->
@@ -100,6 +173,11 @@ $pathbase = '..';
           <div>
             <div class="namamenu"><?= htmlspecialchars($isi['nama_menu']) ?></div>
             <div class="hargasatu">Rp <?= number_format($isi['harga'],0,',','.') ?> / porsi</div>
+            <!-- tampilkan stok terkini menu ini agar pembeli tahu batas pesanan -->
+            <div style="font-size:11px;margin-top:2px;color:<?= $stokitem<=0 ? 'var(--gagal)' : ($stokitem<=5 ? 'var(--tunggu)' : 'var(--tekssamar)') ?>;">
+              <i class="fa-solid fa-box" style="font-size:9px;"></i>
+              <?= $stokitem<=0 ? 'Stok habis' : 'Stok tersedia: '.$stokitem ?>
+            </div>
           </div>
           <!-- form hapus item: kirim POST ke proseskeranjang.php dengan aksi='hapus' -->
           <form method="POST" action="proseskeranjang.php">
@@ -113,9 +191,9 @@ $pathbase = '..';
         </div>
 
         <div class="tengahkeranjang">
-          <!-- kontrol qty menggunakan dua form terpisah: kurang dan tambah_qty -->
-          <!-- menggunakan form POST bukan JS karena tidak ada JS di proyek ini -->
-          <div class="kontrolqty">
+          <!-- kontrol qty: tombol -/+ untuk cepat, dan input angka untuk ketik jumlah custom.
+               semua pakai form POST (tanpa JS) karena proyek ini memang tanpa javascript. -->
+          <div class="kontrolqty" style="flex-wrap:wrap;">
             <!-- form kurangi qty -->
             <form method="POST" action="proseskeranjang.php" style="display:contents;">
               <input type="hidden" name="aksi" value="kurang">
@@ -123,8 +201,21 @@ $pathbase = '..';
               <input type="hidden" name="id_menu" value="<?= $idmenu ?>">
               <button type="submit" class="tombolqty">-</button>
             </form>
-            <!-- tampilkan qty saat ini -->
-            <span class="angkaqty"><?= $isi['qty'] ?></span>
+            <!-- form set_qty: ketik jumlah langsung, otomatis ter-update saat angka berubah
+                 (onchange submit form) — tanpa perlu menekan tombol centang.
+                 max dibatasi stok terkini agar tidak melebihi yang tersedia.
+                 tombol "Set" disediakan sebagai cadangan jika JS dimatikan (noscript). -->
+            <form method="POST" action="proseskeranjang.php" style="display:flex;align-items:center;gap:4px;">
+              <input type="hidden" name="aksi" value="set_qty">
+              <input type="hidden" name="id_toko" value="<?= $idtoko ?>">
+              <input type="hidden" name="id_menu" value="<?= $idmenu ?>">
+              <input type="number" name="qty" value="<?= (int)$isi['qty'] ?>"
+                     min="1" max="<?= max(1,$stokitem) ?>"
+                     onchange="this.form.submit()"
+                     title="Ketik jumlah, otomatis diperbarui"
+                     style="width:54px;text-align:center;padding:6px 4px;border:1.5px solid var(--garis);border-radius:8px;font-family:inherit;font-size:14px;font-weight:700;">
+              <noscript><button type="submit" class="tombolqty">Set</button></noscript>
+            </form>
             <!-- form tambah qty -->
             <form method="POST" action="proseskeranjang.php" style="display:contents;">
               <input type="hidden" name="aksi" value="tambah_qty">
@@ -136,6 +227,13 @@ $pathbase = '..';
           <!-- subtotal item = harga x qty -->
           <div class="subtotalitem">Rp <?= number_format($isi['harga']*$isi['qty'],0,',','.') ?></div>
         </div>
+        <!-- peringatan jika jumlah di keranjang melebihi stok terkini (stok turun setelah ditambahkan) -->
+        <?php if ($lebihstok): ?>
+        <div style="font-size:11px;color:var(--gagal);margin-top:6px;">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          Jumlah melebihi stok tersedia (<?= $stokitem ?>). Mohon kurangi sebelum checkout.
+        </div>
+        <?php endif; ?>
       </div>
     </div>
     <?php endforeach; ?>
@@ -152,16 +250,18 @@ $pathbase = '..';
   </div>
   <?php endforeach; ?>
 
-  <!-- ringkasan total belanja dari semua toko yang ada di keranjang -->
+  <!-- ringkasan total belanja. saat mencari, total dihitung hanya dari kantin yang
+       sedang ditampilkan (yang cocok pencarian), jadi konsisten dengan yang terlihat. -->
   <div class="ringkasan">
-    <div class="judulbagian" style="margin:0 0 10px;"><i class="fa-solid fa-receipt"></i> Total Semua Kantin</div>
+    <div class="judulbagian" style="margin:0 0 10px;"><i class="fa-solid fa-receipt"></i> <?= $cari !== '' ? 'Total Kantin Tampil' : 'Total Semua Kantin' ?></div>
     <div class="barisringkasan total">
       <span>Total Belanja</span>
       <b>Rp <?= number_format($totalsemua,0,',','.') ?></b>
     </div>
   </div>
 
-  <?php endif; ?>
+  <?php endif; // tutup if hasil-pencarian / tampil-normal ?>
+  <?php endif; // tutup if keranjang-kosong / berisi ?>
 
 </div>
 </body>

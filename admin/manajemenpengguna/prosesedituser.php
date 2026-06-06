@@ -22,6 +22,7 @@ $password    = $_POST['password']          ?? '';
 $namatoko    = trim($_POST['nama_toko']    ?? '');
 $namalengkap = trim($_POST['nama_lengkap'] ?? '');
 $kelas       = trim($_POST['kelas']        ?? '');
+$notelepon   = trim($_POST['no_telepon']   ?? '');
 
 // oldinput untuk dikembalikan ke form jika validasi gagal
 $oldinput = [
@@ -30,6 +31,7 @@ $oldinput = [
     'nama_toko'    => $namatoko,
     'nama_lengkap' => $namalengkap,
     'kelas'        => $kelas,
+    'no_telepon'   => $notelepon,
 ];
 
 if (!$id) { flash('gagal','Data tidak valid.'); redirect('user.php'); }
@@ -48,6 +50,13 @@ if (!preg_match('/^[a-zA-Z0-9_.]+$/', $username)) {
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     $_SESSION['oldinput'] = $oldinput;
     flash('gagal','Format email tidak valid.');
+    redirect("edituser.php?id=$id");
+}
+// nomor telepon wajib — cek jumlah digitnya 8–15
+$telpdigit = preg_replace('/\D/', '', $notelepon);
+if (strlen($telpdigit) < 8 || strlen($telpdigit) > 15) {
+    $_SESSION['oldinput'] = $oldinput;
+    flash('gagal','Nomor telepon tidak valid (harus 8–15 digit angka).');
     redirect("edituser.php?id=$id");
 }
 
@@ -97,9 +106,9 @@ $ce->close();
 // ===== UPDATE tb_user =====
 // SET-clause dibangun dinamis sesuai peran, supaya nama_lengkap & kelas hanya
 // disentuh untuk pembeli, dan password hanya disentuh kalau diisi.
-$setFields = ['username=?', 'email=?'];
-$bindTypes = 'ss';
-$bindVals  = [$username, $email];
+$setFields = ['username=?', 'email=?', 'no_telepon=?'];
+$bindTypes = 'sss';
+$bindVals  = [$username, $email, $notelepon];
 
 if ($role === 'pembeli') {
     $setFields[] = 'nama_lengkap=?';

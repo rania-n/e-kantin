@@ -209,6 +209,20 @@ if ($role === 'penjual') {
 
       <div class="barisform">
         <div class="kelompokform">
+          <label>Nomor Telepon / WhatsApp <span style="color:var(--gagal);">*</span></label>
+          <!-- nomor aktif supaya pengguna bisa dihubungi kalau ada kendala.
+               inputmode numeric + pattern + oninput strip → hanya angka yang bisa masuk. -->
+          <input type="tel" name="no_telepon" required autocomplete="off"
+                 inputmode="numeric" pattern="[0-9]{8,15}" minlength="8" maxlength="15"
+                 oninput="this.value=this.value.replace(/\D/g,'')"
+                 value="<?= htmlspecialchars($oldinput['no_telepon'] ?? '') ?>"
+                 placeholder="cth: 081234567890" title="Hanya angka, 8–15 digit">
+          <small>Nomor aktif yang bisa dihubungi (hanya angka, 8–15 digit).</small>
+        </div>
+      </div>
+
+      <div class="barisform">
+        <div class="kelompokform">
           <label>Password <span style="color:var(--gagal);">*</span></label>
           <div style="position:relative;">
             <input type="password" name="password" id="pass_tambah" required
@@ -292,6 +306,20 @@ if ($role === 'penjual') {
 
       <div class="barisform">
         <div class="kelompokform">
+          <label>Nomor Telepon / WhatsApp <span style="color:var(--gagal);">*</span></label>
+          <!-- nomor aktif supaya pengguna bisa dihubungi kalau ada kendala.
+               inputmode numeric + pattern + oninput strip → hanya angka yang bisa masuk. -->
+          <input type="tel" name="no_telepon" required autocomplete="off"
+                 inputmode="numeric" pattern="[0-9]{8,15}" minlength="8" maxlength="15"
+                 oninput="this.value=this.value.replace(/\D/g,'')"
+                 value="<?= htmlspecialchars($oldinput['no_telepon'] ?? '') ?>"
+                 placeholder="cth: 081234567890" title="Hanya angka, 8–15 digit">
+          <small>Nomor aktif yang bisa dihubungi (hanya angka, 8–15 digit).</small>
+        </div>
+      </div>
+
+      <div class="barisform">
+        <div class="kelompokform">
           <label>Password <span style="color:var(--gagal);">*</span></label>
           <div style="position:relative;">
             <input type="password" name="password" id="pass_tambah" required
@@ -349,6 +377,20 @@ if ($role === 'penjual') {
           <input type="email" name="email" required autocomplete="off"
                  value="<?= htmlspecialchars($oldinput['email'] ?? '') ?>"
                  placeholder="Email aktif...">
+        </div>
+      </div>
+
+      <div class="barisform">
+        <div class="kelompokform">
+          <label>Nomor Telepon / WhatsApp <span style="color:var(--gagal);">*</span></label>
+          <!-- nomor aktif supaya pengguna bisa dihubungi kalau ada kendala.
+               inputmode numeric + pattern + oninput strip → hanya angka yang bisa masuk. -->
+          <input type="tel" name="no_telepon" required autocomplete="off"
+                 inputmode="numeric" pattern="[0-9]{8,15}" minlength="8" maxlength="15"
+                 oninput="this.value=this.value.replace(/\D/g,'')"
+                 value="<?= htmlspecialchars($oldinput['no_telepon'] ?? '') ?>"
+                 placeholder="cth: 081234567890" title="Hanya angka, 8–15 digit">
+          <small>Nomor aktif yang bisa dihubungi (hanya angka, 8–15 digit).</small>
         </div>
       </div>
 

@@ -18,8 +18,9 @@ $error      = ''; // pesan error yang akan ditampilkan di halaman jika validasi 
 // proses form saat form dikirim (POST)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // trim menghapus spasi di awal/akhir input
-    $usernamebaru = trim($_POST['username'] ?? '');
-    $emailbaru    = trim($_POST['email']    ?? '');
+    $usernamebaru = trim($_POST['username']   ?? '');
+    $emailbaru    = trim($_POST['email']      ?? '');
+    $noteleponbaru= trim($_POST['no_telepon'] ?? '');
     $daftarerror  = []; // kumpulkan semua error sebelum menampilkan
 
     // validasi panjang username
@@ -27,6 +28,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (strlen($usernamebaru) > 50)                          $daftarerror[] = 'Username maksimal 50 karakter';
     // validasi format email menggunakan filter bawaan PHP
     if (!filter_var($emailbaru, FILTER_VALIDATE_EMAIL))      $daftarerror[] = 'Format email tidak valid';
+    // validasi nomor telepon: ambil angkanya saja, harus 8–15 digit
+    $telpdigit = preg_replace('/\D/', '', $noteleponbaru);
+    if (strlen($telpdigit) < 8 || strlen($telpdigit) > 15)   $daftarerror[] = 'Nomor telepon harus 8–15 digit angka';
 
     // jika tidak ada error format, cek duplikat di database
     if (empty($daftarerror)) {
@@ -40,8 +44,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // jika semua validasi lolos, simpan perubahan ke database
     if (empty($daftarerror)) {
-        $upd = $conn->prepare("UPDATE tb_user SET username=?,email=? WHERE id_user=?");
-        $upd->bind_param("ssi", $usernamebaru, $emailbaru, $idpengguna);
+        $upd = $conn->prepare("UPDATE tb_user SET username=?,email=?,no_telepon=? WHERE id_user=?");
+        $upd->bind_param("sssi", $usernamebaru, $emailbaru, $noteleponbaru, $idpengguna);
         $upd->execute(); $upd->close();
         // perbarui juga data di session agar navbar langsung menampilkan nama baru
         $_SESSION['username'] = $usernamebaru;
@@ -155,6 +159,17 @@ $pathbase = '..';
         <input type="email" name="email"
                value="<?= htmlspecialchars($user['email'] ?? '') ?>"
                required placeholder="Email...">
+      </div>
+
+      <!-- input nomor telepon — hanya angka (huruf/simbol ditolak), 8–15 digit -->
+      <div class="kelompokform">
+        <label>Nomor Telepon / WhatsApp</label>
+        <input type="tel" name="no_telepon"
+               inputmode="numeric" pattern="[0-9]{8,15}" minlength="8" maxlength="15"
+               oninput="this.value=this.value.replace(/\D/g,'')"
+               value="<?= htmlspecialchars($user['no_telepon'] ?? '') ?>"
+               required placeholder="cth: 081234567890" title="Hanya angka, 8–15 digit">
+        <small style="color:var(--tekssamar);">Nomor aktif yang bisa dihubungi (hanya angka, 8–15 digit).</small>
       </div>
 
       <!-- field nama lengkap: read-only (sudah diverifikasi admin) -->

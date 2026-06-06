@@ -27,20 +27,30 @@ $email       = trim($_POST['email']       ?? '');
 $password    = trim($_POST['password']    ?? '');
 $namalengkap = trim($_POST['namalengkap'] ?? '');
 $kelas       = trim($_POST['kelas']       ?? '');
+$notelepon   = trim($_POST['notelepon']   ?? '');
 
 // fungsi bantu: bangun query string untuk redirect balik ke form supaya semua
 // kolom (kecuali password) tetap terisi setelah error.
-function balikUrlForm(string $username, string $email, string $namalengkap, string $kelas): string {
+function balikUrlForm(string $username, string $email, string $namalengkap, string $kelas, string $notelepon): string {
     return "&username="    . urlencode($username) .
            "&email="       . urlencode($email) .
            "&namalengkap=" . urlencode($namalengkap) .
-           "&kelas="       . urlencode($kelas);
+           "&kelas="       . urlencode($kelas) .
+           "&notelepon="   . urlencode($notelepon);
 }
-$balik = balikUrlForm($username, $email, $namalengkap, $kelas);
+$balik = balikUrlForm($username, $email, $namalengkap, $kelas, $notelepon);
 
 // langkah 3a: tidak boleh kosong
-if (empty($username) || empty($email) || empty($password) || empty($namalengkap) || empty($kelas)) {
-    header("Location: register.php?error=" . urlencode("Semua kolom wajib diisi (termasuk kelas / status)!") . $balik);
+if (empty($username) || empty($email) || empty($password) || empty($namalengkap) || empty($kelas) || empty($notelepon)) {
+    header("Location: register.php?error=" . urlencode("Semua kolom wajib diisi (termasuk kelas / status & nomor telepon)!") . $balik);
+    exit;
+}
+
+// langkah 3a-2: validasi nomor telepon — ambil digitnya saja, harus 8–15 digit.
+// (boleh diketik dengan +, spasi, atau tanda hubung; yang dicek jumlah angkanya)
+$telpdigit = preg_replace('/\D/', '', $notelepon);
+if (strlen($telpdigit) < 8 || strlen($telpdigit) > 15) {
+    header("Location: register.php?error=" . urlencode("Nomor telepon tidak valid (harus 8–15 digit angka)!") . $balik);
     exit;
 }
 
@@ -112,9 +122,9 @@ $role        = "pembeli";
 $statusVerif = "pending"; // wajib lewat verifikasi admin sebelum bisa login
 
 $stmt = $conn->prepare("INSERT INTO tb_user
-    (username, nama_lengkap, kelas, email, password, role, status_verifikasi, deleted)
-    VALUES (?, ?, ?, ?, ?, ?, ?, 0)");
-$stmt->bind_param("sssssss", $username, $namalengkap, $kelas, $email, $hash, $role, $statusVerif);
+    (username, nama_lengkap, kelas, email, no_telepon, password, role, status_verifikasi, deleted)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)");
+$stmt->bind_param("ssssssss", $username, $namalengkap, $kelas, $email, $notelepon, $hash, $role, $statusVerif);
 
 if ($stmt->execute()) {
     $stmt->close();

@@ -628,6 +628,32 @@ tfoot td { padding: 12px 16px; background: var(--latar); font-weight: 700; }
   .grid-stat { grid-template-columns: 1fr; }
 }
 
+/* ===== MODAL KONFIRMASI (tanpa JS, pakai CSS :target) =====
+   cara kerja: modal disembunyikan (display:none). saat link #id-modal diklik,
+   browser menandai elemen ber-id itu sebagai :target, lalu css menampilkannya.
+   dipakai untuk konfirmasi aksi penting: nonaktifkan akun, ubah status toko, dll. */
+.modaloverlay {
+  display: none;                  /* sembunyi secara default */
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.5);     /* latar gelap transparan */
+  z-index: 1000;
+  align-items: center; justify-content: center;
+  padding: 20px;
+}
+/* tampilkan modal ketika id-nya menjadi target url (#konfirm-...) */
+.modaloverlay:target { display: flex; }
+/* link transparan selebar layar untuk menutup modal saat area luar diklik */
+.penutup-modal { position: absolute; inset: 0; cursor: default; }
+/* kotak isi modal */
+.isimodal {
+  position: relative; z-index: 1;
+  background: var(--putih);
+  border-radius: 14px;
+  padding: 22px;
+  max-width: 400px; width: 100%;
+  box-shadow: 0 20px 50px rgba(0,0,0,.25);
+}
+
 /* print — harus paling akhir */
 
 /* aturan cetak — sidebar dan elemen tidak perlu cetak disembunyikan */
