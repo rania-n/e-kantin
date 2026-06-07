@@ -215,8 +215,12 @@ $pathbase = '..';
   <?php endif; ?>
 
   <!-- tombol kembali ke beranda -->
-  <a href="../index/index.php" class="tombolringan blok takprint" style="margin-bottom:28px;">
+  <a href="../index/index.php" class="tombolringan blok takprint" style="margin-bottom:15px;">
     <i class="fa-solid fa-house"></i> Kembali ke Beranda
+  </a>
+  <!-- tombol kembali ke pesanan -->
+  <a href="../pesanan/pesanan.php" class="tombolringan blok takprint" style="margin-bottom:28px;">
+    <i class="fa-solid fa-receipt"></i> Kembali ke Pesanan
   </a>
 
 </div>
