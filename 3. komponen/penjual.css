@@ -731,67 +731,45 @@ tbody tr:hover td { background: var(--latar); }
 
 /* kartu pesanan (manajemen pesanan) */
 
-/* grid kartu pesanan — kolom otomatis minimal 300px */
-.grid-pesanan {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 16px;
-}
-/* satu kartu pesanan */
-.kartu-pesanan {
+/* daftar pesanan — tampilan BARIS ringkas (bukan kotak besar) agar mudah dipindai.
+   tiap pesanan = satu baris memanjang: info di kiri, tombol aksi di kanan. */
+.list-pesanan { display: flex; flex-direction: column; gap: 8px; }
+
+/* satu baris pesanan */
+.baris-pesanan {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
   background: var(--putih);
-  border-radius: 14px;
-  padding: 16px;
   border: 1px solid var(--garis);
+  border-left: 4px solid var(--garis); /* garis kiri diwarnai sesuai status */
+  border-radius: 10px;
+  padding: 9px 14px;
   box-shadow: var(--bayang);
 }
-/* garis kiri berwarna sesuai status pesanan untuk identifikasi cepat */
-.kartu-pesanan.menunggu { border-left: 3px solid var(--tunggu); }
-.kartu-pesanan.diproses { border-left: 3px solid var(--info); }
-.kartu-pesanan.siap     { border-left: 3px solid var(--sukses); }
-.kartu-pesanan.selesai  { border-left: 3px solid var(--garis); opacity: .85; } /* redup untuk pesanan selesai */
-/* baris atas kartu pesanan: nomor dan badge status */
-.atas-pesanan {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 8px;
-}
-/* nomor dan tanggal pesanan berada di baris flex — min-width:0 agar tidak bocor ke kanan */
-.nomer-pesanan  { font-size: 14px; font-weight: 800; color: var(--utama); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* warna garis kiri sesuai status untuk identifikasi cepat */
+.baris-pesanan.menunggu   { border-left-color: var(--tunggu); }
+.baris-pesanan.diproses   { border-left-color: var(--info); }
+.baris-pesanan.siap       { border-left-color: var(--sukses); }
+.baris-pesanan.selesai    { border-left-color: var(--garis); opacity: .75; } /* redup untuk selesai */
+.baris-pesanan.dibatalkan { border-left-color: var(--gagal); opacity: .7; }
+
+/* blok info di kiri (mengisi ruang sisa) */
+.info-pesanan { flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 3px; }
+/* baris judul: badge status + nomor + waktu */
+.judul-pesanan { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.judul-pesanan .badge { font-size: 10px; padding: 2px 8px; }
+.nomer-pesanan  { font-size: 13px; font-weight: 800; color: var(--utama); }
 .tanggal-pesanan{ font-size: 11px; color: var(--tekssamar); white-space: nowrap; }
-/* nama pembeli dipotong ellipsis jika terlalu panjang */
-.pembeli-pesanan{ font-size: 13px; font-weight: 600; margin-bottom: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* kotak catatan pesanan dengan latar berbeda agar mudah diperhatikan */
-.catatan-pesanan{ font-size: 12px; color: var(--tekskecil); background: var(--latar); padding: 8px 10px; border-radius: 8px; margin-bottom: 10px; }
-/* area daftar item dalam pesanan */
-.item-pesanan {
-  font-size: 12px;
-  color: var(--tekskecil);
-  margin-bottom: 10px;
-  padding-bottom: 8px;
-  border-bottom: 1px dashed var(--garis); /* garis putus-putus sebagai pemisah */
-}
-/* satu baris item di dalam pesanan */
-.baris-item-pesanan {
-  display: flex;
-  justify-content: space-between; /* nama di kiri, harga di kanan */
-  padding: 4px 0;
-}
-/* total harga pesanan */
-.total-pesanan {
-  font-size: 16px;
-  font-weight: 800;
-  color: var(--utama);
-  margin-bottom: 10px;
-}
-/* metode pembayaran (tunai/qris) */
-.metode-pesanan {
-  font-size: 11px;
-  color: var(--tekssamar);
-  margin-bottom: 10px;
-}
-/* baris tombol aksi pesanan (proses, siap, dll) */
+/* baris detail: pembeli · item · total · metode (dipisah titik) */
+.detail-pesanan { font-size: 12px; color: var(--tekssamar); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.detail-pesanan .pisah      { color: var(--garis); }
+.detail-pesanan .total-baris{ font-weight: 800; color: var(--utama); }
+/* catatan khusus pembeli (opsional) */
+.catatan-baris { font-size: 11px; color: var(--tekskecil); background: var(--latar); padding: 4px 8px; border-radius: 6px; }
+
+/* baris tombol aksi pesanan (proses, siap, dll) — di kanan */
 .aksi-pesanan {
   display: flex;
   gap: 6px;
@@ -1313,7 +1291,8 @@ tbody tr:hover td { background: var(--latar); }
   /* grid menjadi 2 kolom di tablet */
   .grid-stat  { grid-template-columns: repeat(2, 1fr); }
   .grid-dua   { grid-template-columns: 1fr; }
-  .grid-pesanan { grid-template-columns: 1fr; }
+  /* baris pesanan: di layar kecil, tombol aksi turun ke bawah info */
+  .baris-pesanan { align-items: stretch; }
   /* grid menu menjadi 2 kolom di mobile */
   .grid-menu  { grid-template-columns: repeat(2, 1fr); }
   .barisform  { grid-template-columns: 1fr; }

@@ -59,12 +59,14 @@ if ($cari !== '') {
 }
 
 /* ambil pesanan beserta nama pembeli.
-   FIELD() digunakan untuk urutan kustom: menunggu tampil paling atas, dibatalkan paling bawah */
+   urutan: FIELD() menempatkan status sesuai alur (Menunggu → Diproses → Siap Diambil
+   → Selesai → Dibatalkan). lalu tanggal_order ASC = yang paling AWAL dipesan tampil di
+   atas, supaya penjual memproses pesanan yang lebih dulu masuk dulu (FIFO/antrian). */
 $hasilpesanan = $conn->query("SELECT o.*, u.username, u.email
                                FROM tb_order o
                                JOIN tb_user u ON o.id_user=u.id_user
                                WHERE $where
-                               ORDER BY FIELD(o.status_order,'Menunggu','Diproses','Siap Diambil','Selesai','Dibatalkan'), o.tanggal_order DESC");
+                               ORDER BY FIELD(o.status_order,'Menunggu','Diproses','Siap Diambil','Selesai','Dibatalkan'), o.tanggal_order ASC");
 
 // kembalikan nama kelas css berdasarkan status (untuk pewarnaan kartu dan badge)
 function kelasstatus(string $s): string {
@@ -96,7 +98,9 @@ $urldasar = 'manajemenpesanan.php?filter=' . urlencode($filter) . ($cari !== '' 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pesanan Masuk - jajankita</title>
-<link rel="stylesheet" href="../../3. komponen/penjual.css">
+<!-- ?v=filemtime → cache-busting: browser ambil ulang penjual.css tiap kali file berubah,
+     jadi perubahan style langsung kelihatan tanpa perlu hard-refresh manual -->
+<link rel="stylesheet" href="../../3. komponen/penjual.css?v=<?= @filemtime(__DIR__ . '/../../3. komponen/penjual.css') ?>">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
@@ -147,9 +151,9 @@ $urldasar = 'manajemenpesanan.php?filter=' . urlencode($filter) . ($cari !== '' 
     <?php endforeach; ?>
   </div>
 
-  <!-- grid kartu pesanan — tampil jika ada data -->
+  <!-- daftar pesanan — tampilan baris ringkas (bukan kotak), tampil jika ada data -->
   <?php if ($hasilpesanan && $hasilpesanan->num_rows > 0): ?>
-  <div class="grid-pesanan">
+  <div class="list-pesanan">
     <?php while ($pesanan = $hasilpesanan->fetch_assoc()):
       // format nomor pesanan: EK-000001, EK-000002, dst
       $nomer  = 'EK-' . str_pad($pesanan['id_order'], 6, '0', STR_PAD_LEFT);
@@ -158,55 +162,39 @@ $urldasar = 'manajemenpesanan.php?filter=' . urlencode($filter) . ($cari !== '' 
       $qd = $conn->prepare("SELECT d.jumlah, d.harga_satuan, d.subtotal, m.nama_menu FROM tb_detail_order d JOIN tb_menu m ON d.id_menu=m.id_menu WHERE d.id_order=? AND d.deleted=0");
       $qd->bind_param("i", $pesanan['id_order']); $qd->execute();
       $items = $qd->get_result()->fetch_all(MYSQLI_ASSOC); $qd->close();
+      // ringkas item jadi satu baris teks: "2x Nasi Goreng, 1x Es Teh"
+      $ringkasitem = [];
+      foreach ($items as $it) $ringkasitem[] = $it['jumlah'] . 'x ' . $it['nama_menu'];
+      $ringkasitem = implode(', ', $ringkasitem);
     ?>
-    <!-- kartu pesanan — kelas css diambil dari status (untuk warna border kiri) -->
-    <div class="kartu-pesanan <?= $kelas ?>">
+    <!-- satu baris pesanan — kelas css dari status (untuk warna garis kiri) -->
+    <div class="baris-pesanan <?= $kelas ?>">
 
-      <!-- bagian atas kartu: nomor pesanan, waktu, dan badge status -->
-      <div class="atas-pesanan">
-        <div>
-          <div class="nomer-pesanan"><?= $nomer ?></div>
-          <div class="tanggal-pesanan">
-            <?= date('d M Y, H:i', strtotime($pesanan['tanggal_order'])) ?>
-          </div>
+      <!-- info pesanan (kiri): nomor + status + waktu, lalu pembeli + item + total -->
+      <div class="info-pesanan">
+        <div class="judul-pesanan">
+          <span class="badge <?= $kelas ?>"><?= $pesanan['status_order'] ?></span>
+          <span class="nomer-pesanan"><?= $nomer ?></span>
+          <span class="tanggal-pesanan"><i class="fa-regular fa-clock" style="font-size:10px;"></i> <?= date('d M Y, H:i', strtotime($pesanan['tanggal_order'])) ?></span>
         </div>
-        <span class="badge <?= $kelas ?>"><?= $pesanan['status_order'] ?></span>
-      </div>
-
-      <!-- nama pembeli -->
-      <div class="pembeli-pesanan">
-        <i class="fa-solid fa-user" style="font-size:11px;"></i>
-        <?= htmlspecialchars($pesanan['username']) ?>
-      </div>
-
-      <!-- catatan khusus dari pembeli (jika ada) -->
-      <?php if (!empty($pesanan['catatan'])): ?>
-      <div class="catatan-pesanan">
-        <i class="fa-solid fa-note-sticky" style="font-size:11px;"></i>
-        <?= htmlspecialchars($pesanan['catatan']) ?>
-      </div>
-      <?php endif; ?>
-
-      <!-- daftar item yang dipesan beserta subtotal per item -->
-      <div class="item-pesanan">
-        <?php foreach ($items as $it): ?>
-        <div class="baris-item-pesanan">
-          <span><?= $it['jumlah'] ?>x <?= htmlspecialchars($it['nama_menu']) ?></span>
-          <span>Rp <?= number_format($it['subtotal'],0,',','.') ?></span>
+        <div class="detail-pesanan">
+          <span><i class="fa-solid fa-user" style="font-size:10px;"></i> <?= htmlspecialchars($pesanan['username']) ?></span>
+          <span class="pisah">·</span>
+          <span><?= htmlspecialchars($ringkasitem) ?></span>
+          <span class="pisah">·</span>
+          <span class="total-baris">Rp <?= number_format($pesanan['total_harga'],0,',','.') ?></span>
+          <span class="pisah">·</span>
+          <span><i class="fa-solid fa-wallet" style="font-size:10px;"></i> <?= htmlspecialchars($pesanan['metode_pembayaran']) ?></span>
         </div>
-        <?php endforeach; ?>
+        <?php if (!empty($pesanan['catatan'])): ?>
+        <!-- catatan khusus dari pembeli (jika ada) -->
+        <div class="catatan-baris">
+          <i class="fa-solid fa-note-sticky" style="font-size:10px;"></i> <?= htmlspecialchars($pesanan['catatan']) ?>
+        </div>
+        <?php endif; ?>
       </div>
 
-      <!-- total harga dan metode pembayaran -->
-      <div class="total-pesanan">
-        Total: Rp <?= number_format($pesanan['total_harga'],0,',','.') ?>
-      </div>
-      <div class="metode-pesanan">
-        <i class="fa-solid fa-wallet" style="font-size:10px;"></i>
-        <?= htmlspecialchars($pesanan['metode_pembayaran']) ?>
-      </div>
-
-      <!-- tombol aksi yang ditampilkan berbeda-beda tergantung status pesanan saat ini -->
+      <!-- tombol aksi (kanan) — berbeda tergantung status pesanan saat ini -->
       <div class="aksi-pesanan">
 
         <?php
@@ -232,6 +220,9 @@ $urldasar = 'manajemenpesanan.php?filter=' . urlencode($filter) . ($cari !== '' 
              class="tombolkecil merah">
             <i class="fa-solid fa-xmark"></i> Batalkan
           </a>
+          <a href="struk.php?id=<?= $pesanan['id_order'] ?>&filter=<?= urlencode($filter) ?><?= $cari !== '' ? '&cari='.urlencode($cari) : '' ?>" class="tombolkecil hijau">
+            <i class="fa-solid fa-print"></i> Struk
+          </a>
 
         <?php elseif ($pesanan['status_order'] === 'Diproses'): ?>
           <!-- pesanan sedang diproses: bisa ditandai siap diambil atau dibatalkan -->
@@ -239,8 +230,8 @@ $urldasar = 'manajemenpesanan.php?filter=' . urlencode($filter) . ($cari !== '' 
              class="tombolkecil hijau">
             <i class="fa-solid fa-bell"></i> Siap Diambil
           </a>
-          <a href="struk.php?id=<?= $pesanan['id_order'] ?>" class="tombolkecil hijau">
-            <i class="fa-solid fa-print"></i> Cetak Struk
+          <a href="struk.php?id=<?= $pesanan['id_order'] ?>&filter=<?= urlencode($filter) ?><?= $cari !== '' ? '&cari='.urlencode($cari) : '' ?>" class="tombolkecil hijau">
+            <i class="fa-solid fa-print"></i> Struk
           </a>
 
         <?php elseif ($pesanan['status_order'] === 'Siap Diambil'): ?>
@@ -249,14 +240,14 @@ $urldasar = 'manajemenpesanan.php?filter=' . urlencode($filter) . ($cari !== '' 
              class="tombolkecil aktif-kecil">
             <i class="fa-solid fa-circle-check"></i> Selesai
           </a>
-          <a href="struk.php?id=<?= $pesanan['id_order'] ?>" class="tombolkecil hijau">
-            <i class="fa-solid fa-print"></i> Cetak Struk
+          <a href="struk.php?id=<?= $pesanan['id_order'] ?>&filter=<?= urlencode($filter) ?><?= $cari !== '' ? '&cari='.urlencode($cari) : '' ?>" class="tombolkecil hijau">
+            <i class="fa-solid fa-print"></i> Struk
           </a>
 
         <?php elseif ($pesanan['status_order'] === 'Selesai'): ?>
-          <!-- pesanan selesai: hanya bisa mencetak struk -->
-          <a href="struk.php?id=<?= $pesanan['id_order'] ?>" class="tombolkecil hijau">
-            <i class="fa-solid fa-print"></i> Cetak Struk
+          <!-- pesanan selesai: hanya bisa menstruk -->
+          <a href="struk.php?id=<?= $pesanan['id_order'] ?>&filter=<?= urlencode($filter) ?><?= $cari !== '' ? '&cari='.urlencode($cari) : '' ?>" class="tombolkecil hijau">
+            <i class="fa-solid fa-print"></i> Struk
           </a>
         <?php endif; ?>
 

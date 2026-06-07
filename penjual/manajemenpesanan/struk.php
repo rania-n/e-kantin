@@ -16,16 +16,25 @@ $halamansaatini = 'manajemenpesanan';
 // cek apakah parameter ?cetak ada di URL (mode cetak)
 $cetak = isset($_GET['cetak']);
 
-// jika tidak ada id pesanan, redirect ke halaman pesanan
-if (!$idpesanan) { header("Location: manajemenpesanan.php"); exit; }
+// filter & cari dibawa dari halaman pesanan supaya tombol "Kembali" balik ke
+// tab terakhir yang dipilih penjual (bukan selalu ke "Menunggu").
+$statuslist = ['Semua','Menunggu','Diproses','Siap Diambil','Selesai','Dibatalkan'];
+$filter = $_GET['filter'] ?? 'Semua';
+if (!in_array($filter, $statuslist)) $filter = 'Semua';
+$cari   = trim($_GET['cari'] ?? '');
+// url kembali ke daftar pesanan dengan filter (dan pencarian) yang sama
+$kembaliurl = 'manajemenpesanan.php?filter=' . urlencode($filter) . ($cari !== '' ? '&cari=' . urlencode($cari) : '');
+
+// jika tidak ada id pesanan, redirect ke halaman pesanan (tetap bawa filter)
+if (!$idpesanan) { header("Location: $kembaliurl"); exit; }
 
 // ambil data pesanan beserta nama pembeli — pastikan pesanan milik penjual ini
 $q = $conn->prepare("SELECT o.*,u.username FROM tb_order o JOIN tb_user u ON o.id_user=u.id_user WHERE o.id_order=? AND o.id_penjual=? AND o.deleted=0");
 $q->bind_param("ii", $idpesanan, $idpenjual); $q->execute();
 $pesanan = $q->get_result()->fetch_assoc(); $q->close();
 
-// jika pesanan tidak ditemukan, redirect ke halaman pesanan
-if (!$pesanan) { header("Location: manajemenpesanan.php"); exit; }
+// jika pesanan tidak ditemukan, redirect ke halaman pesanan (tetap bawa filter)
+if (!$pesanan) { header("Location: $kembaliurl"); exit; }
 
 // ambil semua item yang ada dalam pesanan ini
 $qd = $conn->prepare("SELECT d.*,m.nama_menu FROM tb_detail_order d JOIN tb_menu m ON d.id_menu=m.id_menu WHERE d.id_order=? AND d.deleted=0");
@@ -179,7 +188,7 @@ $namatoko     = htmlspecialchars($_SESSION['nama_toko'] ?? 'jajankita');
     <button onclick="window.print()" class="tombolutama blok">
       <i class="fa-solid fa-print"></i> Cetak Struk
     </button>
-    <a href="manajemenpesanan.php" class="tombolringan blok" style="margin-top:10px;justify-content:center;">
+    <a href="<?= htmlspecialchars($kembaliurl) ?>" class="tombolringan blok" style="margin-top:10px;justify-content:center;">
       <i class="fa-solid fa-clipboard-list"></i> Kembali ke Pesanan
     </a>
   </div>
