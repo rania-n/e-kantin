@@ -1,9 +1,9 @@
 <?php
-/* laporan platform — filter: periode (7/14/30/custom) + kantin (semua atau satu).
-   mode semua  → data platform-wide (label "Omset Platform").
-   mode kantin → data satu toko + menu & ulasan (label "Omset Kantin ke-X").
-   tombol cetak: window.print() (seluruh halaman). cetak per-kantin: cetakKantin(n).
-   tombol CSV per section: eksporXlsSeksi(id, namafile) — download tabel data ke .csv. */
+/* laporan platform (ADMIN) — filter: periode (7/14/30/custom) + kantin (semua/satu).
+   CATATAN: laporan KEUANGAN (omset, grafik omset, nilai dibatalkan, pendapatan, dll)
+   sengaja TIDAK ada di admin — itu hanya di laporan PENJUAL. admin hanya menampilkan
+   data non-keuangan: info kantin + rating, daftar menu (+ stok), dan daftar pengguna.
+   tombol CSV per section: eksporXlsSeksi(id, namafile); semua sekaligus: eksporXlsSemua(). */
 
 include '../../1. koneksi/koneksi.php';
 include '../../3. komponen/guardadmin.php';
@@ -88,47 +88,10 @@ $judulOmset = 'Omset';
 $idpenjualterpilih = (int)($infokantinterpilih['id_user'] ?? 0);
 $tokoW = $idpenjualterpilih > 0 ? " AND o.id_penjual={$idpenjualterpilih}" : "";
 
-// ── STATISTIK UTAMA ────────────────────────────────────────────────────────────
-$qr1 = $conn->prepare("SELECT COUNT(*) FROM tb_order o WHERE DATE(o.tanggal_order) BETWEEN ? AND ?{$tokoW} AND o.deleted=0");
-$qr1->bind_param("ss", $tglmulai, $tgljin); $qr1->execute();
-$totalorder = (int)$qr1->get_result()->fetch_row()[0]; $qr1->close();
-
-// total omset = HANYA pesanan Selesai (uang yang benar-benar masuk)
-$qr2 = $conn->prepare("SELECT COALESCE(SUM(o.total_harga),0) FROM tb_order o WHERE DATE(o.tanggal_order) BETWEEN ? AND ? AND o.status_order='Selesai'{$tokoW} AND o.deleted=0");
-$qr2->bind_param("ss", $tglmulai, $tgljin); $qr2->execute();
-$totalomset = (float)$qr2->get_result()->fetch_row()[0]; $qr2->close();
-
-// nilai dibatalkan = potensi omset hilang (dipisahkan supaya tidak masuk hitungan utama)
-$qrb = $conn->prepare("SELECT COALESCE(SUM(o.total_harga),0) FROM tb_order o WHERE DATE(o.tanggal_order) BETWEEN ? AND ? AND o.status_order='Dibatalkan'{$tokoW} AND o.deleted=0");
-$qrb->bind_param("ss", $tglmulai, $tgljin); $qrb->execute();
-$totaldibatalkan = (float)$qrb->get_result()->fetch_row()[0]; $qrb->close();
-
-$qstat = $conn->prepare("SELECT status_order, COUNT(*) AS jml FROM tb_order o WHERE DATE(o.tanggal_order) BETWEEN ? AND ?{$tokoW} AND o.deleted=0 GROUP BY status_order");
-$qstat->bind_param("ss", $tglmulai, $tgljin); $qstat->execute();
-$statpesanan = []; $res = $qstat->get_result();
-while ($rs = $res->fetch_assoc()) $statpesanan[$rs['status_order']] = (int)$rs['jml'];
-$qstat->close();
-
-if ($modeSemua) {
-    $qr3 = $conn->prepare("SELECT COUNT(*) FROM tb_user WHERE DATE(created) BETWEEN ? AND ? AND deleted=0");
-    $qr3->bind_param("ss", $tglmulai, $tgljin); $qr3->execute();
-    $userbarujml = (int)$qr3->get_result()->fetch_row()[0]; $qr3->close();
-} else {
-    $userbarujml = 0;
-}
-
-// stat per-kantin tambahan: menu aktif & pelanggan unik (cuma mode per-kantin)
-$jmlmenuaktif = 0; $jmlpelangganunik = 0;
-if (!$modeSemua && $idpenjualterpilih > 0) {
-    // menu aktif yang dimiliki penjual sekarang di slot ini
-    $qm = $conn->prepare("SELECT COUNT(*) FROM tb_menu WHERE id_penjual=? AND status='aktif' AND deleted=0");
-    $qm->bind_param("i", $idpenjualterpilih); $qm->execute();
-    $jmlmenuaktif = (int)$qm->get_result()->fetch_row()[0]; $qm->close();
-    // pelanggan unik = jumlah pembeli berbeda yang pernah order ke penjual ini di periode
-    $qp = $conn->prepare("SELECT COUNT(DISTINCT id_user) FROM tb_order WHERE id_penjual=? AND DATE(tanggal_order) BETWEEN ? AND ? AND status_order='Selesai' AND deleted=0");
-    $qp->bind_param("iss", $idpenjualterpilih, $tglmulai, $tgljin); $qp->execute();
-    $jmlpelangganunik = (int)$qp->get_result()->fetch_row()[0]; $qp->close();
-}
+// ── DATA UNTUK TAMPILAN ──────────────────────────────────────────────────────
+// catatan: query keuangan (omset, nilai dibatalkan, jumlah pesanan, pelanggan, dll)
+// sudah dihapus dari laporan admin — laporan keuangan hanya ada di sisi PENJUAL.
+// admin hanya menampilkan data non-keuangan: rating, daftar menu (+stok), pengguna.
 
 // rating: per-kantin filter by id_penjual, mode semua aggregate platform-wide
 $ratingkantin = 0; $jmlratingkantin = 0;
@@ -144,139 +107,11 @@ if (!$modeSemua) {
     $ratingkantin = (float)($rr[0]??0); $jmlratingkantin = (int)($rr[1]??0);
 }
 
-// ── CHART ──────────────────────────────────────────────────────────────────────
-// chart omset = hanya Selesai (uang masuk per hari)
-$qchart = $conn->prepare("SELECT DATE(o.tanggal_order) AS tgl, COALESCE(SUM(o.total_harga),0) AS nilai FROM tb_order o WHERE DATE(o.tanggal_order) BETWEEN ? AND ? AND o.status_order='Selesai'{$tokoW} AND o.deleted=0 GROUP BY DATE(o.tanggal_order)");
-$qchart->bind_param("ss", $tglmulai, $tgljin); $qchart->execute();
-$rawchart = []; $resc = $qchart->get_result();
-while ($row = $resc->fetch_assoc()) $rawchart[$row['tgl']] = (float)$row['nilai'];
-$qchart->close();
-
-function namahari(string $tgl): string {
-    $map = ['Sun'=>'Min','Mon'=>'Sen','Tue'=>'Sel','Wed'=>'Rab','Thu'=>'Kam','Fri'=>'Jum','Sat'=>'Sab'];
-    return $map[date('D', strtotime($tgl))] ?? date('D', strtotime($tgl));
-}
-
-$selisih  = (int)ceil((strtotime($tgljin) - strtotime($tglmulai)) / 86400) + 1;
-$chartdata = [];
-for ($i = 0; $i < $selisih; $i++) {
-    $tgl = date('Y-m-d', strtotime($tglmulai) + $i * 86400);
-    $chartdata[] = ['tgl'=>$tgl,'label'=>date('d/m',strtotime($tgl)),'nilai'=>$rawchart[$tgl]??0.0];
-}
-$maxnilai = max(array_column($chartdata,'nilai')) ?: 1;
-
-// ── PRODUK TERLARIS ────────────────────────────────────────────────────────────
-// pakai snapshot dari order — nama menu/toko dibekukan saat order dibuat,
-// jadi tetap tampil benar meski toko/menu sudah dihapus
-$qtl = $conn->prepare(
-    "SELECT COALESCE(d.nama_menu_snapshot, m.nama_menu) AS nama_menu,
-            o.nama_toko_snapshot     AS nama_toko,
-            o.nomor_kantin_snapshot  AS nomor_kantin,
-            SUM(d.jumlah)   AS terjual,
-            SUM(d.subtotal) AS omset
-     FROM tb_detail_order d
-     JOIN tb_order o ON d.id_order=o.id_order
-     LEFT JOIN tb_menu m ON d.id_menu=m.id_menu
-     WHERE DATE(o.tanggal_order) BETWEEN ? AND ?
-       AND d.deleted=0 AND o.deleted=0 AND o.status_order='Selesai'{$tokoW}
-     GROUP BY d.id_menu, nama_menu, nama_toko, nomor_kantin
-     ORDER BY terjual DESC LIMIT 10"
-);
-$qtl->bind_param("ss", $tglmulai, $tgljin); $qtl->execute();
-$terlaris = $qtl->get_result()->fetch_all(MYSQLI_ASSOC); $qtl->close();
-
-// ── TOP PELANGGAN (gabungan) ──────────────────────────────────────────────────
-// satu daftar pelanggan dengan kolom jumlah pesanan + total belanja,
-// diurutkan dari paling banyak pesan. menggabung 2 list lama (terbanyak vs
-// pengeluaran terbesar) supaya laporan tidak duplikatif.
-$qpel = $conn->prepare(
-    "SELECT u.username, COUNT(o.id_order) AS jml_order, COALESCE(SUM(o.total_harga),0) AS total_belanja
-     FROM tb_order o JOIN tb_user u ON o.id_user=u.id_user
-     WHERE DATE(o.tanggal_order) BETWEEN ? AND ?{$tokoW}
-       AND o.status_order='Selesai' AND o.deleted=0
-     GROUP BY o.id_user, u.username
-     ORDER BY jml_order DESC, total_belanja DESC LIMIT 10"
-);
-$qpel->bind_param("ss", $tglmulai, $tgljin); $qpel->execute();
-$toppelanggan = $qpel->get_result()->fetch_all(MYSQLI_ASSOC); $qpel->close();
-
-// ── DETAIL PESANAN SELESAI + DIBATALKAN ───────────────────────────────────────
-// query satu baris per item menu agar bisa disusun di tabel detail lengkap.
-// pakai snapshot nama_toko / nomor_kantin / nama_menu agar baris tetap akurat
-// meski toko atau menu sudah dihapus / diubah / digantikan penjual baru.
-$sqdet = $conn->prepare(
-    "SELECT o.id_order, DATE_FORMAT(o.tanggal_order,'%d/%m/%Y %H:%i') AS tgl_format,
-            u.username AS pembeli,
-            o.nama_toko_snapshot AS nama_toko,
-            COALESCE(o.nomor_kantin_snapshot, o.id_toko) AS nokantin,
-            o.status_order, o.total_harga, o.metode_pembayaran,
-            COALESCE(d.nama_menu_snapshot, m.nama_menu) AS nama_menu,
-            d.jumlah, d.harga_satuan, d.subtotal
-     FROM tb_order o
-     JOIN tb_user u ON o.id_user=u.id_user
-     LEFT JOIN tb_detail_order d ON o.id_order=d.id_order AND d.deleted=0
-     LEFT JOIN tb_menu m ON d.id_menu=m.id_menu
-     WHERE DATE(o.tanggal_order) BETWEEN ? AND ?
-       AND o.status_order IN ('Selesai','Dibatalkan')
-       AND o.deleted=0{$tokoW}
-     ORDER BY o.tanggal_order DESC, o.id_order, nama_menu
-     LIMIT 500"
-);
-$sqdet->bind_param("ss",$tglmulai,$tgljin); $sqdet->execute();
-$resdet = $sqdet->get_result();
-$pesanandetail = []; // kunci = id_order, value = array info pesanan + items
-while ($rd = $resdet->fetch_assoc()) {
-    $oid = $rd['id_order'];
-    if (!isset($pesanandetail[$oid])) {
-        $pesanandetail[$oid] = [
-            'id'        => $oid,
-            'tanggal'   => $rd['tgl_format'],
-            'pembeli'   => $rd['pembeli'],
-            'nama_toko' => $rd['nama_toko'],
-            'nokantin'  => $rd['nokantin'],
-            'status'    => $rd['status_order'],
-            'total'     => (float)$rd['total_harga'],
-            'metode'    => $rd['metode_pembayaran'],
-            'items'     => []
-        ];
-    }
-    if ($rd['nama_menu']) {
-        $pesanandetail[$oid]['items'][] = [
-            'nama'     => $rd['nama_menu'],
-            'jumlah'   => (int)$rd['jumlah'],
-            'harga'    => (float)$rd['harga_satuan'],
-            'subtotal' => (float)$rd['subtotal']
-        ];
-    }
-}
-$sqdet->close();
-
-// ── MENU + RATING + ULASAN ───────────────────────────────────
-// menu hanya untuk mode per-kantin. distribusi rating dan ulasan terbaru
-// untuk kedua mode: per-kantin filter by id_penjual, mode semua aggregate platform.
-$daftarmenu = []; $distribusirating = []; $ulasankantin = [];
-
-if ($modeSemua) {
-    // distribusi rating platform-wide (semua penjual)
-    $qdistp = $conn->query("SELECT rating_toko, COUNT(*) AS jml FROM tb_rating WHERE deleted=0 GROUP BY rating_toko ORDER BY rating_toko DESC");
-    while ($r = $qdistp->fetch_assoc()) $distribusirating[(int)$r['rating_toko']] = (int)$r['jml'];
-
-    // 10 ulasan terbaru platform-wide — tambahkan toko_snapshot dan menu yang dipesan
-    $qulp = $conn->query(
-        "SELECT r.rating_toko, r.ulasan, r.created, u.username,
-                COALESCE(o.nama_toko_snapshot, CONCAT('Kantin ', o.id_toko)) AS nama_toko,
-                (SELECT GROUP_CONCAT(COALESCE(d.nama_menu_snapshot, m2.nama_menu) SEPARATOR ', ')
-                 FROM tb_detail_order d
-                 LEFT JOIN tb_menu m2 ON d.id_menu=m2.id_menu
-                 WHERE d.id_order=r.id_order AND d.deleted=0) AS menu_dipesan
-         FROM tb_rating r
-         JOIN tb_user u ON r.id_user=u.id_user
-         LEFT JOIN tb_order o ON r.id_order=o.id_order
-         WHERE r.deleted=0
-         ORDER BY r.created DESC LIMIT 10"
-    );
-    $ulasankantin = $qulp->fetch_all(MYSQLI_ASSOC);
-}
+// ── DAFTAR MENU (+ STOK) ─────────────────────────────────────
+// laporan admin hanya menampilkan daftar menu (+ stok). rating ringkas sudah
+// dihitung di atas ($ratingkantin). distribusi rating & daftar ulasan tidak
+// ditampilkan di admin, jadi query-nya tidak dibuat di sini.
+$daftarmenu = [];
 
 if (!$modeSemua && $idpenjualterpilih > 0) {
     // menu: hanya yang milik penjual sekarang (id_penjual=current seller)
@@ -293,25 +128,6 @@ if (!$modeSemua && $idpenjualterpilih > 0) {
     );
     $qmenu->bind_param("ssi", $tglmulai, $tgljin, $idpenjualterpilih); $qmenu->execute();
     $daftarmenu = $qmenu->get_result()->fetch_all(MYSQLI_ASSOC); $qmenu->close();
-
-    $qdist = $conn->prepare("SELECT rating_toko, COUNT(*) AS jml FROM tb_rating WHERE id_penjual=? AND deleted=0 GROUP BY rating_toko ORDER BY rating_toko DESC");
-    $qdist->bind_param("i", $idpenjualterpilih); $qdist->execute(); $resd = $qdist->get_result();
-    while ($r = $resd->fetch_assoc()) $distribusirating[(int)$r['rating_toko']] = (int)$r['jml'];
-    $qdist->close();
-
-    // ulasan terbaru per-kantin dengan info menu yang dipesan saat rating diberikan
-    $qul = $conn->prepare(
-        "SELECT r.rating_toko, r.ulasan, r.created, u.username,
-                (SELECT GROUP_CONCAT(COALESCE(d.nama_menu_snapshot, m2.nama_menu) SEPARATOR ', ')
-                 FROM tb_detail_order d
-                 LEFT JOIN tb_menu m2 ON d.id_menu=m2.id_menu
-                 WHERE d.id_order=r.id_order AND d.deleted=0) AS menu_dipesan
-         FROM tb_rating r JOIN tb_user u ON r.id_user=u.id_user
-         WHERE r.id_penjual=? AND r.deleted=0
-         ORDER BY r.created DESC LIMIT 10"
-    );
-    $qul->bind_param("i", $idpenjualterpilih); $qul->execute();
-    $ulasankantin = $qul->get_result()->fetch_all(MYSQLI_ASSOC); $qul->close();
 }
 
 if ($modeSemua) {
@@ -336,20 +152,8 @@ if ($modeSemua) {
 }
 
 // ── HELPER ─────────────────────────────────────────────────────────────────────
-// rp(): format angka jadi "Rp 12.345" (titik ribuan, tanpa desimal).
+// rp(): format angka jadi "Rp 12.345" (titik ribuan, tanpa desimal). dipakai kolom Harga menu.
 function rp(float $n): string { return 'Rp ' . number_format($n, 0, ',', '.'); }
-// singkat(): format ringkas untuk kartu stat — "Rp 1,2 M" / "Rp 850 Jt" supaya tidak panjang.
-function singkat(float $n): string {
-    if ($n >= 1_000_000_000) { $v=$n/1_000_000_000; return 'Rp '.rtrim(rtrim(number_format($v,1,',',''),'0'),',').' M'; }
-    if ($n >= 1_000_000)     { $v=$n/1_000_000;     return 'Rp '.rtrim(rtrim(number_format($v,1,',',''),'0'),',').' Jt'; }
-    return 'Rp ' . number_format($n, 0, ',', '.');
-}
-// bintanghtml(): cetak 5 bintang berwarna (kuning untuk yang aktif, abu untuk yang tidak).
-function bintanghtml(float $r): string {
-    $out = '';
-    for ($i=1;$i<=5;$i++) { $w=$i<=$r?'#F59E0B':'#D1D5DB'; $out.="<i class='fa-solid fa-star' style='color:{$w};font-size:11px;'></i>"; }
-    return $out;
-}
 
 // ── LABELS & CHART DIMS ────────────────────────────────────────────────────────
 // siapkan label periode & kantin yang dipakai di header halaman + identitas ekspor
@@ -360,14 +164,6 @@ $labelterpilih = $periode==='custom'
 $labelkantin = $nomorkantin > 0
     ? 'Kantin ke-'.$nomorkantin.(!empty($infokantinterpilih['nama_toko']) ? ' — '.htmlspecialchars($infokantinterpilih['nama_toko']) : '')
     : 'Semua Kantin';
-
-// dimensi SVG chart batang: lebar svg, lebar tiap batang, gap antar batang.
-// makin banyak hari → batang makin tipis, tapi lebar svg minimum tetap 700px.
-$n    = count($chartdata);
-$svgw = max(700, $n * 30);
-$barw = max(8, min(40, (int)(($svgw - 80) / $n) - 4));
-$gap  = max(4, (int)(($svgw - 80 - $n * $barw) / max(1, $n - 1)));
-$startx = 70; $chartH = 160;
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -378,9 +174,6 @@ $startx = 70; $chartH = 160;
 <link rel="stylesheet" href="../../3. komponen/admin.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
-#kartu-cetak-kantin { display:none; }
-.bar-dist { height:8px;background:#f0f0f0;border-radius:4px;overflow:hidden;flex:1; }
-.bar-dist-isi { height:100%;background:var(--kedua);border-radius:4px; }
 .seksi-judul { display:flex;align-items:center;justify-content:space-between;margin-bottom:14px; }
 .seksi-judul h3 { margin:0; }
 .cetakjudul { display:none; }
@@ -395,10 +188,6 @@ $startx = 70; $chartH = 160;
   .tabel-wrapper table { min-width:0 !important; width:100%; font-size:11px; }
   .tabel-wrapper td, .tabel-wrapper th { padding:5px 6px; }
   .kartu { box-shadow:none !important; border:1px solid #ddd !important; page-break-inside:avoid; }
-
-  /* cetak per kantin (popup overlay) */
-  body.mode-cetak-kantin > *:not(#kartu-cetak-kantin) { display:none !important; }
-  body.mode-cetak-kantin #kartu-cetak-kantin { display:block !important; }
 }
 </style>
 </head>
@@ -567,9 +356,60 @@ $startx = 70; $chartH = 160;
   </div>
   <?php endif; ?>
 
-</main>
+  <!-- ── DAFTAR PENGGUNA PLATFORM — HANYA tampil di mode "Semua Kantin"
+       (saat satu kantin dipilih, section ini disembunyikan). ikut ter-ekspor
+       lewat tombol "Cetak Semua". ───── -->
+  <?php if ($modeSemua): ?>
+  <?php
+  // ambil semua pengguna yang belum dihapus (platform-wide, tidak terpengaruh filter kantin)
+  $qusr = $conn->query("SELECT username, nama_lengkap, role, kelas, email, no_telepon, status_verifikasi, status_akun
+                        FROM tb_user WHERE deleted=0
+                        ORDER BY FIELD(role,'admin','penjual','pembeli'), username");
+  $daftarpengguna = $qusr ? $qusr->fetch_all(MYSQLI_ASSOC) : [];
+  ?>
+  <div class="kartu seksi-laporan" id="seksi-pengguna" style="margin-bottom:18px;">
+    <div class="seksi-judul">
+      <h3 style="margin:0;"><i class="fa-solid fa-users"></i> Daftar Pengguna (<?= count($daftarpengguna) ?>)</h3>
+      <button onclick="eksporXlsSeksi('seksi-pengguna','daftar_pengguna')" class="tombolkecil takprint" style="background:var(--sukses);color:white;"><i class="fa-solid fa-file-csv"></i> Cetak</button>
+    </div>
+    <?php if (empty($daftarpengguna)): ?>
+    <div class="kosong" style="padding:24px;"><p>Belum ada pengguna</p></div>
+    <?php else: ?>
+    <div class="tabel-wrapper">
+      <table style="min-width:760px;">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Nama Lengkap</th>
+            <th class="tengah" style="width:90px;">Peran</th>
+            <th>Kelas / Status</th>
+            <th>Email</th>
+            <th style="width:130px;">No. HP</th>
+            <th class="tengah" style="width:110px;">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php foreach ($daftarpengguna as $p): ?>
+          <tr>
+            <td style="font-weight:700;"><?= htmlspecialchars($p['username']) ?></td>
+            <td><?= htmlspecialchars($p['nama_lengkap'] ?: '—') ?></td>
+            <td class="tengah"><span class="badge <?= htmlspecialchars($p['role']) ?>"><?= ucfirst($p['role']) ?></span></td>
+            <td><?= htmlspecialchars($p['kelas'] ?: '—') ?></td>
+            <td style="font-size:12px;color:var(--tekssamar);"><?= htmlspecialchars($p['email']) ?></td>
+            <td style="font-size:12px;"><?= htmlspecialchars($p['no_telepon'] ?: '—') ?></td>
+            <td class="tengah" style="font-size:11px;">
+              <?= htmlspecialchars(ucfirst($p['status_verifikasi'] ?? '—')) ?><?= (($p['status_akun'] ?? 'aktif') === 'nonaktif') ? ' · Nonaktif' : '' ?>
+            </td>
+          </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
+    <?php endif; ?>
+  </div>
+  <?php endif; // tutup blok Daftar Pengguna (hanya mode Semua Kantin) ?>
 
-<div id="kartu-cetak-kantin"></div>
+</main>
 
 <script>
 /* ===== EKSPOR XLS (HTML-in-Excel) — TABEL BERGARIS DENGAN IDENTITAS =====
@@ -670,59 +510,6 @@ function eksporXlsSemua(namafile) {
     unduhXls(html, namafile);
 }
 
-/* cetakKantin: inject kartu satu kantin ke overlay dan print */
-function cetakKantin(n) {
-    var tr = document.querySelector('tr.baris-kantin[data-nomor="' + n + '"]');
-    if (!tr) return;
-    var nomatoko = tr.dataset.nomatoko || '';
-    var penjual  = tr.dataset.penjual  || '';
-    var terisi   = tr.dataset.terisi   === '1';
-    var status   = tr.dataset.status;
-    var order    = parseInt(tr.dataset.order)    || 0;
-    var batal    = parseInt(tr.dataset.batal)    || 0;
-    var rating   = parseFloat(tr.dataset.rating) || 0;
-    var omset    = parseFloat(tr.dataset.omset)  || 0;
-    var nilaibatal = parseFloat(tr.dataset.nilaibatal) || 0;
-    var periode  = '<?= addslashes($labelterpilih) ?>';
-
-    function rpFmt(v) { return 'Rp ' + Math.floor(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
-    var statusLabel = !terisi ? 'Kosong' : (status==='buka' ? 'Buka' : 'Tutup');
-    var statusColor = !terisi ? '#9e9e9e' : (status==='buka' ? '#2e7d32' : '#c62828');
-    var tglCetak = new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'});
-
-    var html =
-        '<div style="font-family:Arial,sans-serif;padding:28px;max-width:640px;margin:0 auto;color:#3D2C33;">'
-        + '<div style="text-align:center;padding-bottom:14px;border-bottom:2px solid #643843;margin-bottom:22px;">'
-        +   '<div style="font-size:22px;font-weight:900;color:#643843;">jajankita</div>'
-        +   '<div style="font-size:15px;font-weight:700;margin-top:4px;">Laporan Kantin ke-' + n + '</div>'
-        +   '<div style="font-size:11px;color:#8B6475;margin-top:3px;">Periode: ' + periode + ' &middot; Dicetak: ' + tglCetak + '</div>'
-        + '</div>'
-        + '<div style="display:flex;align-items:center;gap:16px;padding:14px 18px;background:#F8EBF1;border-radius:10px;margin-bottom:18px;">'
-        +   '<div style="font-size:48px;font-weight:900;color:#643843;line-height:1;min-width:56px;text-align:center;">' + n + '</div>'
-        +   '<div style="flex:1;">'
-        +     '<div style="font-size:18px;font-weight:800;">' + (nomatoko || '— Kosong —') + '</div>'
-        +     (penjual ? '<div style="font-size:12px;color:#8B6475;margin-top:2px;">Penjual: ' + penjual + '</div>' : '')
-        +     '<div style="font-size:12px;font-weight:700;margin-top:4px;color:' + statusColor + ';">' + statusLabel + '</div>'
-        +   '</div>'
-        + '</div>'
-        + '<table style="width:100%;border-collapse:collapse;font-size:13px;">'
-        + '<tr style="border-bottom:1px solid #EFD9D4;"><td style="padding:10px 0;color:#8B6475;">Total Pesanan</td><td style="padding:10px 0;font-weight:700;text-align:right;">' + order + '</td></tr>'
-        + '<tr style="border-bottom:1px solid #EFD9D4;"><td style="padding:10px 0;color:#8B6475;">Pesanan Dibatalkan</td><td style="padding:10px 0;font-weight:700;text-align:right;color:#c62828;">' + batal + '</td></tr>'
-        + '<tr style="border-bottom:1px solid #EFD9D4;"><td style="padding:10px 0;color:#8B6475;">Pesanan Berhasil</td><td style="padding:10px 0;font-weight:700;text-align:right;color:#2e7d32;">' + (order-batal) + '</td></tr>'
-        + '<tr style="border-bottom:1px solid #EFD9D4;"><td style="padding:10px 0;color:#8B6475;">Rating Toko</td><td style="padding:10px 0;font-weight:700;text-align:right;">' + (rating>0?rating+' ★':'—') + '</td></tr>'
-        + '<tr style="border-bottom:1px solid #EFD9D4;"><td style="padding:10px 0;color:#8B6475;">Nilai Dibatalkan</td><td style="padding:10px 0;font-weight:700;text-align:right;color:#c62828;">' + rpFmt(nilaibatal) + '</td></tr>'
-        + '<tr><td style="padding:12px 0;font-weight:800;font-size:14px;">Total Omset (Selesai)</td><td style="padding:12px 0;font-weight:900;text-align:right;font-size:20px;color:#2e7d32;">' + rpFmt(omset) + '</td></tr>'
-        + '</table></div>';
-
-    var kartu = document.getElementById('kartu-cetak-kantin');
-    kartu.innerHTML = html;
-    document.body.classList.add('mode-cetak-kantin');
-    window.onafterprint = function() {
-        document.body.classList.remove('mode-cetak-kantin');
-        window.onafterprint = null;
-    };
-    window.print();
-}
 </script>
 </body>
 </html>

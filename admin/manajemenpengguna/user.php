@@ -368,18 +368,9 @@ if ($toggletokoid > 0) {
           <?php else: foreach ($daftaruser as $u): // loop tiap akun terhapus jadi baris tabel
             $tglDaftar   = !empty($u['created'])    ? date('d M Y', strtotime($u['created']))            : '—';
             $tglBerhenti = !empty($u['deleted_at']) ? date('d M Y H:i', strtotime($u['deleted_at']))     : '—';
-            $tglBprint   = !empty($u['deleted_at']) ? date('d M Y', strtotime($u['deleted_at']))         : '—';
             // untuk penjual: tampilkan pesanan yang pernah dia layani (id_penjual=u.id_user)
             // untuk pembeli/admin: tampilkan pesanan yang dia buat sebagai pembeli
             $pesanan = $u['role']==='penjual' ? (int)$u['pesanan_toko'] : (int)$u['pesanan_user'];
-            $ud = json_encode([
-                'username'   => $u['username'],
-                'email'      => $u['email'],
-                'role'       => $u['role'],
-                'pesanan'    => $pesanan,
-                'created'    => $tglDaftar,
-                'deleted_at' => $tglBprint,
-            ], JSON_HEX_APOS | JSON_HEX_TAG | JSON_UNESCAPED_UNICODE);
           ?>
           <tr>
             <td>
@@ -477,16 +468,6 @@ if ($toggletokoid > 0) {
           <?php endif;
             $pesanan   = $u['role']==='penjual' ? (int)$u['pesanan_toko'] : (int)$u['pesanan_user'];
             $tglDaftar = !empty($u['created']) ? date('d M Y', strtotime($u['created'])) : '—';
-            $ud = json_encode([
-                'username'    => $u['username'],
-                'email'       => $u['email'],
-                'role'        => $u['role'],
-                'nomor_kantin'=> isset($u['nomor_kantin']) ? $u['nomor_kantin'] : null,
-                'nama_toko'   => $u['nama_toko'] ?? null,
-                'pesanan'     => $pesanan,
-                'created'     => $tglDaftar,
-                'deleted_at'  => null,
-            ], JSON_HEX_APOS | JSON_HEX_TAG | JSON_UNESCAPED_UNICODE);
           ?>
           <tr>
             <td>
@@ -679,9 +660,20 @@ function tableToBorderedHtml(t) {
     var bg = i%2===1 ? 'background:#FAF6F8;' : '';
     tr.querySelectorAll('td').forEach(function(td){ td.setAttribute('style','border:1px solid #c8c8c8;padding:6pt 10pt;vertical-align:top;'+bg); });
   });
-  // buang kolom "Aksi" supaya bersih (kelas takprint di header dan cell)
+  // buang kolom "Aksi"/"Status Toko" (kelas takprint di header & cell) supaya bersih
   c.querySelectorAll('.takprint').forEach(function(el){ el.remove(); });
-  c.querySelectorAll('i').forEach(function(ic){ ic.remove(); });
+  // buang ikon, foto/avatar, dan div avatar kosong — kalau dibiarkan, di Excel jadi
+  // gambar rusak (path relatif) dan bikin tampilan ekspor berantakan
+  c.querySelectorAll('i, img, .avatar-tabel').forEach(function(el){ el.remove(); });
+  // setelah kolom takprint dibuang, jumlah kolom berkurang. perbaiki colspan baris
+  // pemisah grup (mis. "Penjual"/"Pembeli") agar tidak melebihi kolom yang tersisa,
+  // supaya baris tidak melebar/berantakan di hasil ekspor.
+  var nCol = c.querySelectorAll('thead th').length;
+  if (nCol > 0) {
+    c.querySelectorAll('td[colspan]').forEach(function(td){
+      if (parseInt(td.getAttribute('colspan'), 10) > nCol) td.setAttribute('colspan', nCol);
+    });
+  }
   return c.outerHTML;
 }
 function unduhXls(body, namafile) {

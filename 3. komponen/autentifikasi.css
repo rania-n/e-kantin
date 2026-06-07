@@ -141,7 +141,8 @@ h2 {
 input[type="text"],
 input[type="email"],
 input[type="password"],
-input[type="tel"] {
+input[type="tel"],
+select {
   width: 100%;
   padding: 11px 14px;
   font-size: 14px;
@@ -153,8 +154,18 @@ input[type="tel"] {
   outline: none;
   transition: border-color .15s; /* animasi border saat difokus */
 }
-/* border berubah saat input difokus */
-input:focus { border-color: var(--kedua); }
+/* dropdown kelas/status: samakan tinggi & beri panah kustom + ruang di kanan */
+select {
+  cursor: pointer;
+  appearance: none; -webkit-appearance: none; -moz-appearance: none;
+  padding-right: 38px;
+  /* panah segitiga via background SVG inline (warna --tekssamar/abu) */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2399627A' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+}
+/* border berubah saat input/select difokus */
+input:focus, select:focus { border-color: var(--kedua); }
 
 /* teks keterangan tambahan di bawah input (contoh: syarat password) */
 .keterangan {

@@ -136,9 +136,9 @@ if ($user['role'] === 'penjual') {
         );
         $s->bind_param("i",$id); $s->execute(); $terlaris=$s->get_result()->fetch_all(MYSQLI_ASSOC); $s->close();
 
-        // daftar menu — total terjual = jumlah pesanan Selesai (real)
+        // daftar menu — laku = jumlah terjual (pesanan Selesai), m.stok = stok akhir (saat ini)
         $s = $conn->prepare(
-            "SELECT m.nama_menu, m.harga, m.status, m.deleted,
+            "SELECT m.nama_menu, m.harga, m.status, m.deleted, m.stok,
                     COALESCE((SELECT SUM(d2.jumlah) FROM tb_detail_order d2
                               JOIN tb_order o2 ON d2.id_order=o2.id_order
                               WHERE d2.id_menu=m.id_menu AND d2.deleted=0
@@ -470,14 +470,6 @@ function bintanghtml(float $r): string {
       <div class="isi-stat"><div class="nilai"><?= $totalpesanan ?></div><div class="label">Total Pesanan</div><div class="sub">Semua status</div></div>
     </div>
     <div class="kartu-stat">
-      <div class="ikon-stat" style="background:var(--suksebg);color:var(--sukses);"><i class="fa-solid fa-coins"></i></div>
-      <div class="isi-stat"><div class="nilai" style="font-size:13px;color:var(--sukses);"><?= rp($omsetselesai) ?></div><div class="label">Omset Selesai</div><div class="sub"><?= $jmlselesai ?> pesanan selesai</div></div>
-    </div>
-    <div class="kartu-stat">
-      <div class="ikon-stat" style="background:#fee2e2;color:#dc2626;"><i class="fa-solid fa-circle-xmark"></i></div>
-      <div class="isi-stat"><div class="nilai" style="font-size:13px;color:#dc2626;"><?= rp($nilaidibatalkan) ?></div><div class="label">Nilai Dibatalkan</div><div class="sub"><?= $jmldibatalkan ?> pesanan dibatalkan</div></div>
-    </div>
-    <div class="kartu-stat">
       <div class="ikon-stat" style="background:#fffbeb;color:#D97706;"><i class="fa-solid fa-star"></i></div>
       <div class="isi-stat"><div class="nilai"><?= $ratarating ?: '—' ?></div><div class="label">Rating Toko</div><div class="sub"><?= $jmlrating ?> ulasan</div></div>
     </div>
@@ -485,210 +477,8 @@ function bintanghtml(float $r): string {
       <div class="ikon-stat"><i class="fa-solid fa-utensils"></i></div>
       <div class="isi-stat"><div class="nilai"><?= $totalmenu ?></div><div class="label">Menu Aktif</div><div class="sub">Bisa dipesan</div></div>
     </div>
-    <div class="kartu-stat">
-      <div class="ikon-stat"><i class="fa-solid fa-users"></i></div>
-      <div class="isi-stat"><div class="nilai"><?= $jmlpelanggan ?></div><div class="label">Pembeli Berbeda</div><div class="sub">Pelanggan unik</div></div>
-    </div>
   </div>
   </div><!-- /seksi-stat -->
-
-  <!-- ── TREN OMSET (SVG chart) ───────────────────────────────────────────── -->
-  <div class="kartu seksi-laporan" id="seksi-chart" style="margin-bottom:18px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
-      <h3 style="margin:0;"><i class="fa-solid fa-chart-bar"></i> Omset — <?= $modecustom ? date('d M Y',strtotime($dari)).' — '.date('d M Y',strtotime($sampai)) : $nhari.' Hari Terakhir' ?></h3>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;" class="takprint">
-        <a href="?id=<?= $id ?>&hari=7"      class="chip-filter <?= !$modecustom&&$nhari===7 ?'aktif':'' ?>" style="font-size:11px;padding:4px 10px;">7 Hari</a>
-        <a href="?id=<?= $id ?>&hari=14"     class="chip-filter <?= !$modecustom&&$nhari===14?'aktif':'' ?>" style="font-size:11px;padding:4px 10px;">14 Hari</a>
-        <a href="?id=<?= $id ?>&hari=30"     class="chip-filter <?= !$modecustom&&$nhari===30?'aktif':'' ?>" style="font-size:11px;padding:4px 10px;">30 Hari</a>
-        <a href="?id=<?= $id ?>&hari=custom" class="chip-filter <?= $modecustom?'aktif':'' ?>" style="font-size:11px;padding:4px 10px;">Custom</a>
-      </div>
-    </div>
-    <?php if ($modecustom): ?>
-    <form method="GET" action="viewuser.php" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;" class="takprint">
-      <input type="hidden" name="id"   value="<?= $id ?>">
-      <input type="hidden" name="hari" value="custom">
-      <div><label style="font-size:11px;font-weight:700;color:var(--tekssamar);display:block;margin-bottom:3px;">DARI</label>
-        <input type="date" name="dari"   value="<?= $dari ?>"   style="padding:7px 10px;border:1.5px solid var(--garis);border-radius:8px;font-size:13px;font-family:inherit;"></div>
-      <div><label style="font-size:11px;font-weight:700;color:var(--tekssamar);display:block;margin-bottom:3px;">SAMPAI</label>
-        <input type="date" name="sampai" value="<?= $sampai ?>" style="padding:7px 10px;border:1.5px solid var(--garis);border-radius:8px;font-size:13px;font-family:inherit;"></div>
-      <button type="submit" class="tombolutama" style="padding:8px 14px;font-size:13px;align-self:flex-end;"><i class="fa-solid fa-filter"></i> Terapkan</button>
-    </form>
-    <?php endif; ?>
-    <div class="area-chart">
-      <svg viewBox="0 0 <?= $svgw ?> 210" xmlns="http://www.w3.org/2000/svg" style="min-width:<?= min(700,$svgw) ?>px;">
-        <?php for ($g = 0; $g <= 4; $g++): $gy = 20 + ($g * 40); ?>
-        <line x1="60" y1="<?= $gy ?>" x2="<?= $svgw-10 ?>" y2="<?= $gy ?>" stroke="#E7CBCB" stroke-width="1" stroke-dasharray="4,4"/>
-        <text x="55" y="<?= $gy+4 ?>" text-anchor="end" fill="#99627A" font-size="9"><?= singkat(($maxomsethari/4)*(4-$g)) ?></text>
-        <?php endfor; ?>
-        <?php foreach ($charthari as $ci => $ch):
-          $cx  = 70 + $ci * ($svgbarw + $svggap);
-          $bh  = $ch['nilai'] > 0 ? ($ch['nilai'] / $maxomsethari) * 160 : 2;
-          $by  = 180 - $bh;
-          $isT = $ch['tgl'] === date('Y-m-d');
-          $fc  = $isT ? '#643843' : '#99627A';
-          $lbl = date('d/m', strtotime($ch['tgl']));
-        ?>
-        <rect x="<?= $cx ?>" y="<?= $by ?>" width="<?= $svgbarw ?>" height="<?= $bh ?>" rx="3" fill="<?= $fc ?>">
-          <title><?= date('d M Y', strtotime($ch['tgl'])) ?> — <?= rp($ch['nilai']) ?></title>
-        </rect>
-        <text x="<?= $cx + $svgbarw/2 ?>" y="200" text-anchor="middle" fill="<?= $fc ?>"
-              font-size="<?= $svgn > 20 ? '7' : '9' ?>" font-weight="<?= $isT ? '700' : '400' ?>"><?= $lbl ?></text>
-        <?php if ($ch['nilai'] > 0 && $svgbarw >= 20): ?>
-        <text x="<?= $cx + $svgbarw/2 ?>" y="<?= max($by-4, 14) ?>" text-anchor="middle"
-              fill="#643843" font-size="8" font-weight="600"><?php $_n=$ch['nilai']; echo $_n>=1000000 ? number_format($_n/1000000,1).'Jt' : ($_n>=1000 ? number_format($_n/1000,0).'k' : number_format($_n,0)); ?></text>
-        <?php endif; ?>
-        <?php endforeach; ?>
-      </svg>
-    </div>
-    <?php if (array_sum(array_column($charthari,'nilai')) === 0): ?>
-    <p style="color:var(--tekssamar);font-size:13px;padding:8px 0;">Belum ada transaksi dalam periode ini.</p>
-    <?php endif; ?>
-  </div>
-
-  <!-- ── TOP PELANGGAN (gabung) — tabel rank, username, jml, total, rata-rata ── -->
-  <div class="kartu seksi-laporan" id="seksi-pelanggan" style="margin-bottom:18px;">
-    <div class="seksi-judul">
-      <h3 style="margin:0;"><i class="fa-solid fa-trophy"></i> Top Pelanggan</h3>
-      <button onclick="eksporXlsSeksi('seksi-pelanggan','top_pelanggan')" class="tombolkecil takprint" style="background:var(--sukses);color:white;"><i class="fa-solid fa-file-csv"></i> Cetak</button>
-    </div>
-    <?php if (empty($toppelanggan)): ?>
-    <div class="kosong" style="padding:24px;"><p>Belum ada data pelanggan</p></div>
-    <?php else: ?>
-    <div class="tabel-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <th class="tengah" style="width:50px;">Rank</th>
-            <th>Username Pembeli</th>
-            <th class="tengah" style="width:120px;">Jumlah Pesanan</th>
-            <th class="kanan" style="width:140px;">Total Belanja</th>
-            <th class="kanan" style="width:140px;">Rata-rata / Pesanan</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php $medal=['emas','perak','perunggu']; ?>
-          <?php foreach ($toppelanggan as $i => $p):
-              $rpeso = $p['jml_order'] > 0 ? $p['total_belanja'] / $p['jml_order'] : 0;
-          ?>
-          <tr>
-            <td class="tengah"><div class="rangking-produk <?= $medal[$i]??'' ?>" style="display:inline-block;">#<?= $i+1 ?></div></td>
-            <td style="font-weight:700;"><?= htmlspecialchars($p['username']) ?></td>
-            <td class="tengah" style="font-weight:700;color:var(--utama);"><?= $p['jml_order'] ?>× pesan</td>
-            <td class="kanan" style="font-weight:700;color:var(--sukses);"><?= rp($p['total_belanja']) ?></td>
-            <td class="kanan"><?= rp($rpeso) ?></td>
-          </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
-    </div>
-    <?php endif; ?>
-  </div>
-
-  <!-- ── RATING & ULASAN — standalone section dengan tabel CSV-exportable ───── -->
-  <div class="kartu seksi-laporan" id="seksi-rating" style="margin-bottom:18px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <h3 style="margin:0;"><i class="fa-solid fa-star"></i> Rating &amp; Ulasan</h3>
-      <button onclick="eksporXlsSeksi('seksi-rating','rating_ulasan')" class="tombolkecil takprint" style="background:var(--sukses);color:white;"><i class="fa-solid fa-file-csv"></i> Cetak</button>
-    </div>
-    <!-- ringkasan rata-rata: angka besar + bintang + jumlah ulasan (sederhana) -->
-    <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--latar);">
-      <div style="font-size:42px;font-weight:900;color:var(--kedua);line-height:1;"><?= $ratarating ?: '—' ?></div>
-      <div>
-        <?php if ($ratarating > 0): ?><div style="margin-bottom:3px;"><?= bintanghtml($ratarating) ?></div><?php endif; ?>
-        <div style="font-size:12px;color:var(--tekssamar);"><?= $jmlrating ?> ulasan masuk</div>
-      </div>
-    </div>
-
-    <!-- distribusi rating per bintang (tabel) -->
-    <?php if ($jmlrating > 0): ?>
-    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--tekssamar);margin-bottom:8px;">Distribusi Rating</div>
-    <div class="tabel-wrapper" style="margin-bottom:14px;">
-      <table>
-        <thead>
-          <tr><th style="width:80px;">Bintang</th><th class="tengah" style="width:140px;">Jumlah Ulasan</th><th class="kanan">Persentase</th></tr>
-        </thead>
-        <tbody>
-          <?php for ($bin=5;$bin>=1;$bin--):
-            $j = $distribusirating[$bin] ?? 0;
-            $pct = $jmlrating > 0 ? round($j / $jmlrating * 100, 1) : 0;
-          ?>
-          <tr>
-            <td style="font-weight:700;"><?= $bin ?> bintang</td>
-            <td class="tengah"><?= $j ?> ulasan</td>
-            <td class="kanan"><?= $pct ?>%</td>
-          </tr>
-          <?php endfor; ?>
-        </tbody>
-      </table>
-    </div>
-    <?php endif; ?>
-
-    <!-- daftar ulasan beserta menu yang dipesan saat rating diberikan -->
-    <?php if (!empty($ulasanterbaru)): ?>
-    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--tekssamar);margin-bottom:8px;">Daftar Ulasan</div>
-    <div class="tabel-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <th style="width:120px;">Pembeli</th>
-            <th class="tengah" style="width:70px;">Rating</th>
-            <th style="width:180px;">Menu Dipesan</th>
-            <th>Ulasan</th>
-            <th class="tengah" style="width:100px;">Tanggal</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach ($ulasanterbaru as $ul): ?>
-          <tr>
-            <td style="font-weight:700;"><?= htmlspecialchars($ul['username']) ?></td>
-            <td class="tengah" style="font-weight:700;color:#D97706;"><?= (int)$ul['rating_toko'] ?>★</td>
-            <td style="font-size:12px;"><?= htmlspecialchars($ul['menu_dipesan'] ?? '—') ?></td>
-            <td style="font-size:12px;font-style:italic;"><?= !empty($ul['ulasan']) ? '"' . htmlspecialchars($ul['ulasan']) . '"' : '—' ?></td>
-            <td class="tengah" style="font-size:11px;color:var(--tekssamar);"><?= !empty($ul['created']) ? date('d M Y', strtotime($ul['created'])) : '—' ?></td>
-          </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
-    </div>
-    <?php endif; ?>
-  </div>
-
-  <!-- ── PRODUK TERLARIS — tabel rank, nama menu, harga, terjual, omset ───── -->
-  <div class="kartu seksi-laporan" id="seksi-terlaris" style="margin-bottom:18px;">
-    <div class="seksi-judul">
-      <h3 style="margin:0;"><i class="fa-solid fa-fire"></i> Produk Terlaris</h3>
-      <button onclick="eksporXlsSeksi('seksi-terlaris','produk_terlaris')" class="tombolkecil takprint" style="background:var(--sukses);color:white;"><i class="fa-solid fa-file-csv"></i> Cetak</button>
-    </div>
-    <?php if (empty($terlaris)): ?>
-    <div class="kosong" style="padding:24px;"><p>Belum ada data penjualan</p></div>
-    <?php else: ?>
-    <div class="tabel-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <th class="tengah" style="width:50px;">Rank</th>
-            <th>Nama Menu</th>
-            <th class="kanan" style="width:110px;">Harga</th>
-            <th class="tengah" style="width:90px;">Terjual</th>
-            <th class="kanan" style="width:140px;">Total Omset</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php $medal=['emas','perak','perunggu']; ?>
-          <?php foreach ($terlaris as $i => $t): ?>
-          <tr>
-            <td class="tengah"><div class="rangking-produk <?= $medal[$i]??'' ?>" style="display:inline-block;">#<?= $i+1 ?></div></td>
-            <td style="font-weight:700;"><?= htmlspecialchars($t['nama_menu']) ?></td>
-            <td class="kanan"><?= rp((float)$t['harga']) ?></td>
-            <td class="tengah" style="font-weight:700;color:var(--utama);"><?= (int)$t['terjual'] ?>×</td>
-            <td class="kanan" style="font-weight:700;color:var(--sukses);"><?= rp((float)$t['omset']) ?></td>
-          </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
-    </div>
-    <?php endif; ?>
-  </div>
 
   <!-- ── DAFTAR MENU — tabel semua menu termasuk yang dihapus ─────────────── -->
   <?php if (!empty($daftarmenu)): ?>
@@ -702,13 +492,22 @@ function bintanghtml(float $r): string {
         <thead>
           <tr>
             <th>Nama Menu</th>
-            <th class="kanan" style="width:110px;">Harga</th>
-            <th class="tengah" style="width:100px;">Status</th>
-            <th class="tengah" style="width:130px;">Total Terjual</th>
+            <th class="kanan" style="width:100px;">Harga</th>
+            <th class="tengah" style="width:90px;">Status</th>
+            <th class="tengah" style="width:90px;">Stok Awal</th>
+            <th class="tengah" style="width:80px;">Laku</th>
+            <th class="tengah" style="width:90px;">Stok Akhir</th>
           </tr>
         </thead>
         <tbody>
-          <?php foreach ($daftarmenu as $m): ?>
+          <?php foreach ($daftarmenu as $m):
+            // laku       = total terjual (pesanan Selesai)
+            // stok akhir = stok menu saat ini
+            // stok awal  = stok akhir + laku (perkiraan stok sebelum terjual)
+            $laku      = (int)$m['terjual'];
+            $stokakhir = (int)($m['stok'] ?? 0);
+            $stokawal  = $stokakhir + $laku;
+          ?>
           <tr style="<?= $m['deleted'] ? 'opacity:.5;' : '' ?>">
             <td style="font-weight:600;">
               <?= htmlspecialchars($m['nama_menu']) ?>
@@ -722,7 +521,9 @@ function bintanghtml(float $r): string {
                 <?= $m['deleted'] ? 'Dihapus' : ucfirst($m['status']) ?>
               </span>
             </td>
-            <td class="tengah" style="font-weight:700;color:var(--utama);"><?= (int)$m['terjual'] ?>×</td>
+            <td class="tengah"><?= $stokawal ?></td>
+            <td class="tengah" style="font-weight:700;color:var(--utama);"><?= $laku ?>×</td>
+            <td class="tengah" style="font-weight:700;"><?= $stokakhir ?></td>
           </tr>
           <?php endforeach; ?>
         </tbody>
@@ -730,68 +531,6 @@ function bintanghtml(float $r): string {
     </div>
   </div>
   <?php endif; ?>
-
-  <!-- ── DETAIL PESANAN SELESAI & DIBATALKAN ──────────────────────────────── -->
-  <div class="kartu seksi-laporan" id="seksi-detail" style="margin-bottom:18px;">
-    <div class="seksi-judul">
-      <h3 style="margin:0;"><i class="fa-solid fa-list-check"></i> Detail Pesanan Selesai &amp; Dibatalkan</h3>
-      <div style="display:flex;gap:6px;align-items:center;">
-        <span style="font-size:11px;color:var(--tekssamar);" class="takprint"><?= count($pesanandetail) ?> pesanan</span>
-        <button onclick="eksporXlsSeksi('seksi-detail','detail_pesanan')" class="tombolkecil takprint" style="background:var(--sukses);color:white;"><i class="fa-solid fa-file-csv"></i> Cetak</button>
-      </div>
-    </div>
-    <?php if (empty($pesanandetail)): ?>
-    <div class="kosong" style="padding:24px;"><p>Belum ada pesanan selesai atau dibatalkan</p></div>
-    <?php else: ?>
-    <div class="tabel-wrapper">
-      <table style="min-width:680px;">
-        <thead>
-          <tr>
-            <th class="tengah" style="width:40px;">ID</th>
-            <th style="width:120px;">Tanggal</th>
-            <th>Pembeli</th>
-            <th class="tengah" style="width:80px;">Status</th>
-            <th>Rincian Menu</th>
-            <th class="kanan" style="width:110px;">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach ($pesanandetail as $po): ?>
-          <tr>
-            <td class="tengah" style="font-weight:700;color:var(--tekssamar);font-size:11px;">#<?= $po['id'] ?></td>
-            <td style="font-size:11px;color:var(--tekssamar);white-space:nowrap;"><?= $po['tanggal'] ?></td>
-            <td style="font-weight:600;"><?= htmlspecialchars($po['pembeli']) ?></td>
-            <td class="tengah">
-              <span class="badge <?= $po['status']==='Selesai'?'selesai':'dibatalkan' ?>"><?= $po['status'] ?></span>
-            </td>
-            <td style="font-size:12px;">
-              <?php if (empty($po['items'])): ?>
-              <span style="color:var(--tekssamar);font-style:italic;">—</span>
-              <?php else: ?>
-              <?php foreach ($po['items'] as $item): ?>
-              <div style="line-height:1.6;">
-                <strong><?= htmlspecialchars($item['nama']) ?></strong>
-                <span style="color:var(--tekssamar);">×<?= $item['jumlah'] ?></span>
-                <span style="color:var(--tekssamar);">@ <?= rp($item['harga']) ?></span>
-                = <span style="color:var(--utama);font-weight:700;"><?= rp($item['subtotal']) ?></span>
-              </div>
-              <?php endforeach; ?>
-              <?php endif; ?>
-            </td>
-            <td class="kanan" style="font-weight:800;color:var(--sukses);"><?= rp($po['total']) ?></td>
-          </tr>
-          <?php endforeach; ?>
-        </tbody>
-        <tfoot>
-          <tr>
-            <td colspan="5"><strong>TOTAL SELESAI</strong></td>
-            <td class="kanan" style="color:var(--sukses);font-weight:800;"><?= rp($omsetselesai) ?></td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
-    <?php endif; ?>
-  </div>
 
 <?php elseif ($user['role'] === 'penjual' && !$toko && !$riwayat): ?>
 <!-- ════════════════ PENJUAL TANPA TOKO ════════════════ -->
@@ -851,26 +590,6 @@ function bintanghtml(float $r): string {
       <div class="ikon-stat"><i class="fa-solid fa-coins"></i></div>
       <div class="isi-stat"><div class="nilai" style="font-size:14px;"><?= rp($totalbelanja) ?></div><div class="label">Total Belanja</div></div>
     </div>
-  </div>
-
-  <!-- daftar toko favorit pembeli — urut berdasarkan jumlah pesanan selesai terbanyak -->
-  <div class="kartu">
-    <h3><i class="fa-solid fa-heart"></i> Toko Favorit</h3>
-      <?php if (empty($tokofavorit)): ?>
-      <div class="kosong" style="padding:20px;"><p>Belum ada transaksi selesai</p></div>
-      <?php else: ?>
-      <?php $medal=['emas','perak','perunggu']; // medali 3 besar — sisanya tanpa kelas ?>
-      <?php foreach ($tokofavorit as $i => $tf): ?>
-      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--latar);">
-        <div class="rangking-produk <?= $medal[$i]??'' ?>">#<?= $i+1 ?></div>
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:13px;font-weight:700;"><?= htmlspecialchars($tf['nama_toko'] ?? '—') ?></div>
-          <div style="font-size:11px;color:var(--tekssamar);"><?= rp($tf['total_belanja']) ?></div>
-        </div>
-        <div style="font-size:13px;font-weight:700;color:var(--utama);white-space:nowrap;"><?= $tf['jml_order'] ?>× pesan</div>
-      </div>
-      <?php endforeach; ?>
-      <?php endif; ?>
   </div>
 
 <?php else: ?>
